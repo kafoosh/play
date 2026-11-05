@@ -1,8 +1,13 @@
-import { C, text, textCenter, wrap, box, drawCard, makeScroll, charSprite, drawTile, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
+import { C, UI, text, textCenter, textWidth, wrap, box, blob, drawCard, makeScroll, charSprite, drawTile, drawOver, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
 import { MAPS, LOOKS, NPCS, SCRIPT, cardName, decodeWord, VALUE_GRID, CHASED, CLASSES, SKINS, HAIRS } from './data.js';
 import * as Audio from './audio.js';
 
-const VW = 160, VH = 144;
+// The game draws at a low resolution that follows the screen's shape: VW x VH game pixels.
+let VW = 160, VH = 144;
+// UIB: bottom of the part of the screen that the touch controls don't cover.
+let UIB = 144;
+// UIX0..UIX1: the free strip between the controls when they sit beside the text box.
+let UIX0 = 0, UIX1 = 160;
 const screen = document.getElementById('screen');
 const ctx = screen.getContext('2d');
 ctx.imageSmoothingEnabled = false;
@@ -18,7 +23,12 @@ const armedCard = () => ({ v: G.armed.v || 1, s: G.armed.s || 'S' });
 const fill = s => s.replace(/\{N\}/g, G.name || 'HERO');
 
 let parts = [];
-function setScene(s, ...args) { parts = []; G.scene = s; s.enter && s.enter(...args); }
+function setScene(s, ...args) {
+  parts = []; G.scene = s;
+  document.body.classList.toggle('playing', s === Play); // controls only while exploring
+  measureUI();
+  if (s.enter) s.enter(...args);
+}
 function fadeTo(fn, dur = 0.25) { if (!G.fade) G.fade = { t: 0, dur, out: true, fn }; }
 
 // ================================================================ input
@@ -90,19 +100,33 @@ document.addEventListener('contextmenu', e => e.preventDefault());
 for (const ev of ['touchend', 'click']) document.addEventListener(ev, () => Audio.unlock(), { passive: true });
 document.addEventListener('visibilitychange', () => Audio.setPaused(document.hidden));
 
-// Keep the canvas at a whole number of device pixels per game pixel when possible.
+// Full screen: a whole number of device pixels per game pixel keeps the art crisp,
+// with at least 160 game pixels across the short side of the screen.
 function layout() {
-  const wrapEl = document.getElementById('screenWrap');
-  const r = wrapEl.getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
-  let s = Math.min((r.width - 12) / VW, (r.height - 12) / VH);
-  const ds = Math.floor(s * dpr);
-  if (ds >= 2) s = ds / dpr;
-  screen.style.width = Math.floor(VW * s) + 'px';
-  screen.style.height = Math.floor(VH * s) + 'px';
+  const w = window.innerWidth, h = window.innerHeight;
+  const k = Math.max(1, Math.floor(Math.min(w, h) * dpr / 160));
+  VW = Math.ceil(w * dpr / k); VH = Math.ceil(h * dpr / k);
+  if (screen.width !== VW || screen.height !== VH) { screen.width = VW; screen.height = VH; }
+  ctx.imageSmoothingEnabled = false;
+  screen.style.width = (VW * k / dpr) + 'px';
+  screen.style.height = (VH * k / dpr) + 'px';
+  measureUI();
+}
+// When the controls sit under the text box (portrait), keep the camera and the
+// text box in the space above them.
+function measureUI() {
+  UIB = VH; UIX0 = 0; UIX1 = VW;
+  if (!document.body.classList.contains('playing')) return;
+  const a = pad.getBoundingClientRect(), b = btnA.getBoundingClientRect();
+  const s = VW / screen.getBoundingClientRect().width;
+  if (!a.height) return;
+  const x0 = Math.ceil(a.right * s) + 3, x1 = Math.floor(b.left * s) - 3;
+  if (x1 - x0 >= 170) { UIX0 = x0; UIX1 = x1; } // text box fits between the controls
+  else UIB = Math.floor(Math.min(a.top, b.top) * s) - 4;
 }
 addEventListener('resize', layout);
-if (window.ResizeObserver) new ResizeObserver(layout).observe(document.getElementById('screenWrap'));
+if (window.visualViewport) window.visualViewport.addEventListener('resize', layout);
 layout();
 
 // ================================================================ particles
@@ -135,9 +159,12 @@ function drawParts(cx = 0, cy = 0) {
 }
 
 // ================================================================ dialog
-const D = { active: false, q: [], page: null, shown: 0, t: 0, choice: 0, low: false, onEnd: null, pos: 'auto' };
+const D = { active: false, q: [], page: null, shown: 0, t: 0, choice: 0, low: false, onEnd: null, pos: 'auto', name: null };
+function dialogW() { return Math.min(UIX1 - UIX0 - 6, 236); }
+const dialogX = () => Math.round((UIX0 + UIX1 - dialogW()) / 2);
+const dialogChars = () => Math.floor((dialogW() - 16) / 6);
 function say(entries, opts = {}) {
-  D.q = entries.slice(); D.onEnd = opts.onEnd || null; D.low = !!opts.low; D.pos = opts.pos || 'auto';
+  D.q = entries.slice(); D.onEnd = opts.onEnd || null; D.low = !!opts.low; D.pos = opts.pos || 'auto'; D.name = opts.name || null;
   D.active = true; nextPage();
 }
 function nextPage() {
@@ -145,12 +172,12 @@ function nextPage() {
   while (D.q.length && !D.page) {
     const e = D.q.shift();
     if (typeof e === 'string') {
-      const lines = wrap(fill(e), 23);
+      const lines = wrap(fill(e), dialogChars());
       const pages = [];
       for (let i = 0; i < lines.length; i += 3) pages.push({ lines: lines.slice(i, i + 3) });
       D.page = pages.shift(); D.q.unshift(...pages);
     } else if (e.lines) D.page = e;
-    else if (e.ask) { D.page = { lines: wrap(fill(e.ask), 23).slice(0, 3), ask: e }; D.choice = 0; }
+    else if (e.ask) { D.page = { lines: wrap(fill(e.ask), dialogChars()).slice(0, 3), ask: e }; D.choice = 0; }
     else if (e.do) e.do();
   }
   if (!D.page) { D.active = false; const f = D.onEnd; D.onEnd = null; if (f) f(); return; }
@@ -178,144 +205,212 @@ function dialogDir(d) {
   if (D.page && D.page.ask && D.shown >= D.total && (d === 'up' || d === 'down')) { D.choice = 1 - D.choice; Audio.sfx('move'); }
 }
 function dialogBoxY(playerScreenY) {
-  if (D.pos === 'bottom') return VH - 46;
-  if (D.pos === 'top') return 2;
-  return playerScreenY > 84 ? 2 : VH - 46;
+  const bottom = UIB - 46, top = D.name ? 16 : 4;
+  if (D.pos === 'bottom') return bottom;
+  if (D.pos === 'top') return top;
+  return playerScreenY + 10 > bottom ? top : bottom;
+}
+function choiceBox(by) {
+  const w = dialogW(), bx = dialogX();
+  return [bx + w - 46, by > VH / 3 ? by - 30 : by + 46];
 }
 function dialogTap(x, y, by) {
   if (D.page && D.page.ask && D.shown >= D.total) {
-    const cy = by > 60 ? by - 30 : by + 46;
-    if (x >= 112 && y >= cy && y < cy + 28) { answer(y < cy + 14 ? 0 : 1); return; }
+    const [cx, cy] = choiceBox(by);
+    if (x >= cx && x < cx + 44 && y >= cy && y < cy + 28) { answer(y < cy + 14 ? 0 : 1); return; }
   }
   dialogA();
 }
 function drawDialog(by) {
   if (!D.active || !D.page) return;
-  box(ctx, 2, by, 156, 44);
+  const w = dialogW(), bx = dialogX();
+  if (D.name) { box(ctx, bx + 6, by - 13, textWidth(D.name) + 14, 16, '#9a643e'); text(ctx, D.name, bx + 13, by - 9, '#fff6dc'); }
+  box(ctx, bx, by, w, 44);
   let left = D.shown;
   D.page.lines.forEach((ln, i) => {
     const part = ln.slice(0, Math.max(0, left)); left -= ln.length;
-    text(ctx, part, 9, by + 8 + i * 11, C.white);
+    text(ctx, part, bx + 8, by + 8 + i * 11, UI.text);
   });
   if (D.shown >= D.total) {
     if (D.page.ask) {
-      const cy = by > 60 ? by - 30 : by + 46;
-      box(ctx, 112, cy, 44, 28);
-      text(ctx, 'YES', 128, cy + 6, C.white); text(ctx, 'NO', 128, cy + 16, C.white);
-      text(ctx, '▶', 119, cy + 6 + D.choice * 10, C.gold);
-    } else if (Math.floor(G.time * 3) % 2) text(ctx, '▼', 146, by + 35, C.gold);
+      const [cx, cy] = choiceBox(by);
+      box(ctx, cx, cy, 44, 28);
+      text(ctx, 'YES', cx + 16, cy + 7, UI.text); text(ctx, 'NO', cx + 16, cy + 17, UI.text);
+      text(ctx, '▶', cx + 8, cy + 7 + D.choice * 10, UI.accent);
+    } else if (Math.floor(G.time * 3) % 2) text(ctx, '▼', bx + w - 13, by + 34, UI.accent);
   }
 }
 
 // ================================================================ backdrop (title / end)
-const STARS = Array.from({ length: 40 }, (_, i) => ({ x: (hash(i, 1) * VW) | 0, y: (hash(i, 2) * 84) | 0, p: hash(i, 3) * 6 }));
-function drawSky(t) {
-  const bands = ['#121232', '#1b1c4c', '#2a2862', '#3f3676', '#5c4482'];
-  for (let i = 0; i < bands.length; i++) {
-    ctx.fillStyle = bands[i]; ctx.fillRect(0, i * 18, VW, 18);
-    if (i) { ctx.fillStyle = bands[i - 1]; for (let x = 0; x < VW; x += 2) { ctx.fillRect(x + ((i % 2)), i * 18, 1, 1); ctx.fillRect(x, i * 18 + 2, 1, 1); } }
+const STARS = Array.from({ length: 50 }, (_, i) => ({ x: hash(i, 1), y: hash(i, 2), p: hash(i, 3) * 6 }));
+let deco = null;
+function backdropArt() {
+  if (deco) return deco;
+  const cloud = night => {
+    const [c, x] = makeCanvas(44, 20);
+    blob(x, 2, 2, [[9, 11, 6], [18, 8, 8], [28, 9, 7], [35, 12, 5], [20, 13, 6]], night ? { o: '#3e4488', g: '#7a80c8', l: '#9aa0e0', d: '#6268b0' } : { o: '#c890b8', g: '#fff4f4', l: '#ffffff', d: '#f6d8e2' }, 1, false);
+    return c;
+  };
+  const tree = (pal) => {
+    const [c, x] = makeCanvas(24, 26);
+    x.fillStyle = C.trunkD; x.fillRect(10, 17, 5, 8); x.fillStyle = C.trunk; x.fillRect(11, 17, 3, 7);
+    blob(x, 4, 6, [[8, 0.5, 5.2], [3.8, 5.5, 4.6], [12.2, 5.5, 4.6], [8, 6.5, 5.8]], pal, 5);
+    return c;
+  };
+  // a little castle with blue roofs
+  const [cs, x] = makeCanvas(72, 52);
+  const wallC = (ox, oy, w, h) => { x.fillStyle = C.stoneO; x.fillRect(ox, oy, w, h); x.fillStyle = C.stone; x.fillRect(ox + 1, oy + 1, w - 2, h - 1); x.fillStyle = C.stoneL; x.fillRect(ox + 1, oy + 1, 2, h - 1); x.fillStyle = C.stoneD; x.fillRect(ox + w - 3, oy + 1, 2, h - 1); };
+  const cone = (cx, top, half, h) => {
+    for (let j = 0; j < h; j++) { const hw = Math.round(1 + j * (half - 1) / (h - 1)); for (let i = -hw; i < hw; i++) { x.fillStyle = (i === -hw || i === hw - 1 || j === h - 1) ? '#2a3a6e' : i < -hw / 3 ? '#8cb8f4' : '#5a8ce0'; x.fillRect(cx + i, top + j, 1, 1); } }
+    x.fillStyle = C.ink; x.fillRect(cx, top - 6, 1, 6); x.fillStyle = C.red; x.fillRect(cx + 1, top - 6, 4, 2);
+  };
+  wallC(14, 26, 44, 26);
+  for (let i = 14; i < 58; i += 6) { x.fillStyle = C.stoneO; x.fillRect(i, 23, 4, 4); x.fillStyle = C.stone; x.fillRect(i + 1, 24, 2, 3); }
+  wallC(29, 14, 14, 38); cone(36, 3, 9, 12);
+  wallC(6, 22, 12, 30); cone(12, 12, 8, 11);
+  wallC(54, 22, 12, 30); cone(60, 12, 8, 11);
+  x.fillStyle = C.stoneO; x.fillRect(31, 38, 10, 14); x.fillStyle = '#3a2a4a'; x.fillRect(32, 39, 8, 13); x.fillStyle = C.wood; x.fillRect(32, 40, 2, 12); x.fillRect(38, 40, 2, 12);
+  x.fillStyle = '#ffe9a0';
+  for (const [a, b] of [[35, 20], [10, 30], [58, 30], [20, 34], [48, 34]]) { x.fillRect(a, b, 2, 4); }
+  deco = {
+    cloud: cloud(false), cloudN: cloud(true), castle: cs,
+    tree: tree({ o: C.leafO, g: C.leaf, l: C.leafL, d: C.leafD }),
+    pine: tree({ o: C.pineO, g: C.pine, l: C.pineL, d: C.pineD }),
+  };
+  return deco;
+}
+function drawBackdrop(t, night = false) {
+  const art = backdropArt();
+  const H = Math.round(VH * 0.62);
+  const sky = night ? ['#141a3a', '#1c2450', '#283068', '#363c80', '#4a4a96'] : ['#3a4a96', '#5462b4', '#7e7ccc', '#c892c8', '#ffbfa8'];
+  const bh = Math.ceil(H / sky.length);
+  for (let i = 0; i < sky.length; i++) {
+    ctx.fillStyle = sky[i]; ctx.fillRect(0, i * bh, VW, bh + 1);
+    if (i) { ctx.fillStyle = sky[i - 1]; for (let x = 0; x < VW; x += 2) { ctx.fillRect(x + (i % 2), i * bh, 1, 1); ctx.fillRect(x, i * bh + 2, 1, 1); } }
   }
-  ctx.fillStyle = bands[4]; ctx.fillRect(0, 90, VW, 20);
   for (const s of STARS) {
-    const b = Math.sin(t * 2 + s.p);
-    if (b > -0.3) { ctx.fillStyle = b > 0.7 ? C.white : '#a9a6d8'; ctx.fillRect(s.x, s.y, 1, 1); if (b > 0.93) { ctx.fillRect(s.x - 1, s.y, 3, 1); ctx.fillRect(s.x, s.y - 1, 1, 3); } }
+    if (!night && s.y > 0.45) continue;
+    const b = Math.sin(t * 2 + s.p), sx = (s.x * VW) | 0, sy = (s.y * H * 0.8) | 0;
+    if (b > -0.3) { ctx.fillStyle = b > 0.7 ? '#ffffff' : '#c8c8f0'; ctx.fillRect(sx, sy, 1, 1); if (b > 0.94) { ctx.fillRect(sx - 1, sy, 3, 1); ctx.fillRect(sx, sy - 1, 1, 3); } }
   }
   // moon
-  ctx.fillStyle = '#fff1c2'; ctx.fillRect(136, 58, 10, 12); ctx.fillRect(134, 60, 14, 8);
-  ctx.fillStyle = '#e8d49a'; ctx.fillRect(139, 61, 2, 2); ctx.fillRect(143, 65, 2, 1);
-  // back hills + castle
-  ctx.fillStyle = '#1f2a48';
-  for (let x = 0; x < VW; x++) { const h = 86 + Math.round(Math.sin(x / 19) * 4 + Math.sin(x / 7) * 1.5); ctx.fillRect(x, h, 1, VH - h); }
-  ctx.fillStyle = '#141b33';
-  ctx.fillRect(62, 62, 36, 26); ctx.fillRect(56, 54, 8, 34); ctx.fillRect(96, 54, 8, 34); ctx.fillRect(75, 46, 10, 42);
-  for (const x of [56, 60, 96, 100, 62, 68, 74, 86, 92]) ctx.fillRect(x, x < 64 || x > 94 ? 51 : 59, 3, 3);
-  ctx.fillRect(79, 40, 2, 6); ctx.fillRect(76, 44, 8, 2);
-  ctx.fillStyle = '#f3c646';
-  for (const [x, y] of [[59, 60], [99, 60], [79, 52], [68, 70], [90, 70], [79, 64]]) if ((Math.floor(t * 1.3 + x) % 7)) ctx.fillRect(x, y, 2, 2);
-  // front hills with pines
-  ctx.fillStyle = '#0f1a1c';
-  for (let x = 0; x < VW; x++) { const h = 100 + Math.round(Math.sin(x / 23 + 1) * 5); ctx.fillRect(x, h, 1, VH - h); }
-  for (let i = 0; i < 14; i++) {
-    const px = i * 12 + ((hash(i, 9) * 6) | 0) - 2, base = 104 + ((hash(i, 8) * 8) | 0), hgt = 10 + ((hash(i, 7) * 8) | 0);
-    for (let j = 0; j < hgt; j++) { const w = Math.floor(j / 2) + 1; ctx.fillRect(px - w, base - hgt + j, w * 2 + 1, 1); }
+  const mx = Math.round(VW * 0.82), my = Math.round(H * 0.18);
+  ctx.fillStyle = '#fff6d0'; ctx.fillRect(mx - 4, my - 5, 9, 11); ctx.fillRect(mx - 5, my - 4, 11, 9);
+  ctx.fillStyle = '#f2e2a8'; ctx.fillRect(mx - 2, my - 2, 2, 2); ctx.fillRect(mx + 2, my + 1, 2, 1);
+  // clouds drift by
+  for (let i = 0; i < 3; i++) {
+    const span = VW + 60, x = ((hash(i, 5) * span + t * (3 + i * 1.5)) % span) - 50, y = Math.round(H * (0.22 + i * 0.17));
+    ctx.drawImage(night ? art.cloudN : art.cloud, Math.round(x), y);
   }
+  // far hills
+  ctx.fillStyle = night ? '#2c3a6a' : '#7a86c8';
+  for (let x = 0; x < VW; x++) { const h = H - 14 + Math.round(Math.sin(x / 23) * 4 + Math.sin(x / 9 + 2) * 2); ctx.fillRect(x, h, 1, VH - h); }
+  ctx.drawImage(art.castle, Math.round(VW / 2 - 36), H - 47);
+  // near hills and meadow
+  for (let x = 0; x < VW; x++) {
+    const h = H + Math.round(Math.sin(x / 31 + 1) * 3);
+    ctx.fillStyle = night ? '#3f7a44' : C.grassL; ctx.fillRect(x, h, 1, 2);
+    ctx.fillStyle = night ? '#356a3a' : C.grass; ctx.fillRect(x, h + 2, 1, VH - h);
+  }
+  for (let i = 0; i < 24; i++) {
+    const a = (hash(i, 31) * VW) | 0, b = H + 6 + ((hash(i, 32) * (VH - H - 8)) | 0);
+    ctx.fillStyle = night ? '#2c5a32' : C.grassD; ctx.fillRect(a, b + 1, 1, 1); ctx.fillRect(a + 1, b, 1, 2); ctx.fillRect(a + 3, b, 1, 2); ctx.fillRect(a + 4, b + 1, 1, 1);
+  }
+  const trees = [[0.04, 0], [0.16, 1], [0.84, 1], [0.95, 0], [-0.02, 1]];
+  for (const [fx, k] of trees) ctx.drawImage(k ? art.pine : art.tree, Math.round(fx * VW) - 6, H - 20 + (k ? 0 : 2));
+  if (night) { ctx.fillStyle = 'rgba(20,20,60,0.25)'; ctx.fillRect(0, H, VW, VH - H); }
 }
+// Draw a fixed 160x144 layout in the middle of the screen; returns the offset.
+function centre() { return [Math.round((VW - 160) / 2), Math.round((VH - 144) / 2)]; }
 
 // ================================================================ title
-const START = { x: 44, y: 104, w: 72, h: 16 };
+// START sits on the meadow. Everything above it is the secret value grid.
+function startBox() {
+  const w = 72, h = 16;
+  return { x: Math.round((VW - w) / 2), y: Math.min(VH - 40, Math.round(VH * 0.74)), w, h };
+}
 const Title = {
   enter() {
-    this.t = 0; this.cheat = false; this.go = false; this.credit = []; this.flies = [];
-    for (let i = 0; i < 6; i++) this.flies.push({ x: Math.random() * VW, y: 96 + Math.random() * 30, p: Math.random() * 6 });
+    this.t = 0; this.cheat = false; this.go = false; this.credit = []; this.petals = [];
     Audio.music('title');
   },
   update(dt) {
     this.t += dt;
-    for (const f of this.flies) { f.x += Math.sin(this.t * 0.7 + f.p) * 0.15; f.y += Math.cos(this.t * 0.9 + f.p) * 0.1; }
+    if (Math.random() < dt * 1.5) this.petals.push({ x: -4, y: Math.random() * VH * 0.7, p: Math.random() * 6, v: 14 + Math.random() * 10, col: ['#ffb0c8', '#ffffff', '#ffe066'][Math.random() * 3 | 0] });
+    for (const f of this.petals) { f.x += f.v * dt; f.y += Math.sin(this.t * 2 + f.p) * 0.2 + dt * 4; }
+    this.petals = this.petals.filter(f => f.x < VW + 4);
   },
   draw() {
-    drawSky(this.t);
-    for (const f of this.flies) if (Math.sin(this.t * 3 + f.p) > 0) { ctx.fillStyle = '#e8f27a'; ctx.fillRect(f.x | 0, f.y | 0, 1, 1); }
-    const bob = Math.round(Math.sin(this.t * 1.5));
-    textCenter(ctx, 'ODDPAQ', 81, 17 + bob, C.ink, 3);
-    textCenter(ctx, 'ODDPAQ', 80, 16 + bob, C.gold, 3, C.ink);
-    ctx.fillStyle = C.goldD; ctx.fillRect(28, 38 + bob, 104, 1);
-    textCenter(ctx, 'WINDS OF WONDER', 80, 44, '#a8e4ff', 1, C.ink);
-    const pressed = this.go;
-    box(ctx, START.x, START.y, START.w, START.h, pressed ? '#3a3480' : '#1a1840', C.gold);
-    if (pressed ? Math.floor(this.t * 12) % 2 : (this.t % 1.1) < 0.8) textCenter(ctx, 'START', 80, START.y + 5, C.white);
-    textCenter(ctx, '@ODDPAQ', 80, 131, '#7c78a8');
+    drawBackdrop(this.t);
+    for (const f of this.petals) { ctx.fillStyle = f.col; ctx.fillRect(f.x | 0, f.y | 0, 2, 1); ctx.fillRect((f.x | 0) + (Math.sin(this.t * 6 + f.p) > 0 ? 1 : 0), (f.y | 0) + 1, 1, 1); }
+    const bob = Math.round(Math.sin(this.t * 1.5)), cx = VW / 2, ly = Math.round(VH * 0.12);
+    textCenter(ctx, 'ODDPAQ', cx + 2, ly + 3 + bob, '#2a1a3a', 3);
+    textCenter(ctx, 'ODDPAQ', cx, ly + bob, C.gold, 3, C.ink);
+    ctx.fillStyle = '#fff6b0'; ctx.fillRect(Math.round(cx - 50), ly + bob + 3, 2, 2);
+    textCenter(ctx, 'WINDS OF WONDER', cx, ly + 28, '#ffffff', 1, C.ink);
+    const S = startBox();
+    box(ctx, S.x, S.y, S.w, S.h, this.go ? '#ffe6a0' : UI.paper);
+    if (!this.go || Math.floor(this.t * 12) % 2) textCenter(ctx, 'START', cx, S.y + 5, UI.text);
+    if (!this.go && (this.t % 1.1) < 0.7) { text(ctx, '▶', S.x - 9, S.y + 5, '#ffffff'); }
+    textCenter(ctx, '@ODDPAQ', cx, VH - 12, '#eaffd8', 1, '#2f6a3a');
     drawParts();
     if (this.cheat) drawCheat();
   },
   onTap(x, y) {
     if (this.go) return;
     if (this.cheat) { this.cheat = false; return; }
-    spark(x, y, 5, '#bfe8ff');
+    spark(x, y, 5, '#ffffff');
     // performer cheat sheet: triple-tap the credit
-    if (y >= 126 && Math.abs(x - 80) < 26) {
+    if (y >= VH - 20 && Math.abs(x - VW / 2) < 28) {
       const now = this.t; this.credit = this.credit.filter(c => now - c < 0.9); this.credit.push(now);
       if (this.credit.length >= 3) { this.cheat = true; this.credit = []; }
       return;
     }
-    if (x >= START.x && x < START.x + START.w && y >= START.y - 2 && y < START.y + START.h + 2) {
-      if (!G.locked) G.armed.s = CHASED[Math.max(0, Math.min(3, Math.floor((x - START.x) / (START.w / 4))))];
+    const S = startBox();
+    if (x >= S.x && x < S.x + S.w && y >= S.y - 3 && y < S.y + S.h + 3) {
+      if (!G.locked) G.armed.s = CHASED[Math.max(0, Math.min(3, Math.floor((x - S.x) / (S.w / 4))))];
       this.begin();
       return;
     }
-    if (y < 98 && !G.locked) {
-      const row = Math.floor(y / (98 / 4));
-      G.armed.v = row < 3 ? VALUE_GRID[row][Math.max(0, Math.min(3, Math.floor(x / 40)))] : 13;
+    const top = S.y - 4;
+    if (y < top && !G.locked) {
+      const row = Math.min(3, Math.floor(y / (top / 4)));
+      G.armed.v = row < 3 ? VALUE_GRID[row][Math.max(0, Math.min(3, Math.floor(x / (VW / 4))))] : 13;
     }
   },
   onA() { if (!this.cheat) this.begin(); else this.cheat = false; },
   begin() {
     if (this.go) return;
     this.go = true; Audio.sfx('start');
-    spark(80, START.y + 8, 12, C.gold);
+    const S = startBox();
+    spark(VW / 2, S.y + 8, 12, C.gold);
     setTimeout(() => fadeTo(() => setScene(NameEntry), 0.3), 450);
   },
 };
 function drawCheat() {
-  box(ctx, 6, 6, 148, 132, '#101024');
-  textCenter(ctx, 'CHEAT SHEET', 80, 12, C.gold);
+  ctx.fillStyle = 'rgba(30,20,40,0.5)'; ctx.fillRect(0, 0, VW, VH);
+  const [ox, oy] = centre();
+  ctx.save(); ctx.translate(ox, oy);
+  box(ctx, 6, 6, 148, 132);
+  textCenter(ctx, 'CHEAT SHEET', 80, 13, UI.accent);
   const gx = 20, gy = 24, cw = 30, ch = 13;
   VALUE_GRID.forEach((row, j) => row.forEach((v, i) => {
-    ctx.fillStyle = '#2a2860'; ctx.fillRect(gx + i * cw, gy + j * ch, cw - 2, ch - 2);
-    textCenter(ctx, VALUE_LABEL[v], gx + i * cw + cw / 2 - 1, gy + j * ch + 2, C.white);
+    ctx.fillStyle = UI.paperD; ctx.fillRect(gx + i * cw, gy + j * ch, cw - 2, ch - 2);
+    textCenter(ctx, VALUE_LABEL[v], gx + i * cw + cw / 2 - 1, gy + j * ch + 2, UI.text);
   }));
-  ctx.fillStyle = '#2a2860'; ctx.fillRect(gx, gy + 3 * ch, cw * 4 - 2, ch - 2);
-  textCenter(ctx, 'K', gx + cw * 2 - 1, gy + 3 * ch + 2, C.white);
-  text(ctx, 'TAP THE SKY FOR VALUE', 18, 79, '#8f8cc0');
+  ctx.fillStyle = UI.paperD; ctx.fillRect(gx, gy + 3 * ch, cw * 4 - 2, ch - 2);
+  textCenter(ctx, 'K', gx + cw * 2 - 1, gy + 3 * ch + 2, UI.text);
+  text(ctx, 'TAP THE SKY FOR VALUE', 18, 79, UI.dim);
   ['C', 'H', 'S', 'D'].forEach((s, i) => {
-    ctx.fillStyle = '#3a3480'; ctx.fillRect(32 + i * 24, 90, 22, 12);
-    textCenter(ctx, s, 43 + i * 24, 93, s === 'H' || s === 'D' ? '#ff8a8a' : C.white);
+    ctx.fillStyle = '#ecc890'; ctx.fillRect(32 + i * 24, 90, 22, 12);
+    textCenter(ctx, s, 43 + i * 24, 93, s === 'H' || s === 'D' ? C.red : UI.text);
   });
-  text(ctx, 'START = SUIT', 44, 105, '#8f8cc0');
+  text(ctx, 'START = SUIT', 44, 105, UI.dim);
   const a = G.armed;
   const lab = a.v || a.s ? `${a.v ? VALUE_LABEL[a.v] : '?'}${a.s ? { C: '♣', H: '♥', S: '♠', D: '♦' }[a.s] : '?'}` : '--';
-  textCenter(ctx, a.word ? 'WORD: ' + a.word.slice(0, 16) : 'ARMED: ' + lab + (G.locked ? ' (URL)' : ''), 80, 116, C.gold);
-  textCenter(ctx, 'TAP TO CLOSE', 80, 127, '#8f8cc0');
+  textCenter(ctx, a.word ? 'WORD: ' + a.word.slice(0, 16) : 'ARMED: ' + lab + (G.locked ? ' (URL)' : ''), 80, 116, UI.accent);
+  textCenter(ctx, 'TAP TO CLOSE', 80, 126, UI.dim);
+  ctx.restore();
 }
 
 // ================================================================ name entry
@@ -325,24 +420,28 @@ const NameEntry = {
   update(dt) { this.t += dt; },
   cell(r, c) { return r < 3 ? { x: 9 + c * 16, y: 52 + r * 15, w: 14, h: 13 } : (c < 5 ? { x: 9, y: 98, w: 46, h: 13 } : { x: 105, y: 98, w: 46, h: 13 }); },
   draw() {
-    ctx.fillStyle = '#121232'; ctx.fillRect(0, 0, VW, VH);
-    textCenter(ctx, 'WHAT IS YOUR NAME?', 80, 8, C.gold);
-    box(ctx, 22, 20, 116, 24);
+    drawBackdrop(this.t);
+    const [ox, oy] = centre();
+    ctx.save(); ctx.translate(ox, oy);
+    box(ctx, 0, 0, 160, 144);
+    textCenter(ctx, 'WHAT IS YOUR NAME?', 80, 8, UI.accent);
+    box(ctx, 22, 20, 116, 24, '#ffffff');
     for (let i = 0; i < 8; i++) {
       const ch = this.name[i];
-      if (ch) text(ctx, ch, 32 + i * 12, 25, C.white, 2);
-      else if (i === this.name.length && Math.floor(this.t * 3) % 2) { ctx.fillStyle = C.gold; ctx.fillRect(32 + i * 12, 38, 10, 2); }
-      else { ctx.fillStyle = '#4a4880'; ctx.fillRect(32 + i * 12, 38, 10, 1); }
+      if (ch) text(ctx, ch, 32 + i * 12, 25, UI.text, 2);
+      else if (i === this.name.length && Math.floor(this.t * 3) % 2) { ctx.fillStyle = UI.accent; ctx.fillRect(32 + i * 12, 38, 10, 2); }
+      else { ctx.fillStyle = UI.paperD; ctx.fillRect(32 + i * 12, 38, 10, 1); }
     }
     for (let r = 0; r < 4; r++) for (let c = 0; c < (r < 3 ? 9 : 2); c++) {
       const cc = r < 3 ? c : c * 5;
       const b = this.cell(r, cc), sel = this.r === r && (r < 3 ? this.c === c : (this.c < 5 ? 0 : 1) === c);
-      if (sel) { ctx.fillStyle = '#3a3480'; ctx.fillRect(b.x, b.y, b.w, b.h); ctx.fillStyle = C.gold; ctx.fillRect(b.x, b.y + b.h - 1, b.w, 1); }
+      if (sel) { ctx.fillStyle = '#ffe6a0'; ctx.fillRect(b.x, b.y, b.w, b.h); ctx.fillStyle = UI.accent; ctx.fillRect(b.x, b.y + b.h - 1, b.w, 1); }
       const label = r < 3 ? LETTERS[r][c] : (c ? 'END' : 'DEL');
-      textCenter(ctx, label, b.x + b.w / 2, b.y + 3, sel ? C.gold : C.white);
+      textCenter(ctx, label, b.x + b.w / 2, b.y + 3, sel ? UI.accent : UI.text);
     }
-    textCenter(ctx, 'PICK LETTERS. THEN END.', 80, 124, '#7c78a8');
+    textCenter(ctx, 'PICK LETTERS. THEN END.', 80, 126, UI.dim);
     drawParts();
+    ctx.restore();
   },
   onDir(d) {
     Audio.sfx('move');
@@ -369,6 +468,7 @@ const NameEntry = {
   },
   onA() { this.pick(); },
   onTap(x, y) {
+    const [ox, oy] = centre(); x -= ox; y -= oy;
     for (let r = 0; r < 4; r++) for (let c = 0; c < 9; c++) {
       if (r === 3 && c !== 0 && c !== 5) continue;
       const b = this.cell(r, c);
@@ -404,28 +504,34 @@ const HeroScene = {
   enter() { this.roll = 0; this.t = 0; this.choice = 0; G.hero = makeHero(G.name, 0); },
   update(dt) { this.t += dt; },
   draw() {
-    ctx.fillStyle = '#121232'; ctx.fillRect(0, 0, VW, VH);
-    textCenter(ctx, 'A HERO APPEARS!', 80, 7, C.gold);
-    // spotlight + shadow
-    ctx.fillStyle = '#1e1d4a'; ctx.fillRect(46, 20, 68, 64); ctx.fillRect(42, 24, 76, 56);
-    ctx.fillStyle = '#0c0b22'; ctx.fillRect(58, 78, 44, 4); ctx.fillRect(62, 77, 36, 6);
+    drawBackdrop(this.t);
+    const [ox, oy] = centre();
+    ctx.save(); ctx.translate(ox, oy);
+    textCenter(ctx, 'A HERO APPEARS!', 80, 4, '#ffffff', 1, C.ink);
+    // grassy spot to stand on
+    ctx.fillStyle = C.grassDD; ctx.fillRect(50, 72, 60, 10); ctx.fillRect(56, 70, 48, 14);
+    ctx.fillStyle = C.grass; ctx.fillRect(52, 72, 56, 7); ctx.fillRect(58, 70, 44, 10);
+    ctx.fillStyle = C.grassL; ctx.fillRect(60, 71, 30, 1);
+    ctx.fillStyle = 'rgba(40,60,30,0.45)'; ctx.fillRect(62, 74, 36, 4);
     const dirs = ['down', 'left', 'up', 'right'];
     const dir = dirs[Math.floor(this.t / 1.2) % 4], frame = [0, 1, 0, 2][Math.floor(this.t * 6) % 4];
-    ctx.drawImage(charSprite(G.hero.look, dir, frame), 48, 16, 64, 64);
+    ctx.drawImage(charSprite(G.hero.look, dir, frame), 48, 13, 64, 64);
     const h = G.hero;
-    box(ctx, 14, 84, 132, 38);
-    text(ctx, 'NAME', 22, 90, '#9a96c8'); text(ctx, G.name, 64, 90, C.white);
-    text(ctx, 'CLASS', 22, 100, '#9a96c8'); text(ctx, h.cls, 64, 100, C.white);
-    text(ctx, 'LV 1', 22, 110, '#9a96c8'); text(ctx, `HP ${h.hp}  MP ${h.mp}`, 64, 110, C.white);
-    text(ctx, 'IS THIS YOU?', 16, 130, C.white);
-    text(ctx, 'YES', 104, 130, this.choice === 0 ? C.gold : C.white);
-    text(ctx, 'NO', 134, 130, this.choice === 1 ? C.gold : C.white);
-    text(ctx, '▶', this.choice === 0 ? 97 : 127, 130, C.gold);
+    box(ctx, 14, 82, 132, 39);
+    text(ctx, 'NAME', 22, 88, UI.dim); text(ctx, G.name, 64, 88, UI.text);
+    text(ctx, 'CLASS', 22, 98, UI.dim); text(ctx, h.cls, 64, 98, UI.text);
+    text(ctx, 'LV 1', 22, 108, UI.dim); text(ctx, `HP ${h.hp}  MP ${h.mp}`, 64, 108, UI.text);
+    box(ctx, 6, 123, 148, 20);
+    text(ctx, 'IS THIS YOU?', 14, 130, UI.text);
+    text(ctx, 'YES', 104, 130, this.choice === 0 ? UI.accent : UI.text);
+    text(ctx, 'NO', 134, 130, this.choice === 1 ? UI.accent : UI.text);
+    text(ctx, '▶', this.choice === 0 ? 97 : 127, 130, UI.accent);
     drawParts();
+    ctx.restore();
   },
   onDir(d) { if (d === 'left' || d === 'right') { this.choice = 1 - this.choice; Audio.sfx('move'); } },
   onA() { this.choose(this.choice); },
-  onTap(x, y) { if (y > 122 && x > 90) this.choose(x < 124 ? 0 : 1); },
+  onTap(x, y) { const [ox, oy] = centre(); x -= ox; y -= oy; if (y > 120 && x > 90) this.choose(x < 124 ? 0 : 1); },
   choose(i) {
     if (i === 1) {
       this.roll++; G.hero = makeHero(G.name, this.roll); Audio.sfx('sparkle'); spark(80, 48, 14, C.cyan); this.choice = 0;
@@ -452,6 +558,7 @@ function loadMap(name) {
   for (let f = 0; f < (m.water ? 2 : 1); f++) {
     const [c, x] = makeCanvas(w * 16, h * 16);
     for (let ty = 0; ty < h; ty++) for (let tx = 0; tx < w; tx++) drawTile(x, tiles[ty][tx][0], tx * 16, ty * 16, m, tx, ty, f);
+    for (let ty = 0; ty < h; ty++) for (let tx = 0; tx < w; tx++) drawOver(x, tiles[ty][tx][0], tx * 16, ty * 16, m, tx, ty);
     m.canvas.push(c);
   }
   m.flames = [];
@@ -472,7 +579,9 @@ const Play = {
       moving: false, t: 0, timer: 1 + Math.random() * 2, frame: 0, anim: Math.random() * 3, talked: 0,
     }));
     this.load('home', 2, 3, 'right');
-    this.run(function* () { yield wait(0.7); yield* talk(SCRIPT.wake); });
+    const wake = SCRIPT.wake.slice();
+    if (!window.matchMedia('(pointer: coarse)').matches) wake[2] = 'USE THE ARROW KEYS TO WALK. PRESS Z TO TALK OR LOOK.';
+    this.run(function* () { yield wait(0.7); yield* talk(wake); });
   },
   load(mapName, x, y, dir) {
     this.map = loadMap(mapName);
@@ -568,7 +677,7 @@ const Play = {
     const w = m.def.warps[`${p.x},${p.y}`];
     if (w) { Audio.sfx('door'); fadeTo(() => this.load(w.map, w.x, w.y, w.dir), 0.25); return; }
     if (m.name === 'castle') {
-      if (p.y <= 6 && !G.flags.closer) { G.flags.closer = 1; this.run(function* () { yield* talk(SCRIPT.comeCloser, true); }); }
+      if (p.y <= 6 && !G.flags.closer) { G.flags.closer = 1; this.run(function* () { yield* talk(SCRIPT.comeCloser, true, null, 'WIZARD'); }); }
       if (p.y <= 4 && !G.flags.met) { p.dir = 'up'; this.run(wizardScene); }
     }
   },
@@ -603,6 +712,7 @@ const Play = {
     const lines = n.talked && n.again ? n.again : n.talk;
     n.talked++;
     say(lines, {
+      name: n.name,
       onEnd: () => {
         if (n.id === 'guard' && !G.flags.guard) {
           G.flags.guard = 1;
@@ -613,11 +723,12 @@ const Play = {
   },
   draw() {
     const m = this.map, p = this.p, mw = m.w * 16, mh = m.h * 16;
-    let cx = p.px + 8 - VW / 2, cy = p.py + 8 - VH / 2;
+    const viewH = UIB; // keep the hero out from under the controls
+    let cx = p.px + 8 - VW / 2, cy = p.py + 8 - viewH / 2;
     cx = Math.round(mw <= VW ? (mw - VW) / 2 : Math.max(0, Math.min(mw - VW, cx)));
-    cy = Math.round(mh <= VH ? (mh - VH) / 2 : Math.max(0, Math.min(mh - VH, cy)));
+    cy = Math.round(mh <= viewH ? (mh - viewH) / 2 : Math.max(0, Math.min(mh - viewH, cy)));
     this.cam = [cx, cy];
-    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, VW, VH);
+    ctx.fillStyle = m.name === 'world' ? '#2f6a3e' : '#1e1424'; ctx.fillRect(0, 0, VW, VH);
     ctx.drawImage(m.canvas[m.water ? Math.floor(this.time * 1.6) % 2 : 0], -cx, -cy);
     for (const f of m.flames) flame(ctx, f.x - cx, f.y - cy, this.time + f.x, f.big);
     // letter twinkle until read
@@ -685,7 +796,7 @@ const Play = {
     const c = this.card, k = Math.min(1, c.t / 0.6);
     const step = Math.max(1, Math.round(k * 8)) / 8;
     // light rays
-    const cxp = 80, cyp = 60;
+    const cxp = Math.round(VW / 2), cyp = Math.round((UIB - 46) / 2) + 4;
     ctx.fillStyle = 'rgba(243,198,70,0.25)';
     for (let i = 0; i < 8; i++) {
       const a = c.t * 0.6 + i * Math.PI / 4;
@@ -694,14 +805,14 @@ const Play = {
     if (!this.cardCanvas) this.cardCanvas = revealCanvas(c);
     const rc = this.cardCanvas, rw = Math.round(rc.width * step), rh = Math.round(rc.height * step);
     ctx.drawImage(rc, cxp - rw / 2 | 0, cyp - rh / 2 | 0, rw, rh);
-    if (c.t > 0.9) textCenter(ctx, c.word ? 'THE WIND SAYS:' : cardName(c.v, c.s), 80, 14, C.gold, 1, C.ink);
-    if (c.waitA && c.t > 1.6 && Math.floor(G.time * 3) % 2) text(ctx, '▼', 146, 132, C.gold);
+    if (c.t > 0.9) textCenter(ctx, c.word ? 'THE WIND SAYS:' : cardName(c.v, c.s), cxp, cyp - rc.height / 2 - 13, C.gold, 1, C.ink);
+    if (c.waitA && c.t > 1.6 && Math.floor(G.time * 3) % 2) text(ctx, '▼', cxp + 30, cyp + rc.height / 2 + 6, C.gold);
   },
 };
 
 // ---------------------------------------------------------------- script helpers
 const wait = s => { const until = Play.time + s; return () => Play.time >= until; };
-function* talk(lines, low = false, pos) { say(lines, { low, pos }); yield () => !D.active; }
+function* talk(lines, low = false, pos = null, name = null) { say(lines, { low, pos: pos || 'auto', name }); yield () => !D.active; }
 // "NO" loops back until they say yes.
 const ask = (q = SCRIPT.ask) => ({ ask: q, yes: [], no: () => [...SCRIPT.askNo, ask(SCRIPT.askAgain)] });
 const askWord = (q = SCRIPT.askWord) => ({ ask: q, yes: [], no: () => [...SCRIPT.askNoWord, askWord(SCRIPT.askAgain)] });
@@ -718,7 +829,7 @@ function* wizardScene() {
   this.p.dir = 'up';
   yield wait(0.3);
   const word = G.armed.word;
-  yield* talk([...SCRIPT.wizard1, word ? askWord() : ask(), ...(word ? SCRIPT.wizard2Word : SCRIPT.wizard2)], true);
+  yield* talk([...SCRIPT.wizard1, word ? askWord() : ask(), ...(word ? SCRIPT.wizard2Word : SCRIPT.wizard2)], true, null, 'WIZARD');
   // the wind returns
   Audio.stopMusic();
   wiz.frame = 1;
@@ -743,7 +854,7 @@ function* wizardScene() {
   setTimeout(() => Audio.music('fanfare'), 250);
   for (let i = 0; i < 30; i++) parts.push({ k: 'wind', x: cx - Math.random() * 60, y: cy + Math.random() * VH, vx: 200 + Math.random() * 100, vy: 0, len: 8 + (Math.random() * 10 | 0), life: 1.5, world: true });
   yield () => !this.card.waitA && this.card.t > 1.2;
-  yield* talk(SCRIPT.wizard3, true, 'bottom');
+  yield* talk(SCRIPT.wizard3, true, 'bottom', 'WIZARD');
   yield wait(0.3);
   fadeTo(() => setScene(End), 0.6);
 }
@@ -757,19 +868,22 @@ const End = {
   update(dt) {
     this.t += dt;
     if (Math.random() < dt * 14) parts.push({ k: 'wind', x: -20, y: Math.random() * VH, vx: 90 + Math.random() * 80, vy: 0, len: 4 + (Math.random() * 10 | 0), life: 2.5, col: 'rgba(220,240,255,0.5)' });
-    if (Math.random() < dt * 3) parts.push({ k: 'leaf', x: -4, y: Math.random() * 110, vx: 50 + Math.random() * 40, vy: 8 + Math.random() * 10, life: 4, col: ['#7cc35f', '#f3c646', '#e0705a'][Math.random() * 3 | 0] });
+    if (Math.random() < dt * 3) parts.push({ k: 'leaf', x: -4, y: Math.random() * VH * 0.8, vx: 50 + Math.random() * 40, vy: 8 + Math.random() * 10, life: 4, col: ['#7cc35f', '#f3c646', '#e0705a'][Math.random() * 3 | 0] });
     updateParts(dt);
   },
   draw() {
-    drawSky(this.t);
+    drawBackdrop(this.t, true);
     drawParts();
-    textCenter(ctx, 'THE END', 80, 8, C.gold, 2, C.ink);
-    ctx.drawImage(this.cc, Math.round(80 - this.cc.width / 2), Math.round(60 - this.cc.height / 2) + Math.round(Math.sin(this.t * 1.6)));
-    box(ctx, 14, 98, 132, 26);
-    textCenter(ctx, 'THANKS FOR PLAYING,', 80, 104, C.white);
-    textCenter(ctx, G.name + '!', 80, 114, C.gold);
-    if (this.t > 3 && Math.floor(this.t * 2) % 2) textCenter(ctx, 'PRESS A', 80, 130, '#a8a4d8');
-    else textCenter(ctx, '@ODDPAQ', 80, 130, '#7c78a8');
+    const cx = VW / 2;
+    textCenter(ctx, 'THE END', cx, Math.round(VH * 0.08), C.gold, 2, C.ink);
+    const cy = Math.round(VH * 0.42);
+    ctx.drawImage(this.cc, Math.round(cx - this.cc.width / 2), Math.round(cy - this.cc.height / 2) + Math.round(Math.sin(this.t * 1.6)));
+    const by = Math.max(cy + 40, Math.round(VH * 0.68));
+    box(ctx, Math.round(cx - 66), by, 132, 28);
+    textCenter(ctx, 'THANKS FOR PLAYING,', cx, by + 7, UI.text);
+    textCenter(ctx, G.name + '!', cx, by + 17, UI.accent);
+    if (this.t > 3 && Math.floor(this.t * 2) % 2) textCenter(ctx, 'PRESS A', cx, VH - 12, '#ffffff', 1, C.ink);
+    else textCenter(ctx, '@ODDPAQ', cx, VH - 12, '#eaffd8', 1, '#2f4a3a');
   },
   onA() { if (this.t > 3) fadeTo(() => setScene(Title), 0.5); },
   onTap() { this.onA(); },

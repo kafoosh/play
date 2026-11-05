@@ -36,7 +36,7 @@
     })();
   </script>
   <meta name="description" content="A tiny fantasy adventure. Find the wizard.">
-  <meta name="theme-color" content="#15122a">
+  <meta name="theme-color" content="#3a4a96">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -51,14 +51,13 @@
 </head>
 <body>
   <main id="app">
-    <div id="screenWrap"><canvas id="screen" width="160" height="144" aria-label="ODDPAQ: Winds of Wonder"></canvas></div>
+    <canvas id="screen" width="160" height="144" aria-label="ODDPAQ: Winds of Wonder"></canvas>
     <div id="dpad" role="group" aria-label="Direction pad">
-      <span class="bar h"></span><span class="bar v"></span>
+      <span class="bar h"></span><span class="bar v"></span><span class="hub"></span>
       <span class="ar up"></span><span class="ar down"></span><span class="ar left"></span><span class="ar right"></span>
     </div>
     <button id="btnA" type="button" aria-label="A button">A</button>
     <button id="mute" type="button" aria-label="Sound on or off">&#9835;</button>
-    <p id="keys">ARROWS / WASD TO WALK &nbsp; Z / SPACE = A</p>
   </main>
   <script type="module" src="src/main.js"></script>
 </body>

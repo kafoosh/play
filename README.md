@@ -88,16 +88,21 @@ Answering NO makes him wait and ask again. After YES the wind comes back, the sc
 flashes and the armed card appears with its name, for example **SEVEN OF DIAMONDS**.
 The end screen keeps the card on show.
 
-## Controls
+## Look and controls
 
-- **Phone:** the D-pad walks, **A** talks / reads / picks. Tapping the text box also
-  advances it, and YES/NO can be tapped directly. The ♫ button mutes the music.
+The game fills the whole screen in a soft, cute 16-bit fantasy style. It works in
+portrait and landscape, on phones and on desktop. The pixel size is chosen so the art
+always stays crisp, and at least 10 tiles are visible across the short side.
+
+- **Phone:** while walking around, a see-through D-pad (bottom left) and **A** button
+  (bottom right) float over the game. They are hidden on the title, name, hero and
+  ending screens, which are tap-only. In portrait the camera and text box stay above
+  the controls; in landscape the text box sits between them. Tapping the text box also
+  advances it, and YES/NO can be tapped directly. The ♫ button (top right) mutes.
 - **Keyboard:** arrows or WASD to walk; Z, X, Space or Enter for A. On the name screen
   you can just type, with Backspace and Enter.
 
-Sound starts on the first tap (browsers need a touch before they play audio). On
-iPhone the game asks for playback audio, so it should still play with the silent
-switch on (recent iOS versions).
+People's names show on a tab above their text box (GUARD, WIZARD and so on).
 
 ## Run locally
 
