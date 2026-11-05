@@ -118,7 +118,9 @@ crisp, and at least 10 tiles are visible across the short side.
   ending screens are tap-only. In portrait the camera and text box stay above
   the controls; in landscape the text box sits between them. Tapping the text box also
   advances it, and YES/NO can be tapped directly. The ♫ button (top right) mutes.
-- **Keyboard:** arrows or WASD to walk; Z, Space or Enter for A; X or C for B. On the name screen
+- **Keyboard:** WASD or arrows to walk; **P** (or Enter/Space) is A; **O** is B. On a
+  computer the on-screen A and B buttons are labelled with their keys (P and O), and the
+  opening text says which key talks. On the name screen
   you can just type, with Backspace and Enter.
 
 People's names show on a tab above their text box (GUARD, WIZARD and so on).
@@ -140,10 +142,33 @@ and animals blink, hop back a step and a small word floats up ("OW!", "MY BACK!"
 The next time you talk to someone you hit, they mention it first. The wizard is not
 impressed.
 
+### Side quest: the frog, the key and the witches
+
+The blue house in the village is locked; knock and someone inside shouts that the frog
+has their key. A short trail of wet, water-blue frog prints leads away from under its
+window toward the lake.
+Hit the frog (by the lake) with your weapon, or just talk to it (it
+doesn't show a speech bubble like the others, so it isn't obvious), and it coughs up a
+rusty key.
+Pick it up, then press A at the blue door. Three witches have been stuck inside since the
+frog swallowed their key and jumped out the window. They give you a **Crimson Cow**
+potion, you drink it (it does nothing, but you feel energised), and when you step back
+outside you've grown a pair of wings: "HUH. I GUESS CRIMSON COW GIVES YOU FEATHERS."
+
+### Along the way
+
+- In the woods past the bridge, a **hermit** spots you ("!"), walks over and asks if
+  you've thought of a playing card (or have a word in mind, in word mode). YES lets you
+  pass. NO gets a nudge to have something in mind before seeing the wizard, then lets
+  you pass. It's a handy check before the reveal.
+- If the bridge **guard** ends up on the bridge (say, after you hit him), he walks off it
+  by himself, shoving you or anyone else out of the way, so the bridge can't get blocked.
+- The pet in your house is a cream long-haired dachshund. The witches have a black cat, Soot.
+
 ### Secret: the evil wizard
 
 While walking around, enter **up, up, down, down, left, right, left, right, B, A** (on a
-keyboard: arrows, then X, Z). An evil wizard flies down out of the sky and gives the
+keyboard: arrows, then O, P). An evil wizard flies down out of the sky and gives the
 hero a **chicken staff** and a **wizard hat** (worn from then on). The staff replaces
 the hero's weapon: press B and it fires a spark (aimed like the bow) that turns whoever
 it hits into a chicken for the rest of the game. Chickens still talk, but everything

@@ -410,6 +410,9 @@ const WIZARD = [
   '...obbsseebbo...', '...obbbbbbbbo...', '..orrbbbbbbBrro.', '..orrrbbbbBrrro.', '..orrrrbbBrrrro.', '..orrrrrBrrrrro.',
   '..orryrrrrrrRro.', '..orrrrrrrrrRro.', '..orrrrrrryrRro.', '..orrrrrrrrrRro.', '.orrrrrrrrrrrRro', '.ooooooooooooooo'];
 
+const DOG = ['................', '................', '................', '................', '................', '................', '...oooo.......o.', '..oFFFFo.....oFo', '.oFeFFEEoooooFo.', 'oNFFFFEEFFFFFFo.', '.ooFFEEEFFFFFFFo', '...oEEEFFFFFFFFo', '...oFFFFFFFFFFFo', '...oFoFoooooFoFo', '...oo.oo...oo.oo', '................'];
+const DOG_WAG = ['................', '................', '................', '................', '................', '................', '..............o.', '...oooo......oFo', '.oFeFFEEoooooo..', '.oFeFFEEoooooFo.', 'oNFFFFEEFFFFFFo.', '.ooFFEEEFFFFFFFo', '...oEEEFFFFFFFFo', '...oFFFFFFFFFFFo', '...oFoFoooooFoFo', '...oo.oo...oo.oo', '................'];
+
 const sprCache = new Map();
 // Returns a canvas for a character look at a facing and frame.
 export function charSprite(look, dir = 'down', frame = 0) {
@@ -427,10 +430,14 @@ export function charSprite(look, dir = 'down', frame = 0) {
     x.fillStyle = C.wood; x.fillRect(15, 10 - up, 1, 15 + up - (frame ? 2 : 0));
     x.fillStyle = C.ink; x.fillRect(13, 4 - up, 5, 6); x.fillRect(14, 3 - up, 3, 8);
     x.fillStyle = look.evil ? (frame ? '#d0ffb0' : '#6ae84a') : frame ? '#ffffff' : C.cyan; x.fillRect(14, 5 - up, 3, 4); x.fillRect(15, 4 - up, 1, 6);
+  } else if (look.kind === 'dog') {
+    // cream long-haired dachshund (faces left; flipped when walking right)
+    [c, x] = makeCanvas(16, 16);
+    grid(x, frame % 2 ? DOG_WAG : DOG, 0, 0, { o: C.ink, F: '#efe2c4', E: '#cdb58a', e: C.eye, N: '#2a1a14' }, dir === 'right');
   } else if (look.kind === 'cat' || look.kind === 'chicken' || look.kind === 'frog') {
     [c, x] = makeCanvas(16, 16);
     if (look.kind === 'cat') {
-      grid(x, CAT, 0, 0, { o: C.ink, G: '#6a6470', e: '#c8d84a', p: C.pink, W: '#c8c2b8' });
+      grid(x, CAT, 0, 0, look.black ? { o: C.ink, G: '#2a2630', e: '#d8e84a', p: '#c87a8a', W: '#3a3640' } : { o: C.ink, G: '#6a6470', e: '#c8d84a', p: C.pink, W: '#c8c2b8' });
       x.fillStyle = C.ink;
       if (frame % 2) { x.fillRect(12, 11, 1, 4); x.fillRect(13, 10, 1, 2); } else { x.fillRect(12, 13, 3, 1); x.fillRect(14, 12, 1, 1); }
     } else if (look.kind === 'chicken') {
@@ -458,13 +465,31 @@ const HAT = ['......oo....', '.....ohho...', '.....ohho...', '....ohhhho..', '..
   '...obbbbbbo.', 'oohhhhhhhhoo', '.oooooooooo.'];
 const hats = {};
 // evil: the dark hat from the evil wizard. Otherwise the castle wizard's purple one.
-export function hatSprite(evil = true) {
-  const k = evil ? 'evil' : 'good';
-  if (!hats[k]) {
-    let x; [hats[k], x] = makeCanvas(12, 9);
-    grid(x, HAT, 0, 0, evil ? { o: C.ink, h: '#3a1a3e', y: '#e8c84a', b: '#a8302a' } : { o: C.ink, h: '#4e2e8a', y: C.gold, b: '#2e1c5a' });
-  }
+const HAT_PAL = {
+  evil: { o: C.ink, h: '#3a1a3e', y: '#e8c84a', b: '#a8302a' },
+  good: { o: C.ink, h: '#4e2e8a', y: C.gold, b: '#2e1c5a' },
+  witch: { o: C.ink, h: '#1e1a24', y: '#1e1a24', b: '#6a3a9a' },
+};
+export function hatSprite(kind = 'evil') {
+  const k = kind === true ? 'evil' : kind === false ? 'good' : kind;
+  if (!hats[k]) { let x; [hats[k], x] = makeCanvas(12, 9); grid(x, HAT, 0, 0, HAT_PAL[k]); }
   return hats[k];
+}
+
+// Feathered wings from the Crimson Cow. One wing, facing left; flip for the other side.
+const WING = ['...oo.', '..owwo', '.owwWo', 'owwwWo', 'owwWo.', '.owwo.', '..oo..'];
+let wingCanvas = null;
+export function wingSprite() {
+  if (!wingCanvas) { let x; [wingCanvas, x] = makeCanvas(6, 7); grid(x, WING, 0, 0, { o: '#6a6470', w: '#fffaf0', W: '#d8d0e0' }); }
+  return wingCanvas;
+}
+
+// A small rusty key lying on the ground.
+const KEY = ['.oo.......', 'oyyo......', 'oy.yoooooo', 'oyyoyyyyyo', '.oo.o.oo.o', '....o..o..'];
+let keyCanvas = null;
+export function keySprite() {
+  if (!keyCanvas) { let x; [keyCanvas, x] = makeCanvas(10, 6); grid(x, KEY, 0, 0, { o: '#3a2410', y: '#c8903a' }); }
+  return keyCanvas;
 }
 
 // ---------------------------------------------------------------- object sprites
@@ -865,6 +890,15 @@ export function drawTile(x, kind, ox, oy, m, tx, ty, frame) {
       break;
     }
     case 'pot': planks(x, ox, oy, tx, ty); grid(x, POT, ox, oy, PAL.pot); break;
+    case 'cauldron': planks(x, ox, oy, tx, ty);
+      x.fillStyle = 'rgba(0,0,0,0.3)'; x.fillRect(ox + 2, oy + 13, 13, 3);
+      x.fillStyle = C.ink; x.fillRect(ox + 2, oy + 4, 12, 10); x.fillRect(ox + 3, oy + 14, 10, 1); x.fillRect(ox + 1, oy + 4, 14, 2);
+      x.fillStyle = '#2e2a34'; x.fillRect(ox + 3, oy + 6, 10, 7);
+      x.fillStyle = '#46404e'; x.fillRect(ox + 4, oy + 7, 2, 5);
+      x.fillStyle = '#5ad84a'; x.fillRect(ox + 2, oy + 4, 12, 2);
+      x.fillStyle = '#a8ff8a'; x.fillRect(ox + 4, oy + 4, 3, 1); x.fillRect(ox + 10, oy + 5, 2, 1);
+      x.fillStyle = C.ink; x.fillRect(ox + 3, oy + 14, 2, 2); x.fillRect(ox + 11, oy + 14, 2, 2);
+      break;
     case 'exit':
       x.fillStyle = '#3a2228'; x.fillRect(ox, oy, 16, 16);
       x.fillStyle = C.floor; x.fillRect(ox + 1, oy, 14, 10);

@@ -102,7 +102,7 @@ export const MAPS = {
     looks: {
       '17,25': ['NORTH: CASTLE\nEAST: LAKE\nWEST: VILLAGE'],
       '13,11': ['WEST: THE TOWER OF WINDS\nNORTH: CASTLE'],
-      '6,28': ['LOCKED. NOBODY IS HOME.'],
+      '6,28': ['LOCKED.', 'SOMEONE INSIDE SHOUTS: "THE FROG! THE FROG HAS OUR KEY!"'],
       '12,28': ['YOU KNOCK. NO ANSWER.', 'A NOTE ON THE DOOR SAYS "GONE TO SEE THE WIZARD."'],
       runestone: ['OLD WORDS ARE CUT INTO THE STONE:', '"THE WIND DID NOT DIE. IT WENT TO LIVE WITH THE ONE WHO LISTENS."'],
       pillar: ['A BROKEN PILLAR. ALL THAT IS LEFT OF THE TOWER OF WINDS.'],
@@ -112,6 +112,30 @@ export const MAPS = {
       hwin: ['YOU PEEK IN THE WINDOW. A CANDLE BURNS. NOBODY IS HOME.'],
       lamp: ['AN OLD LANTERN. NOBODY EVER FILLS IT, BUT IT NEVER GOES OUT.'],
       water: [],
+    },
+  },
+  // The blue house in the village: three witches, locked in.
+  witches: {
+    legend: { ...HOME_LEGEND, c: ['cauldron', 1] },
+    music: 'field',
+    rows: [
+      '##########',
+      '#WkWnWWhk#',
+      '#________#',
+      '#___c____#',
+      '#________#',
+      '#_rrr____#',
+      '#_rrr__p_#',
+      '####E#####',
+    ],
+    warps: { '4,7': { map: 'world', x: 6, y: 29, dir: 'down' } },
+    looks: {
+      cauldron: ['A BUBBLING CAULDRON. IT SMELLS OF NEWT.'],
+      shelf: ['JARS OF EYES, TOES AND ONE LABELLED "DO NOT".'],
+      hwindow: ['THE WINDOW THE FROG JUMPED OUT OF.', 'THERE IS A FROG-SHAPED SMUDGE ON THE GLASS.'],
+      hearth: ['A GREEN FIRE. IT GIVES OFF NO HEAT AT ALL.'],
+      pot: ['A POT OF SOMETHING. IT BLINKS AT YOU.'],
+      paper: [],
     },
   },
   castle: {
@@ -151,14 +175,18 @@ export const LOOKS = {
   woodcutter: P({ hair: '#8a3a22', tunic: '#7a2e24', cloak: '#4a3a24', beard: true, beardColor: '#8a3a22' }),
   bard: P({ hair: '#b8903a', tunic: '#5a3a7a', cloak: '#2e4a3a', acc: 'cap', cap: '#2e5a3a' }),
   sleeper: P({ hair: '#5a3a22', tunic: '#7a5232', sleep: true, skin: '#d8a882' }),
-  cat: { kind: 'cat' }, chicken: { kind: 'chicken' }, frog: { kind: 'frog' }, wizard: { kind: 'wizard' },
+  hermit: P({ hair: '#8a8a90', tunic: '#4a4652', acc: 'hood', hood: '#5a5660', skin: '#d8a882' }),
+  witch1: P({ hair: '#2a2a32', tunic: '#3a2a4a', cloak: '#1e1a26', long: true, skin: '#c8d0a8' }),
+  witch2: P({ hair: '#c85a2a', tunic: '#2e3a2e', cloak: '#1e261e', long: true }),
+  witch3: P({ hair: '#d8d4ca', tunic: '#4a2a3a', cloak: '#2a1a24', beard: false, skin: '#d8a882' }),
+  dog: { kind: 'dog' }, cat: { kind: 'cat' }, blackcat: { kind: 'cat', black: true }, chicken: { kind: 'chicken' }, frog: { kind: 'frog' }, wizard: { kind: 'wizard' },
 };
 for (const k in LOOKS) LOOKS[k].key = k;
 
 // talk: first chat. again: later chats (falls back to talk).
 export const NPCS = [
-  { id: 'cat', name: 'CAT', map: 'home', x: 6, y: 3, look: 'cat', wander: 2, slow: true,
-    talk: ['MEW.'], again: ['THE CAT STARES AT THE DOOR.', 'MEW.'] },
+  { id: 'dog', name: 'DOG', map: 'home', x: 6, y: 3, look: 'dog', wander: 2, slow: true,
+    talk: ['WOOF.'], again: ['THE DOG STARES AT THE DOOR.', 'WOOF.'] },
 
   { id: 'guard', name: 'GUARD', map: 'world', x: 18, y: 21, look: 'guard', dir: 'down', bump: true, spear: true,
     talk: ['HALT! WHO GOES THERE?', '...{N}? OH. THE WIZARD SAID YOU WOULD COME.', 'GO ON THEN. THE CASTLE IS NORTH, PAST THE WOODS.'],
@@ -166,7 +194,19 @@ export const NPCS = [
   { id: 'fisher', name: 'FISHER', map: 'world', x: 22, y: 26, look: 'fisher', dir: 'right',
     talk: ['NOTHING HAS BITTEN SINCE THE STILL NIGHT.', 'NO WIND, NO WAVES. THE LAKE IS FLAT AS GLASS.'],
     again: ['STILL NOTHING.'] },
-  { id: 'frog', name: 'FROG', map: 'world', x: 25, y: 28, look: 'frog', wander: 1, slow: true, talk: ['RIBBIT.'] },
+  { id: 'hermit', name: 'HERMIT', map: 'world', x: 13, y: 14, look: 'hermit', dir: 'right',
+    talk: ['THE CASTLE IS JUST AHEAD. KEEP THAT THOUGHT.'] },
+  { id: 'soot', name: 'SOOT', map: 'witches', x: 8, y: 2, look: 'blackcat', wander: 2, slow: true,
+    talk: ['MEOW.'], again: ['THE CAT LOOKS AT YOU LIKE IT KNOWS SOMETHING YOU DON\'T.'] },
+  { id: 'morag', name: 'MORAG', map: 'witches', x: 6, y: 3, look: 'witch1', dir: 'down', hat: 'witch',
+    talk: ['MIND HOW YOU GO. AND MIND THAT FROG.'] },
+  { id: 'bridie', name: 'BRIDIE', map: 'witches', x: 7, y: 5, look: 'witch2', dir: 'left', hat: 'witch',
+    talk: ['DON\'T MIND THE SMELL. THAT\'S DINNER.'], again: ['IT\'S NEWT. IT\'S ALWAYS NEWT.'] },
+  { id: 'tansy', name: 'TANSY', map: 'witches', x: 2, y: 3, look: 'witch3', dir: 'right', hat: 'witch',
+    talk: ['THE WIZARD? WE DON\'T TALK TO HIM.', 'HE KNOWS WHAT YOU\'RE THINKING BEFORE YOU SAY IT. IT\'S RUDE.'] },
+  // quiet: no speech bubble when you face it, so it isn't obvious you can talk to it
+  { id: 'frog', name: 'FROG', map: 'world', x: 25, y: 28, look: 'frog', wander: 1, slow: true, quiet: true,
+    talk: ['RIBBIT.', '...HIC!'], again: ['RIBBIT.'] },
   { id: 'oldman', name: 'OLD TOM', map: 'world', x: 10, y: 32, look: 'oldman', dir: 'left',
     talk: ['WHEN I WAS A BOY THE WIND NEVER STOPPED. IT SANG IN THE TREES ALL DAY.', 'THEN CAME THE STILL NIGHT. IT STOPPED. JUST LIKE THAT.', 'TEN YEARS NOW. I STILL MISS THE NOISE.'],
     again: ['SOME SAY THE WIZARD KNOWS WHERE THE WIND WENT.'] },
@@ -202,8 +242,8 @@ export const SCRIPT = {
   comeCloser: ['COME CLOSER, {N}.'],
   wizard1: [
     'AH. {N}. YOU CAME.',
-    'THE WIND NEVER LEFT. IT CAME TO ME.',
-    'IT HEARS WHAT PEOPLE THINK. AND IT TELLS ME.',
+    'THE WINDS TELL ME YOU HAVE SOMETHING ON YOUR MIND.',
+    'THE WIND KNOWS. AND IT TELLS ME.',
   ],
   ask: 'TELL ME. ARE YOU THINKING OF A PLAYING CARD?',
   askNo: ['THEN THINK OF ONE NOW. ANY CARD AT ALL.', 'TAKE YOUR TIME. I AM VERY OLD. I CAN WAIT.'],
@@ -270,6 +310,7 @@ export const OUCH = {
   bard: ['MY LUTE!', 'OFF KEY!', 'A CRITIC!'],
   sleeper: ['WHA-? ...ZZZ', 'MMF. ZZZ...'],
   cat: ['HSSS!', 'MRRAW!'],
+  dog: ['YIP!', 'WOOF?!', 'GRR!'],
   chicken: ['BAWK!!', 'BA-GAWK!'],
   frog: ['RIBBIT?!', 'CROAK!'],
   wizard: ['HM.', 'CUTE.', 'NO.'],
@@ -295,6 +336,31 @@ export function squawk(str) {
   let k = 0;
   return String(str).replace(/[A-Z0-9'{}-]+/gi, w => BAWKS[(w.length * 7 + k++ * 3) % BAWKS.length]);
 }
+
+// Side quest: the frog, the key and the witches.
+export const QUEST = {
+  hermit: {
+    hello: ['WAIT, TRAVELLER.', 'YOU ARE GOING TO SEE THE WIZARD?'],
+    askCard: 'TELL ME. HAVE YOU THOUGHT OF A PLAYING CARD?',
+    askWord: 'TELL ME. DO YOU HAVE A WORD IN MIND?',
+    yes: ['GOOD. HOLD ON TO IT. GO ON.'],
+    no: ['THEN THINK OF ONE BEFORE YOU REACH HIS DOOR.', 'HE HAS NO TIME FOR AN EMPTY HEAD.', 'GO ON, THEN.'],
+  },
+  frogKey: ['THE FROG COUGHS UP SOMETHING SHINY!'],
+  gotKey: ['YOU GOT A RUSTY KEY!'],
+  unlock: ['YOU UNLOCK THE DOOR WITH THE RUSTY KEY.'],
+  witches: [
+    'OH! A VISITOR! AND YOU HAVE OUR KEY!',
+    'WE\'VE BEEN STUCK IN HERE FOR THREE DAYS.',
+    'A FROG HOPPED IN, SWALLOWED THE KEY, AND JUMPED OUT THE WINDOW.',
+    'WE TRIED A SPELL TO GET IT BACK. IT TURNED BRIDIE BLUE FOR A WEEK.',
+    'HERE. TAKE THIS FOR YOUR TROUBLE.',
+  ],
+  gotPotion: ['YOU GOT A CRIMSON COW!'],
+  drinkIt: ['WELL, DON\'T JUST STAND THERE. DRINK IT.'],
+  drink: ['YOU DRINK THE CRIMSON COW.', 'IT TASTES OF BERRIES AND THUNDER.', 'NOTHING HAPPENS. BUT YOU FEEL ENERGISED.'],
+  wings: ['...WAIT. WHAT\'S ON MY BACK?', 'HUH. I GUESS CRIMSON COW GIVES YOU FEATHERS.'],
+};
 
 // Said once, the next time you talk to someone you hit.
 export const GRUDGE = ['THAT HURT, YOU KNOW.', 'STILL SORE FROM THAT.', 'I HAVE NOT FORGOTTEN.'];
