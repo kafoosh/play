@@ -1,0 +1,113 @@
+/* Full-screen game; touch controls float over it, see-through. */
+:root {
+  --glass: rgba(255, 250, 235, 0.16);
+  --glass-edge: rgba(255, 250, 235, 0.55);
+  --glass-hi: rgba(255, 250, 235, 0.38);
+  --shadow: rgba(30, 15, 40, 0.35);
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: #1e1424;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+#app { position: fixed; inset: 0; overflow: hidden; }
+
+#screen {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  touch-action: none;
+}
+
+/* ---------- D-pad */
+#dpad {
+  position: absolute;
+  left: max(18px, env(safe-area-inset-left));
+  bottom: max(22px, env(safe-area-inset-bottom));
+  width: 138px;
+  height: 138px;
+  touch-action: none;
+  display: none;
+  filter: drop-shadow(0 2px 3px var(--shadow));
+}
+#dpad .bar, #dpad .hub {
+  position: absolute;
+  background: var(--glass);
+  border: 2px solid var(--glass-edge);
+  border-radius: 10px;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+#dpad .bar.h { left: 0; right: 0; top: 46px; height: 46px; }
+#dpad .bar.v { top: 0; bottom: 0; left: 46px; width: 46px; }
+#dpad .hub { left: 48px; top: 48px; width: 42px; height: 42px; border: 0; border-radius: 0; background: rgba(255, 250, 235, 0.05); -webkit-backdrop-filter: none; backdrop-filter: none; }
+#dpad .ar {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border: 8px solid transparent;
+  pointer-events: none;
+}
+#dpad .ar.up { left: 61px; top: 12px; border-bottom: 11px solid var(--glass-edge); border-top-width: 0; }
+#dpad .ar.down { left: 61px; bottom: 12px; border-top: 11px solid var(--glass-edge); border-bottom-width: 0; }
+#dpad .ar.left { top: 61px; left: 12px; border-right: 11px solid var(--glass-edge); border-left-width: 0; }
+#dpad .ar.right { top: 61px; right: 12px; border-left: 11px solid var(--glass-edge); border-right-width: 0; }
+#dpad[data-dir="up"] .ar.up { border-bottom-color: #fff; }
+#dpad[data-dir="down"] .ar.down { border-top-color: #fff; }
+#dpad[data-dir="left"] .ar.left { border-right-color: #fff; }
+#dpad[data-dir="right"] .ar.right { border-left-color: #fff; }
+
+/* ---------- A button */
+#btnA {
+  position: absolute;
+  right: max(22px, env(safe-area-inset-right));
+  bottom: max(40px, calc(env(safe-area-inset-bottom) + 18px));
+  width: 82px;
+  height: 82px;
+  border: 2px solid var(--glass-edge);
+  border-radius: 50%;
+  background: rgba(240, 96, 90, 0.32);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  box-shadow: 0 2px 6px var(--shadow);
+  color: rgba(255, 250, 235, 0.9);
+  font: 900 28px/1 ui-monospace, Menlo, Consolas, monospace;
+  text-shadow: 0 1px 2px var(--shadow);
+  cursor: pointer;
+  touch-action: none;
+  display: none;
+}
+#btnA.down { background: rgba(240, 96, 90, 0.6); transform: scale(0.94); }
+
+body.playing #dpad, body.playing #btnA { display: block; }
+
+/* ---------- mute */
+#mute {
+  position: absolute;
+  right: max(10px, env(safe-area-inset-right));
+  top: max(10px, env(safe-area-inset-top));
+  width: 34px;
+  height: 26px;
+  border: 1px solid var(--glass-edge);
+  border-radius: 13px;
+  background: var(--glass);
+  color: #fffaf0;
+  font: 14px/24px sans-serif;
+  cursor: pointer;
+  opacity: 0.75;
+}
+#mute.off { opacity: 0.45; text-decoration: line-through; }

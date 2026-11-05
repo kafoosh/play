@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>ODDPAQ: Winds of Wonder</title>
+  <script>
+    // Backup URL force: "/7D" or "?=7D" arms the 7 of Diamonds. Values are numbers only:
+    // 1 = Ace, 11 = Jack, 12 = Queen, 13 = King. Suits C H S D, any case. Anything may follow
+    // the card. The address is reset to the bare site before first paint. "/7D" works because
+    // the deploy also publishes this page as 404.html.
+    (function () {
+      var card = /^(1[0-3]|[1-9])([chsd])/i, base = location.pathname, m = null;
+      var segs = location.pathname.split('/');
+      for (var i = 1; i < segs.length && !m; i++) {
+        var seg = segs[i];
+        try { seg = decodeURIComponent(seg); } catch (e) {}
+        if (card.test(seg)) { m = card.exec(seg); base = segs.slice(0, i).join('/') + '/'; }
+      }
+      var q = location.search.replace(/^\?=?/, '');
+      if (!m && location.search) {
+        // "?=" starting with a number is a card ("12H"); letters only is a QWERTY+1
+        // ciphered word ("?=jraap" = HELLO).
+        if (/^\d/.test(q)) m = card.exec(q);
+        else if (/^([a-z+_-]|%20)+$/i.test(q)) {
+          window.__forceWord = q;
+          try { history.replaceState(null, '', location.pathname); } catch (e) {}
+          return;
+        }
+      }
+      if (!m) return;
+      window.__force = { v: parseInt(m[1], 10), s: m[2].toUpperCase() };
+      // Load the game's files from the real site folder, not from under "/7D/...".
+      var b = document.createElement('base'); b.href = base; document.head.appendChild(b);
+      try { history.replaceState(null, '', base); } catch (e) {}
+    })();
+  </script>
+  <meta name="description" content="A tiny fantasy adventure. Find the wizard.">
+  <meta name="theme-color" content="#3a4a96">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Winds of Wonder">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.png">
+  <link rel="apple-touch-icon" href="icon.png">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="modulepreload" href="src/art.js">
+  <link rel="modulepreload" href="src/data.js">
+  <link rel="modulepreload" href="src/audio.js">
+</head>
+<body>
+  <main id="app">
+    <canvas id="screen" width="160" height="144" aria-label="ODDPAQ: Winds of Wonder"></canvas>
+    <div id="dpad" role="group" aria-label="Direction pad">
+      <span class="bar h"></span><span class="bar v"></span><span class="hub"></span>
+      <span class="ar up"></span><span class="ar down"></span><span class="ar left"></span><span class="ar right"></span>
+    </div>
+    <button id="btnA" type="button" aria-label="A button">A</button>
+    <button id="mute" type="button" aria-label="Sound on or off">&#9835;</button>
+  </main>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
