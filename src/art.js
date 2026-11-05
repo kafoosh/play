@@ -421,7 +421,7 @@ const BELLY = [
 const bellyC = {};
 export function dogBellySprite(frame = 0, flip = false) {
   const k = (frame % 2) + (flip ? 2 : 0);
-  if (!bellyC[k]) { let x; [bellyC[k], x] = makeCanvas(16, 16); grid(x, BELLY[frame % 2], 0, 0, { o: C.ink, F: '#efe2c4', E: '#cdb58a', e: C.eye, N: '#2a1a14', P: '#f2c8b8' }, flip); }
+  if (!bellyC[k]) { let x; [bellyC[k], x] = makeCanvas(16, 16); grid(x, BELLY[frame % 2], 0, 0, { o: C.ink, F: '#efe2c4', E: '#cdb58a', e: C.eye, N: '#2a1a14', P: '#f0d5be' }, flip); }
   return bellyC[k];
 }
 

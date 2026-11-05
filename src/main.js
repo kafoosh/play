@@ -1071,7 +1071,9 @@ const Play = {
         const frame = p.moving ? [0, 1, 0, 2][Math.floor(p.anim * 8) % 4] : 0;
         const hx = p.px - cx, hy = p.py - cy - 2;
         if (G.flags.wings && p.dir !== 'up') this.drawWings(hx, hy, p.dir);
+        if (G.flags.chickenStaff && p.dir === 'up') this.drawStaff(hx, hy);
         ctx.drawImage(charSprite(G.hero.look, p.dir, frame), hx, hy);
+        if (G.flags.chickenStaff && p.dir !== 'up') this.drawStaff(hx, hy);
         if (G.flags.wings && p.dir === 'up') this.drawWings(hx, hy, p.dir);
         if (G.flags.hat) ctx.drawImage(hatSprite(), p.px - cx + 2, p.py - cy - 6);
         if (this.swing) this.drawSwing(cx, cy);
@@ -1104,6 +1106,7 @@ const Play = {
       if (sx > VW || sy > VH || sx + r * 2 < 0 || sy + r * 2 < 0) continue;
       ctx.drawImage(glow(r, L.col), sx, sy);
     }
+    if (G.flags.chickenStaff) { const [ox, oy] = this.staffOrb(p.px - cx, p.py - cy - 2), r = this.cool > 0 ? 14 : 8; ctx.drawImage(glow(r, '#6ae84a'), ox + 1 - r, oy - r); }
     if (wiz) { const r = wiz.frame ? 40 : 22, ox = wiz.chicken ? 12 : 15, oy = wiz.chicken ? -3 : -6; ctx.drawImage(glow(r, '#3ab8e0'), wiz.px - cx + ox - r, wiz.py - cy + oy - r); }
     ctx.globalCompositeOperation = 'source-over';
     for (const f of m.flames) flame(ctx, f.x - cx, f.y - cy, this.time + f.x, f.big);
@@ -1138,6 +1141,16 @@ const Play = {
     if (this.fx.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${Math.min(1, this.fx.flash)})`; ctx.fillRect(0, 0, VW, VH); }
     this.dialogY = dialogBoxY(p.py - cy);
     drawDialog(this.dialogY);
+  },
+  // The evil wizard's staff, in the hero's hand: dark wood, a green orb that flashes when it fires.
+  staffOrb(hx, hy) { return [hx + (this.p.dir === 'left' || this.p.dir === 'up' ? 1 : 12), hy - 4]; },
+  drawStaff(hx, hy) {
+    const [x] = this.staffOrb(hx, hy), lit = this.cool > 0;
+    ctx.fillStyle = C.ink; ctx.fillRect(x, hy - 3, 3, 18);
+    ctx.fillStyle = '#4a2e3a'; ctx.fillRect(x + 1, hy - 2, 1, 16);
+    ctx.fillStyle = C.ink; ctx.fillRect(x - 1, hy - 8, 5, 6); ctx.fillRect(x, hy - 9, 3, 8);
+    ctx.fillStyle = lit ? '#d0ffb0' : '#6ae84a'; ctx.fillRect(x, hy - 7, 3, 4); ctx.fillRect(x + 1, hy - 8, 1, 6);
+    ctx.fillStyle = '#e8ffd8'; ctx.fillRect(x, hy - 7, 1, 1);
   },
   // Something held up or flying through the air: the Crimson Cow, the rod, a fish.
   drawProp(cx, cy) {
