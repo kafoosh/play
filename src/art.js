@@ -517,6 +517,23 @@ export function fishSprite(cooked = false) {
   return fishC[k];
 }
 
+// A lute, held across the body: round wooden body, neck up to the right.
+const LUTE = ['........oo', '.......oko', '......oko.', '..ooooko..', '.oLLLLLo..', 'oLLLhLLo..', 'oLLLLLLo..', '.oLLLLo...', '..oooo....'];
+const luteC = {};
+export function luteSprite(flip = false) {
+  const k = flip ? 1 : 0;
+  if (!luteC[k]) { let x; [luteC[k], x] = makeCanvas(10, 9); grid(x, LUTE, 0, 0, { o: C.ink, k: '#5a3a22', L: '#c8843a', h: '#3a2414' }, flip); }
+  return luteC[k];
+}
+
+// A paper fan, open, held up.
+const FAN = ['ooooooo', 'oPWPWPo', '.oPWPo.', '..oPo..', '...k...'];
+let fanC = null;
+export function fanSprite() {
+  if (!fanC) { let x; [fanC, x] = makeCanvas(7, 5); grid(x, FAN, 0, 0, { o: C.ink, P: '#e87a9a', W: '#f4ecd8', k: '#5a3a22' }); }
+  return fanC;
+}
+
 // A small rusty key lying on the ground.
 const KEY = ['.oo.......', 'oyyo......', 'oy.yoooooo', 'oyyoyyyyyo', '.oo.o.oo.o', '....o..o..'];
 let keyCanvas = null;

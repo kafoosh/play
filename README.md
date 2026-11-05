@@ -182,6 +182,13 @@ outside you've grown a pair of wings: "HUH. I GUESS CRIMSON COW GIVES YOU FEATHE
   you pass. It's a handy check before the reveal.
 - If the bridge **guard** ends up on the bridge (say, after you hit him), he walks off it
   by himself, shoving you or anyone else out of the way, so the bridge can't get blocked.
+- The **Story Teller** sits by a log east of the path. He lists a few tales about
+  musicians for another time, and says he's "QUITE THE EXPERT AT THE BARD FABLE"
+  (*The Expert at the Card Table*).
+- **Bard Christian**, a hooded friar with a lute, plays to the ruins of the Tower of
+  Winds. The low strings call a Black Tiger, the high ones a White Ghost.
+- The **Fan Seller** by the well cries "TALLY HO! TALLY HO!" With no wind, everyone's
+  building fans. The fronts sold first, so all she has left are fan backs. Tally ho!
 - The pet in your house is a cream long-haired dachshund. The witches have a black cat, Soot.
 
 ### Secret: the evil wizard
