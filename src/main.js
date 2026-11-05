@@ -719,10 +719,28 @@ const Play = {
     return g.map === 'world' && this.map.name === 'world' && (k(g.x, g.y) === 'bridge' || k(g.x, g.y - 1) === 'bridge' || k(g.x, g.y + 1) === 'bridge');
   },
   // The frog coughs up the witches' key onto a free tile next to it (once).
+  // It lands on the nearest open ground you can walk to: never water, trees, rocks
+  // or a doorway. Nearest to the frog first, then nearest to you.
   dropKey(n, dir) {
     if (G.flags.keyDropped) return;
-    const spots = [OPP[dir], 'up', 'down', 'left', 'right'].map(d => [n.x + DIRV[d][0], n.y + DIRV[d][1]]);
-    const [x, y] = spots.find(([x, y]) => !this.map.solid(x, y) && !this.npcAt(x, y) && !(this.p.x === x && this.p.y === y)) || [n.x, n.y];
+    const OPEN = new Set(['grass', 'grass2', 'flowers', 'tall', 'path', 'rubble']), m = this.map, p = this.p;
+    const reach = new Set([p.x + ',' + p.y]), q = [[p.x, p.y]];
+    while (q.length && reach.size < 900) {
+      const [x, y] = q.shift();
+      for (const [dx, dy] of Object.values(DIRV)) { const k = (x + dx) + ',' + (y + dy); if (!reach.has(k) && !m.solid(x + dx, y + dy)) { reach.add(k); q.push([x + dx, y + dy]); } }
+    }
+    const ok = (x, y) => reach.has(x + ',' + y) && OPEN.has(m.kind(x, y)) && !m.def.warps[x + ',' + y] && !this.npcAt(x, y) && !(p.x === x && p.y === y);
+    let best = null;
+    for (let d = 1; d <= 8 && !best; d++) {
+      let bd = 1e9;
+      for (let dx = -d; dx <= d; dx++) for (const dy of [d - Math.abs(dx), -(d - Math.abs(dx))]) {
+        const x = n.x + dx, y = n.y + dy;
+        if (!ok(x, y)) continue;
+        const toYou = Math.abs(x - p.x) + Math.abs(y - p.y);
+        if (toYou < bd) { bd = toYou; best = [x, y]; }
+      }
+    }
+    const [x, y] = best || [p.x, p.y];
     G.flags.keyDropped = 1;
     this.items.push({ map: this.map.name, x, y, kind: 'key' });
     spark(x * 16 + 8, y * 16 + 8, 10, '#e8b84a', true);
@@ -736,6 +754,7 @@ const Play = {
     if (this.map.solid(x, y) || this.map.def.warps[`${x},${y}`] && who !== this.p) return false;
     const p = this.p;
     if (who !== p && ((p.x === x && p.y === y) || (p.moving && p.tx === x && p.ty === y))) return false;
+    if (who !== p && this.items && this.items.some(i => i.map === this.map.name && i.x === x && i.y === y)) return false; // keep the key clear
     const n = this.npcAt(x, y);
     return !n || n === who;
   },

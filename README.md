@@ -144,13 +144,13 @@ impressed.
 
 ### Side quest: the frog, the key and the witches
 
-The blue house in the village is locked; knock and someone inside shouts that the frog
-has their key. A short trail of wet, water-blue frog prints leads away from under its
-window toward the lake.
+The blue house in the village is locked. A short trail of wet, water-blue frog prints
+leads away from under its window toward the lake.
 Hit the frog (by the lake) with your weapon, or just talk to it (it
 doesn't show a speech bubble like the others, so it isn't obvious), and it coughs up a
 rusty key.
-Pick it up, then press A at the blue door. Three witches have been stuck inside since the
+It always lands on open ground you can reach (never in the water), and nobody wanders onto
+it. Pick it up, then press A at the blue door: "LOCKED." / "...WAIT. THE KEY!" and it opens. Three witches have been stuck inside since the
 frog swallowed their key and jumped out the window. They give you a **Crimson Cow**
 potion, you drink it (it does nothing, but you feel energised), and when you step back
 outside you've grown a pair of wings: "HUH. I GUESS CRIMSON COW GIVES YOU FEATHERS."
