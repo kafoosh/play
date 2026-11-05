@@ -1,7 +1,7 @@
 // Run with: node --test tests/
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MAPS, NPCS, LOOKS, SCRIPT, parseForce, cardName, VALUE_GRID, encodeWord, decodeWord, CLASSES, OUCH, GRUDGE, EGG, squawk, KONAMI, QUEST } from '../src/data.js';
+import { MAPS, NPCS, LOOKS, SCRIPT, parseForce, cardName, VALUE_GRID, encodeWord, decodeWord, CLASSES, OUCH, GRUDGE, EGG, squawk, KONAMI, QUEST, FISH } from '../src/data.js';
 import { GLYPH_SET, GLYPH5_SET, wrap } from '../src/art.js';
 import { SONGS } from '../src/audio.js';
 
@@ -68,6 +68,7 @@ test('all text can be drawn by the pixel font and fits the box', () => {
   all.push(...GRUDGE, ...EGG.hello, ...EGG.got, ...EGG.restored);
   for (const w of Object.values(EGG.woke)) all.push(...w.talk, ...w.again);
   for (const v of Object.values(QUEST)) all.push(...(typeof v === 'string' ? [v] : Array.isArray(v) ? v : Object.values(v).flat()));
+  for (const v of Object.values(FISH)) all.push(...v);
   for (const n of NPCS) for (const l of n.talk || []) all.push(squawk(l));
   for (const s of all) {
     const t = s.replace(/\{N\}/g, 'ABCDEFGH');
@@ -134,4 +135,18 @@ test('witches house: door outside, way back out, the frog can be reached', () =>
   assert.ok(seen.has('25,28') || seen.has('24,28'), 'frog area');
   assert.ok(reach(MAPS.witches, [4, 6]).has('4,7'), 'exit reachable inside');
   assert.ok(seen.has('13,14'), 'hermit spot');
+});
+
+test('fishing quest: worm pile, bard and the fisher\'s lake spot can all be reached', () => {
+  const seen = reach(MAPS.world, [15, 40]), row = MAPS.world.rows[9];
+  assert.equal(row[2], 'V', 'worm pile in the top-left of the ruins');
+  assert.ok(seen.has('2,10') || seen.has('3,9'), 'can stand next to the worms');
+  assert.ok(seen.has('20,17') || seen.has('21,18') || seen.has('22,17'), 'next to the bard');
+  // a lake tile you can face from within 4 steps of the fisher
+  const lakeFacing = [...seen].some(k => {
+    const [x, y] = k.split(',').map(Number);
+    if (Math.abs(x - 22) + Math.abs(y - 26) > 4) return false;
+    return [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => x + dx >= 23 && MAPS.world.rows[y + dy][x + dx] === '~');
+  });
+  assert.ok(lakeFacing, 'lake spot by the fisher');
 });

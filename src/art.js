@@ -413,6 +413,18 @@ const WIZARD = [
 const DOG = ['................', '................', '................', '................', '................', '................', '...oooo.......o.', '..oFFFFo.....oFo', '.oFeFFEEoooooFo.', 'oNFFFFEEFFFFFFo.', '.ooFFEEEFFFFFFFo', '...oEEEFFFFFFFFo', '...oFFFFFFFFFFFo', '...oFoFoooooFoFo', '...oo.oo...oo.oo', '................'];
 const DOG_WAG = ['................', '................', '................', '................', '................', '................', '..............o.', '...oooo......oFo', '.oFeFFEEoooooo..', '.oFeFFEEoooooFo.', 'oNFFFFEEFFFFFFo.', '.ooFFEEEFFFFFFFo', '...oEEEFFFFFFFFo', '...oFFFFFFFFFFFo', '...oFoFoooooFoFo', '...oo.oo...oo.oo', '................'];
 
+// The dachshund on its back, pink belly up, paws kicking (two frames). Faces left.
+const BELLY = [
+  ['....o.o....o.o..', '....oFo....oFo..'],
+  ['...o.o......o.o.', '...oFo......oFo.'],
+].map(legs => ['', '', '', '', '', '', '', ...legs, '.oooPPPPPPPPPPo.', 'oNFePPPPPPPPPPFo', '.oFFFPPPPPPPPFFo', '..oEEFFFFFFFFFo.', '.oEEEoooooooooo.', '..ooo...........', '']);
+const bellyC = {};
+export function dogBellySprite(frame = 0, flip = false) {
+  const k = (frame % 2) + (flip ? 2 : 0);
+  if (!bellyC[k]) { let x; [bellyC[k], x] = makeCanvas(16, 16); grid(x, BELLY[frame % 2], 0, 0, { o: C.ink, F: '#efe2c4', E: '#cdb58a', e: C.eye, N: '#2a1a14', P: '#f0d5be' }, flip); }
+  return bellyC[k];
+}
+
 const sprCache = new Map();
 // Returns a canvas for a character look at a facing and frame.
 export function charSprite(look, dir = 'down', frame = 0) {
@@ -490,6 +502,19 @@ let potionCanvas = null;
 export function potionSprite() {
   if (!potionCanvas) { let x; [potionCanvas, x] = makeCanvas(8, 10); grid(x, POTION, 1, 0, { o: C.ink, s: '#8a909c', B: '#2a4aa8', W: '#dfe3ea', r: '#d8302a', Y: '#f2c838' }); }
   return potionCanvas;
+}
+
+// A fish, facing left: raw (red) or cooked (golden brown).
+const FISH_ROWS = ['...ooooo......', '.ooRRRRRoo..oo', 'oeRRRRRRRRooRo', 'oRRrRRRRRRRRRo', '.oLLLLLLLLooRo', '..ooooooo...oo'];
+const fishC = {};
+export function fishSprite(cooked = false) {
+  const k = cooked ? 1 : 0;
+  if (!fishC[k]) {
+    let x; [fishC[k], x] = makeCanvas(14, 6);
+    grid(x, FISH_ROWS, 0, 0, cooked ? { o: '#2a160a', e: '#f4ecd8', R: '#a8642a', r: '#5a2e10', L: '#e0a85a' } : { o: C.ink, e: '#f4ecd8', R: '#d8402e', r: '#8a1e1e', L: '#f0a088' });
+    if (cooked) { x.fillStyle = '#5a2e10'; for (const gx of [4, 7, 10]) x.fillRect(gx, 2, 1, 2); }
+  }
+  return fishC[k];
 }
 
 // A small rusty key lying on the ground.
@@ -678,6 +703,11 @@ export function drawTile(x, kind, ox, oy, m, tx, ty, frame) {
       blob(x, ox, oy, [[5.5, 9, 4], [10.5, 9, 4.2], [8, 7, 4.5]], { o: C.stoneO, g: C.stone, l: C.stoneL, d: C.stoneD }, 3, false);
       break;
     case 'stump': grass(x, ox, oy, tx, ty); grid(x, STUMP, ox, oy, PAL.stump); break;
+    case 'worms': grass(x, ox, oy, tx, ty); // a heap of dark, damp soil (the worms are drawn live)
+      x.fillStyle = C.grassDD; x.fillRect(ox + 1, oy + 13, 14, 2);
+      blob(x, ox, oy, [[5, 10, 4.2], [10.5, 10.5, 4], [8, 8, 4.4]], { o: '#1e140e', g: '#4a3424', l: '#6a4c32', d: '#34241a' }, 7, false);
+      x.fillStyle = '#7a5a3c'; x.fillRect(ox + 6, oy + 6, 1, 1); x.fillRect(ox + 11, oy + 9, 1, 1); x.fillRect(ox + 4, oy + 10, 1, 1);
+      break;
     case 'sign': grass(x, ox, oy, tx, ty); grid(x, SIGN, ox, oy, PAL.sign); break;
     case 'well': grass(x, ox, oy, tx, ty); grid(x, WELL, ox, oy, PAL.well); break;
     case 'pillar': grass(x, ox, oy, tx, ty); grid(x, PILLAR, ox, oy, PAL.pillar); break;

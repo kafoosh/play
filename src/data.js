@@ -7,7 +7,7 @@ const WORLD_LEGEND = {
   '=': ['path'], '~': ['water', 1], '#': ['bridge'], R: ['rock', 1], S: ['sign', 1], u: ['stump', 1],
   P: ['pillar', 1], x: ['rubble'], O: ['runestone', 1], L: ['log', 1], W: ['well', 1], m: ['stall', 1],
   '^': ['roof', 1], B: ['roofB', 1], N: ['roofN', 1], H: ['hwall', 1], w: ['hwin', 1], d: ['door', 1], D: ['door'], F: ['fence', 1],
-  l: ['lamp', 1], K: ['ctop', 1], C: ['cwall', 1], Q: ['tower', 1], v: ['cwin', 1], G: ['gate'],
+  l: ['lamp', 1], V: ['worms', 1], K: ['ctop', 1], C: ['cwall', 1], Q: ['tower', 1], v: ['cwin', 1], G: ['gate'],
 };
 const HOME_LEGEND = {
   '#': ['htop', 1], W: ['paper', 1], n: ['hwindow', 1], k: ['shelf', 1], h: ['hearth', 1], _: ['floor'],
@@ -59,7 +59,7 @@ export const MAPS = {
       'YYYYYYYYYYY..R..=....YYYYYYYYYYYYY',
       'YYYYYYYYYYYYY...=...YYYYYYYYYYYYYY',
       'YYYYYYYYYYYYYY..=..YYYYYYYYYYYYYYY',
-      'YY...,..YYY.=====YYYYY....YYYYYYYY',
+      'YYV..,..YYY.=====YYYYY....YYYYYYYY',
       'Y..P...P..Yl=.YYYYYYY.u.....YYYYYY',
       'Y..x.O.x..Y.=SYYYYYYY.....u.YYYYYY',
       'Y.P...x.=====.YYYYYYY...,...YYYYYY',
@@ -110,6 +110,7 @@ export const MAPS = {
       stump: ['A STUMP. SOMEONE TRIED TO COUNT THE RINGS AND GAVE UP.'],
       log: ['A MOSSY LOG. GOOD FOR SITTING.'],
       hwin: ['YOU PEEK IN THE WINDOW. A CANDLE BURNS. NOBODY IS HOME.'],
+      worms: ['A PILE OF WORMS. THEY WRIGGLE.'],
       lamp: ['AN OLD LANTERN. NOBODY EVER FILLS IT, BUT IT NEVER GOES OUT.'],
       water: [],
     },
@@ -367,6 +368,35 @@ export const QUEST = {
   drinkIt: ['WELL, DON\'T JUST STAND THERE. DRINK IT.'],
   drink: ['YOU DRINK THE CRIMSON COW.', 'IT TASTES OF BERRIES AND THUNDER.', 'NOTHING HAPPENS. BUT YOU FEEL ENERGISED.'],
   wings: ['...WAIT. WHAT\'S ON MY BACK?', 'HUH. I GUESS CRIMSON COW GIVES YOU FEATHERS.'],
+};
+
+// Side quest: the dog, the worms, the bard's old rod and the big red herring.
+export const FISH = {
+  belly: ['THE DOG FLOPS ONTO ITS BACK AND WRIGGLES.', 'IT WANTS BELLY SCRATCHES.'],
+  // the bard used to fish the lake, until the wizard heard his tune
+  bard: ['I WROTE A SONG ABOUT THE WIZARD.', 'HE HUMMED IT BACK TO ME. BEFORE I EVER PLAYED IT.',
+    'I USED TO FISH THE LAKE, YOU KNOW. EVERY DAY.', 'BUT IF A WIZARD HAS MY TUNE IN HIS HEAD, IT MUST BE GOOD.',
+    'SO NOW I PLAY ALL DAY. I DON\'T NEED THIS ANY MORE.', 'HERE. HAVE MY OLD ROD.'],
+  gotRod: ['YOU GOT A FISHING ROD!'],
+  bardAgain: ['THE FISH NEVER BIT FOR ME. TRY BY THE OLD FISHER, EAST OF THE VILLAGE.'],
+  bardDone: ['A BIG RED HERRING? HA! THE LAKE NEVER GAVE ME ONE OF THOSE.'],
+  pickWorm: ['YOU PICK UP A WORM.'],
+  wormFriend: ['I\'D LOVE FISHING WITH YOU, EVEN IF YOU ARE A WORM.'],
+  haveWorm: ['YOU ALREADY HAVE A WORM. ONE IS PLENTY.'],
+  baited: ['YOUR HOOK ALREADY HAS A WORM ON IT.'],
+  bait: ['YOU PUT A WORM ON THE HOOK.'],
+  canFish: ['NOW I CAN FISH!'],
+  noBait: ['I PROBABLY NEED TO BAIT THE HOOK.', 'SO THE FISH WILL FALL FOR THE BAIT.'],
+  badSpot: ['HMM. THIS DOESN\'T LOOK LIKE A GOOD PLACE TO FISH.'],
+  quiet: ['THE LAKE IS QUIET AGAIN. NOTHING BITES.'],
+  caught: ['YOU CAUGHT A FISH!'],
+  red: ['IT\'S RED. MAYBE A SNAPPER OR SOMETHING.'],
+  fisherSees: ['WELL I NEVER! A BITE!', 'THE FIRST ONE SINCE THE STILL NIGHT.', 'HERE. LET ME COOK THAT FOR YOU.'],
+  cooked: ['THERE. A BIG RED HERRING.', 'COOKED JUST RIGHT.'],
+  gotHerring: ['YOU GOT A BIG RED HERRING!'],
+  eat: ['YOU EAT THE BIG RED HERRING.'],
+  better: ['WOW. I WONDER IF I COULD HAVE SPENT MY TIME BETTER.'],
+  fisherAfter: ['TEN YEARS I SAT HERE. YOU GOT ONE IN A MINUTE.', 'I\'M NOT ANGRY. I\'M JUST... THINKING.'],
 };
 
 // Said once, the next time you talk to someone you hit.

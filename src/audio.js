@@ -294,6 +294,15 @@ export function sfx(name) {
       seq(['C6', 'G5'], 0.06, 'pulse12', 0.05);
       break;
     }
+    case 'plop': tone('tri', midi('C5'), t, 0.08, 0.2, sfxBus); tone('tri', midi('G4'), t + 0.05, 0.08, 0.16, sfxBus); break;
+    case 'splash': case 'sizzle': {
+      const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(), d = name === 'splash' ? 0.35 : 0.7;
+      s.buffer = noise; f.type = name === 'splash' ? 'lowpass' : 'highpass';
+      if (name === 'splash') { f.frequency.setValueAtTime(3000, t); f.frequency.exponentialRampToValueAtTime(400, t + d); } else f.frequency.value = 4000;
+      g.gain.setValueAtTime(name === 'splash' ? 0.5 : 0.12, t); g.gain.exponentialRampToValueAtTime(0.001, t + d);
+      s.connect(f); f.connect(g); g.connect(sfxBus); s.start(t); s.stop(t + d + 0.05);
+      break;
+    }
     case 'evil': seq(['A4', 'G#4', 'D#4', 'D4', 'A3'], 0.14, 'pulse25', 0.12); break;
     case 'item': seq(['G4', 'C5', 'E5', 'G5', 'C6', 'E6'], 0.07, 'pulse25', 0.12); break;
     case 'flash': {
