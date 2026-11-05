@@ -1,5 +1,5 @@
-import { C, UI, text, textCenter, textWidth, tinyText, hatSprite, wrap, box, blob, glow, glyphDots, drawCard, makeScroll, charSprite, drawTile, drawOver, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
-import { MAPS, LOOKS, NPCS, SCRIPT, cardName, decodeWord, VALUE_GRID, CHASED, CLASSES, SKINS, HAIRS, OUCH, GRUDGE, KONAMI, EGG, squawk } from './data.js';
+import { C, UI, text, textCenter, textWidth, tinyText, hatSprite, wingSprite, keySprite, wrap, box, blob, glow, glyphDots, drawCard, makeScroll, charSprite, drawTile, drawOver, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
+import { MAPS, LOOKS, NPCS, SCRIPT, cardName, decodeWord, VALUE_GRID, CHASED, CLASSES, SKINS, HAIRS, OUCH, GRUDGE, KONAMI, EGG, squawk, QUEST } from './data.js';
 import * as Audio from './audio.js';
 
 // The game draws at a low resolution that follows the screen's shape: VW x VH game pixels.
@@ -629,11 +629,12 @@ function loadMap(name) {
     for (let ty = 0; ty < h; ty++) for (let tx = 0; tx < w; tx++) drawOver(x, tiles[ty][tx][0], tx * 16, ty * 16, m, tx, ty);
     m.canvas.push(c);
   }
-  m.flames = []; m.lights = [];
+  m.flames = []; m.lights = []; m.bubbles = [];
   for (let ty = 0; ty < h; ty++) for (let tx = 0; tx < w; tx++) {
     const k = tiles[ty][tx][0];
     if (k === 'torch') m.flames.push({ x: tx * 16 + 8, y: ty * 16 + 7, big: false });
     if (k === 'hearth') m.flames.push({ x: tx * 16 + 8, y: ty * 16 + 15, big: true });
+    if (k === 'cauldron') m.bubbles.push({ x: tx * 16, y: ty * 16 });
     const L = LIGHTS[k];
     if (L) m.lights.push({ x: tx * 16 + L[0], y: ty * 16 + L[1], r: L[2], col: L[3] });
     if (k === 'tower' && m.kind(tx, ty - 1) !== 'tower') m.lights.push({ x: tx * 16 + 8, y: ty * 16 + 6, r: 10, col: '#c87a2a' });
@@ -645,9 +646,9 @@ function loadMap(name) {
 const LIGHTS = {
   lamp: [8, 1, 30, '#d88a30'], hwin: [8, 6, 16, '#d88a30'], cwin: [8, 8, 14, '#d88a30'], gate: [8, 10, 18, '#d88a30'],
   torch: [8, 4, 36, '#e07a2a'], hearth: [8, 12, 46, '#e07a2a'], runestone: [8, 8, 22, '#3ab8e0'],
-  hwindow: [8, 6, 12, '#5a5aa0'],
+  hwindow: [8, 6, 12, '#5a5aa0'], cauldron: [8, 4, 24, '#4ae84a'],
 };
-const TINT = { world: 'rgba(28,18,66,0.28)', home: 'rgba(34,18,10,0.26)', castle: 'rgba(16,10,44,0.3)' };
+const TINT = { world: 'rgba(28,18,66,0.28)', home: 'rgba(34,18,10,0.26)', witches: 'rgba(30,14,40,0.3)', castle: 'rgba(16,10,44,0.3)' };
 const SPEED = 5, NPC_SPEED = 2.6;
 const Play = {
   start() {
@@ -659,7 +660,7 @@ const Play = {
     this.load('home', 2, 3, 'right');
     const wake = SCRIPT.wake.slice(), keys = !window.matchMedia('(pointer: coarse)').matches;
     if (keys) wake[2] = 'USE THE ARROW KEYS TO WALK. PRESS Z TO TALK OR LOOK.';
-    this.shots = []; this.cool = 0; this.swing = null; this.code = []; this.visitor = null;
+    this.shots = []; this.cool = 0; this.swing = null; this.code = []; this.visitor = null; this.items = [];
     this.run(function* () { yield wait(0.7); yield* talk(wake); });
   },
   load(mapName, x, y, dir) {
@@ -673,11 +674,60 @@ const Play = {
       this.flies.push({ x: spots[i][0] * 16, y: spots[i][1] * 16, p: Math.random() * 9, col: ['#ffffff', '#f3e04a', '#f08aa8'][i % 3] });
     }
     Audio.music(this.map.def.music);
+    if (mapName === 'witches' && !G.flags.potion) this.run(witchScene);
+    if (mapName === 'world' && G.flags.wingsDue && !G.flags.wings) this.run(wingsScene);
   },
   run(gen) { this.script = gen.call(this); this.waitFn = null; },
   npcsHere() { return this.npcs.filter(n => n.map === this.map.name); },
   npcAt(x, y) { return this.npcsHere().find(n => (n.x === x && n.y === y) || (n.moving && n.tx === x && n.ty === y)); },
   npc(id) { return this.npcs.find(n => n.id === id); },
+  // First step of the shortest walk from o to a tile where isGoal(x, y). With
+  // `through`, people in the way are ignored (they'll be shoved).
+  bfsDir(o, isGoal, through = false) {
+    const key = (x, y) => x + ',' + y, start = key(o.x, o.y), prev = new Map([[start, null]]), q = [[o.x, o.y]];
+    while (q.length) {
+      const [x, y] = q.shift();
+      if (isGoal(x, y) && key(x, y) !== start) {
+        let k = key(x, y);
+        while (prev.get(k).from !== start) k = prev.get(k).from;
+        return prev.get(k).dir;
+      }
+      for (const d of ['up', 'down', 'left', 'right']) {
+        const [dx, dy] = DIRV[d], nx = x + dx, ny = y + dy, k = key(nx, ny);
+        if (prev.has(k) || this.map.solid(nx, ny) || Math.abs(nx - o.x) + Math.abs(ny - o.y) > 14) continue;
+        if (!through && ((this.p.x === nx && this.p.y === ny) || (this.npcAt(nx, ny) && this.npcAt(nx, ny) !== o))) continue;
+        prev.set(k, { from: key(x, y), dir: d }); q.push([nx, ny]);
+      }
+    }
+    return null;
+  },
+  // Push someone one tile out of the way (straight on if possible, else to a side).
+  shove(o, d) {
+    for (const dd of [d, ...(d === 'up' || d === 'down' ? ['left', 'right'] : ['up', 'down'])]) {
+      const [dx, dy] = DIRV[dd];
+      if (this.free(o.x + dx, o.y + dy, o)) { this.move(o, dd, o === this.p ? SPEED : NPC_SPEED * 2); o.t = 0; if (o !== this.p) o.faceAfter = OPP[dd]; return true; }
+    }
+    return false;
+  },
+  // Is the bridge guard standing on the bridge, or at either end of it?
+  guardBlocking(g) {
+    const k = (x, y) => this.map.kind(x, y);
+    return g.map === 'world' && this.map.name === 'world' && (k(g.x, g.y) === 'bridge' || k(g.x, g.y - 1) === 'bridge' || k(g.x, g.y + 1) === 'bridge');
+  },
+  // The frog coughs up the witches' key onto a free tile next to it (once).
+  dropKey(n, dir) {
+    if (G.flags.keyDropped) return;
+    const spots = [OPP[dir], 'up', 'down', 'left', 'right'].map(d => [n.x + DIRV[d][0], n.y + DIRV[d][1]]);
+    const [x, y] = spots.find(([x, y]) => !this.map.solid(x, y) && !this.npcAt(x, y) && !(this.p.x === x && this.p.y === y)) || [n.x, n.y];
+    G.flags.keyDropped = 1;
+    this.items.push({ map: this.map.name, x, y, kind: 'key' });
+    spark(x * 16 + 8, y * 16 + 8, 10, '#e8b84a', true);
+    this.run(function* () { yield wait(0.5); yield* talk(QUEST.frogKey); });
+  },
+  enterWitches() {
+    Audio.sfx('door');
+    fadeTo(() => this.load('witches', 4, 6, 'up'), 0.25);
+  },
   free(x, y, who) {
     if (this.map.solid(x, y) || this.map.def.warps[`${x},${y}`] && who !== this.p) return false;
     const p = this.p;
@@ -702,6 +752,10 @@ const Play = {
     for (const n of this.npcsHere()) {
       n.anim += dt;
       if (n.hitT > 0) n.hitT -= dt;
+      if (n.recheck > 0 && (n.recheck -= dt) <= 0) {
+        if (busy || n.moving) n.recheck = 0.3;
+        else if (G.flags.guard && this.guardBlocking(n)) this.run(guardStepAside);
+      }
       if (n.moving) { if (this.step(n, dt)) { n.t = 0; if (n.faceAfter) { n.dir = n.faceAfter; n.faceAfter = null; } } n.frame = [0, 1, 0, 2][Math.floor(n.anim * 7) % 4]; continue; }
       n.frame = n.look.kind === 'person' ? 0 : Math.floor(n.anim * (n.look.kind === 'chicken' ? 3 : 1.5)) % 2;
       if (n.wander && !busy) {
@@ -804,6 +858,7 @@ const Play = {
   // The chicken staff. Anyone (but the wizard) becomes a chicken; a second bolt turns
   // them back. A real chicken hit by it gains the power of speech (and loses it again).
   chicken(n, dir) {
+    if (n.id === 'frog') this.dropKey(n, dir);
     Audio.sfx('poof');
     for (let i = 0; i < 14; i++) { const a = Math.random() * Math.PI * 2, v = 10 + Math.random() * 25; parts.push({ k: 'spark', x: n.px + 8, y: n.py + 6, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 8, life: 0.6, col: i % 2 ? '#e8e0d0' : '#c8c0d8', world: true }); }
     let shout;
@@ -827,6 +882,8 @@ const Play = {
     parts.push({ k: 'say', text: lines[(n.hurt - 1) % lines.length], x: n.px + 8, y: n.py - (n.tall ? 20 : 9), vy: -14, life: 1.3, world: true });
     if (n.id === 'wizard') { Audio.sfx('fizzle'); spark(n.px + 8, n.py, 10, C.cyan, true); return; }
     Audio.sfx('hit');
+    if (n.id === 'frog') this.dropKey(n, dir);
+    if (n.id === 'guard') n.recheck = 0.6;
     n.hitT = 0.45; n.timer = 2.5; n.grudged = false;
     if (n.look.kind === 'chicken') spark(n.px + 8, n.py + 8, 8, '#e8e2d0', true);
     if (n.sleep || n.moving) return;
@@ -842,12 +899,23 @@ const Play = {
     const n = this.npcAt(nx, ny);
     if (!n && this.free(nx, ny, p)) { this.move(p, d, SPEED); return; }
     if (n && n.bump && !n.moving) { this.talkTo(n); return; }
+    if (this.map.name === 'world' && nx === 6 && ny === 28 && G.flags.unlocked) { this.enterWitches(); return; }
     if (this.bumpT <= 0) { Audio.sfx('bump'); this.bumpT = 0.3; }
   },
   onStep() {
     const p = this.p, m = this.map;
     const w = m.def.warps[`${p.x},${p.y}`];
     if (w) { Audio.sfx('door'); fadeTo(() => this.load(w.map, w.x, w.y, w.dir), 0.25); return; }
+    const item = this.items.find(i => i.map === m.name && i.x === p.x && i.y === p.y);
+    if (item) {
+      this.items = this.items.filter(i => i !== item); G.flags.key = 1;
+      this.run(function* () { Audio.sfx('item'); yield* talk(QUEST.gotKey); });
+      return;
+    }
+    if (m.name === 'world' && !G.flags.hermit) {
+      const h = this.npc('hermit');
+      if (h && !h.chicken && Math.max(Math.abs(p.x - h.x), Math.abs(p.y - h.y)) <= 3) { this.run(hermitScene); return; }
+    }
     if (m.name === 'castle') {
       if (p.y <= 6 && !G.flags.closer) { G.flags.closer = 1; this.run(function* () { yield* talk(SCRIPT.comeCloser.map(wz), true, null, 'WIZARD'); }); }
       if (p.y <= 4 && !G.flags.met) { p.dir = 'up'; this.run(wizardScene); }
@@ -877,6 +945,12 @@ const Play = {
     const kind = this.map.kind(fx, fy);
     if (!n && kind === 'stall') n = this.npcAt(fx + dx, fy + dy);
     if (n) { this.talkTo(n); return; }
+    if (this.map.name === 'world' && fx === 6 && fy === 28 && G.flags.key) {
+      if (G.flags.unlocked) { this.enterWitches(); return; }
+      G.flags.unlocked = 1;
+      this.run(function* () { Audio.sfx('select'); yield* talk(QUEST.unlock); this.enterWitches(); });
+      return;
+    }
     const looks = this.map.def.looks;
     const lines = looks[`${fx},${fy}`] || looks[kind];
     if (lines && lines.length) {
@@ -901,10 +975,7 @@ const Play = {
     say(lines, {
       name: n.name,
       onEnd: () => {
-        if (n.id === 'guard' && !G.flags.guard) {
-          G.flags.guard = 1;
-          if (this.free(n.x - 1, n.y, n)) { this.move(n, 'left', NPC_SPEED); n.t = 0; setTimeout(() => { n.dir = 'right'; }, 450); }
-        }
+        if (n.id === 'guard' && (!G.flags.guard || this.guardBlocking(n))) this.run(guardStepAside);
       },
     });
   },
@@ -929,6 +1000,11 @@ const Play = {
       ctx.fillStyle = f.col; const o = Math.floor(this.time * 8 + f.p) % 2;
       ctx.fillRect(fxp | 0, fyp | 0, 1, 1); ctx.fillRect((fxp | 0) - 1 - o, (fyp | 0) - 1 + o, 1, 1); ctx.fillRect((fxp | 0) + 1 + o, (fyp | 0) - 1 + o, 1, 1);
     }
+    // things lying on the ground
+    for (const it of this.items) if (it.map === m.name) {
+      ctx.drawImage(keySprite(), it.x * 16 - cx + 3, it.y * 16 - cy + 6 + Math.round(Math.sin(this.time * 3)));
+      if (Math.random() < 0.05) parts.push({ k: 'spark', x: it.x * 16 + 6 + Math.random() * 6, y: it.y * 16 + 6, vx: 0, vy: -5, life: 0.4, col: '#ffe9a0', world: true });
+    }
     // characters, back to front
     const ents = this.npcsHere().map(n => ({ n, y: n.py }));
     ents.push({ n: null, y: p.py });
@@ -937,7 +1013,10 @@ const Play = {
     for (const e of ents) {
       if (!e.n) {
         const frame = p.moving ? [0, 1, 0, 2][Math.floor(p.anim * 8) % 4] : 0;
-        ctx.drawImage(charSprite(G.hero.look, p.dir, frame), p.px - cx, p.py - cy - 2);
+        const hx = p.px - cx, hy = p.py - cy - 2;
+        if (G.flags.wings && p.dir !== 'up') this.drawWings(hx, hy, p.dir);
+        ctx.drawImage(charSprite(G.hero.look, p.dir, frame), hx, hy);
+        if (G.flags.wings && p.dir === 'up') this.drawWings(hx, hy, p.dir);
         if (G.flags.hat) ctx.drawImage(hatSprite(), p.px - cx + 2, p.py - cy - 6);
         if (this.swing) this.drawSwing(cx, cy);
         continue;
@@ -952,6 +1031,7 @@ const Play = {
       }
       const look = n.look;
       ctx.drawImage(charSprite(look, n.dir, n.frame), n.px - cx, n.py - cy - (look.kind === 'person' && !n.sleep ? 2 : 0));
+      if (n.hat && !n.chicken) ctx.drawImage(hatSprite(n.hat), n.px - cx + 2, n.py - cy - 6);
     }
     // dusk, then the lights
     ctx.fillStyle = TINT[m.name]; ctx.fillRect(0, 0, VW, VH);
@@ -965,6 +1045,10 @@ const Play = {
     if (wiz) { const r = wiz.frame ? 40 : 22, ox = wiz.chicken ? 12 : 15, oy = wiz.chicken ? -3 : -6; ctx.drawImage(glow(r, '#3ab8e0'), wiz.px - cx + ox - r, wiz.py - cy + oy - r); }
     ctx.globalCompositeOperation = 'source-over';
     for (const f of m.flames) flame(ctx, f.x - cx, f.y - cy, this.time + f.x, f.big);
+    for (const b of m.bubbles) for (let i = 0; i < 3; i++) {
+      const ph = (this.time * 1.2 + i / 3) % 1;
+      ctx.fillStyle = `rgba(168,255,138,${(1 - ph).toFixed(2)})`; ctx.fillRect(b.x - cx + 5 + i * 3, Math.round(b.y - cy + 4 - ph * 9), 1, 1);
+    }
     this.drawShots(cx, cy);
     drawVignette();
     // talk bubble when facing someone
@@ -990,6 +1074,15 @@ const Play = {
     if (this.fx.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${Math.min(1, this.fx.flash)})`; ctx.fillRect(0, 0, VW, VH); }
     this.dialogY = dialogBoxY(p.py - cy);
     drawDialog(this.dialogY);
+  },
+  // Crimson Cow wings: one each side (from the front/back), one behind (from the side).
+  drawWings(hx, hy, dir) {
+    const w = wingSprite(), f = Math.floor(this.time * 3) % 2;
+    const left = (x, y) => ctx.drawImage(w, x, y);
+    const right = (x, y) => { ctx.save(); ctx.translate(x + 6, y); ctx.scale(-1, 1); ctx.drawImage(w, 0, 0); ctx.restore(); };
+    if (dir === 'down' || dir === 'up') { left(hx - 3, hy + 5 - f); right(hx + 13, hy + 5 - f); }
+    else if (dir === 'right') left(hx + 1, hy + 4 - f);
+    else right(hx + 9, hy + 4 - f);
   },
   drawSwing(cx, cy) {
     const s = this.swing, p = this.p, x = p.px - cx + 8, y = p.py - cy + 7, k = s.t / 0.25;
@@ -1124,6 +1217,71 @@ function* evilWizardScene() {
   }
   this.visitor = null; this.fx.dark = 0;
   Audio.music(music);
+}
+
+// The hermit on the woods path spots you, walks over and checks you're ready.
+function* hermitScene() {
+  G.flags.hermit = 1;
+  const h = this.npc('hermit'), p = this.p, Q = QUEST.hermit;
+  parts.push({ k: 'say', text: '!', x: h.px + 8, y: h.py - 9, vy: -10, life: 0.9, world: true });
+  Audio.sfx('select');
+  yield wait(0.7);
+  for (let i = 0; i < 12 && Math.abs(h.x - p.x) + Math.abs(h.y - p.y) > 1; i++) {
+    const d = this.bfsDir(h, (x, y) => Math.abs(x - p.x) + Math.abs(y - p.y) === 1);
+    if (!d) break;
+    this.move(h, d, NPC_SPEED * 1.3); h.t = 0;
+    yield () => !h.moving;
+  }
+  const dx = p.x - h.x, dy = p.y - h.y;
+  h.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+  p.dir = OPP[h.dir];
+  const word = !!G.armed.word;
+  yield* talk([...Q.hello, { ask: word ? Q.askWord : Q.askCard, yes: Q.yes, no: Q.no }], false, null, 'HERMIT');
+}
+
+// The bridge guard gets off the bridge, shoving whoever is in his way.
+function* guardStepAside() {
+  const g = this.npc('guard'), spots = new Set(['17,21', '19,21', '17,18', '19,18']);
+  for (let i = 0; i < 10 && !spots.has(`${g.x},${g.y}`); i++) {
+    const d = this.bfsDir(g, (x, y) => spots.has(`${x},${y}`), true);
+    if (!d) break;
+    const [dx, dy] = DIRV[d], nx = g.x + dx, ny = g.y + dy, p = this.p;
+    if (p.x === nx && p.y === ny && !this.shove(p, d)) { p.x = g.x; p.y = g.y; p.px = p.x * 16; p.py = p.y * 16; } // no room: swap
+    const other = this.npcAt(nx, ny);
+    if (other && other !== g && !this.shove(other, d)) break;
+    yield () => !this.p.moving && !(other && other.moving);
+    if (!this.free(nx, ny, g)) break;
+    this.move(g, d, NPC_SPEED); g.t = 0;
+    yield () => !g.moving;
+  }
+  g.dir = g.x < 18 ? 'right' : 'left';
+  G.flags.guard = 1;
+}
+
+// Inside the blue house: the witches, the reward and the drink.
+function* witchScene() {
+  G.flags.potion = 1;
+  const m = this.npc('morag');
+  m.dir = 'down';
+  yield wait(0.5);
+  yield* talk(QUEST.witches, false, null, 'MORAG');
+  Audio.sfx('item');
+  yield* talk(QUEST.gotPotion);
+  yield* talk(QUEST.drinkIt, false, null, 'MORAG');
+  Audio.sfx('sparkle');
+  for (let i = 0; i < 16; i++) parts.push({ k: 'spark', x: this.p.px + 8 + (Math.random() - 0.5) * 14, y: this.p.py + 4, vx: 0, vy: -14 - Math.random() * 10, life: 0.8, col: i % 2 ? C.red : '#ffd27a', world: true });
+  yield* talk(QUEST.drink);
+  G.flags.wingsDue = 1;
+}
+
+// Back outside: the Crimson Cow kicks in.
+function* wingsScene() {
+  yield wait(0.6);
+  Audio.sfx('sparkle');
+  for (let i = 0; i < 20; i++) { const a = Math.random() * Math.PI * 2; parts.push({ k: 'spark', x: this.p.px + 8, y: this.p.py + 6, vx: Math.cos(a) * 30, vy: Math.sin(a) * 30, life: 0.7, col: i % 2 ? '#ffffff' : '#ffd27a', world: true }); }
+  G.flags.wings = 1;
+  yield wait(0.6);
+  yield* talk(QUEST.wings, false, null, G.name);
 }
 
 function* wizardScene() {

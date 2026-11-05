@@ -140,6 +140,25 @@ and animals blink, hop back a step and a small word floats up ("OW!", "MY BACK!"
 The next time you talk to someone you hit, they mention it first. The wizard is not
 impressed.
 
+### Side quest: the frog, the key and the witches
+
+The blue house in the village is locked; knock and someone inside shouts that the frog
+has their key. Hit the frog (by the lake) with your weapon and it coughs up a rusty key.
+Pick it up, then press A at the blue door. Three witches have been stuck inside since the
+frog swallowed their key and jumped out the window. They give you a **Crimson Cow**
+potion, you drink it (it does nothing, but you feel energised), and when you step back
+outside you've grown a pair of wings: "HUH. I GUESS CRIMSON COW GIVES YOU FEATHERS."
+
+### Along the way
+
+- In the woods past the bridge, a **hermit** spots you ("!"), walks over and asks if
+  you've thought of a playing card (or have a word in mind, in word mode). YES lets you
+  pass. NO gets a nudge to have something in mind before seeing the wizard, then lets
+  you pass. It's a handy check before the reveal.
+- If the bridge **guard** ends up on the bridge (say, after you hit him), he walks off it
+  by himself, shoving you or anyone else out of the way, so the bridge can't get blocked.
+- The pet in your house is a cream long-haired dachshund.
+
 ### Secret: the evil wizard
 
 While walking around, enter **up, up, down, down, left, right, left, right, B, A** (on a
