@@ -18,15 +18,18 @@ Arm the card on the **title screen**, then hand over the phone.
 
    ```
    +----+----+----+----+
-   | A  | 2  | 3  | 4  |
+   | 1  | 2  | 3  | 4  |      1 = Ace
    +----+----+----+----+
    | 5  | 6  | 7  | 8  |
    +----+----+----+----+
-   | 9  | 10 | J  | Q  |
+   | 9  | 10 | 11 | 12 |      11 = Jack, 12 = Queen
    +----+----+----+----+
-   |         K         |   <- the band just above START
+   |         13        |   <- the band just above START (King)
    +-------------------+
    ```
+
+   Values are always numbers, here and in the URL: 1 = Ace, 11 = Jack, 12 = Queen,
+   13 = King. The revealed card still shows a real J, Q or K.
 
    The grid covers the full width, from the top of the screen down to just above
    START, in four equal rows. Every tap makes a little sparkle wherever you touch, so
@@ -48,8 +51,8 @@ suit order and the card that is currently armed. Tap anywhere to close it.
 Open `play.oddpaq.com/7D` (or `play.oddpaq.com/?=7D`) to arm the 7 of Diamonds before
 the page appears. The address bar is reset to the plain site straight away. Anything
 may follow the card in the path form (`/7D-x9`, `/QH/foo`); in the `?=` form see
-"Card or word?" below. Values `A 2-10 J Q K`, suits `C H S D`,
-any case. While a URL force is armed, the title-screen taps are ignored, so the
+"Card or word?" below. Values are numbers `1`–`13` (`12H` = Queen of Hearts, `1S` = Ace of Spades), suits
+`C H S D`, any case. While a URL force is armed, the title-screen taps are ignored, so the
 spectator can press START themselves. The cheat sheet shows `(URL)` in this mode.
 
 ### Word force (`?=` with a ciphered word)
@@ -74,11 +77,9 @@ taps are ignored. The wizard then asks **"ARE YOU THINKING OF A WORD?"** and the
 appears on a scroll ("THE WIND SAYS:"). Short words (up to 10 letters) are shown big;
 longer phrases wrap onto up to four lines. The cheat sheet shows `WORD: HELLO`.
 
-**Card or word?** After `?=`, the game reads a **card** if the text is exactly a card
-(`?=7D`, `?=qs`, `?=10h`) or starts with a number (`?=7D90x`). Anything made only of
-letters (plus `+ - _`) is a **word**. A ciphered word that happens to be exactly a
-two-letter card (`as`, `qs`, `jh`, `kd`, ...) is read as the card. The `/7D` path form
-is always a card.
+**Card or word?** After `?=`, anything starting with a number is a **card** (`?=7D`,
+`?=12h`, `?=1s90x`) and anything made only of letters (plus `+ - _`) is a **word**.
+There are no exceptions. The `/7D` path form is always a card.
 
 ### The reveal
 
@@ -90,9 +91,11 @@ The end screen keeps the card on show.
 
 ## Look and controls
 
-The game fills the whole screen in a soft, cute 16-bit fantasy style. It works in
-portrait and landscape, on phones and on desktop. The pixel size is chosen so the art
-always stays crisp, and at least 10 tiles are visible across the short side.
+The game fills the whole screen in a medieval fantasy style set at dusk: cobbled roads,
+timber-framed houses with thatch and slate roofs, dark fir woods, a stone castle. Lanterns,
+windows and torches glow, and motes of magic drift in the air. It works in portrait and
+landscape, on phones and on desktop. The pixel size is chosen so the art always stays
+crisp, and at least 10 tiles are visible across the short side.
 
 - **Phone:** while walking around, a see-through D-pad (bottom left) and **A** button
   (bottom right) float over the game. They are hidden on the title, name, hero and

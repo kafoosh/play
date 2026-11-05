@@ -1,4 +1,4 @@
-import { C, UI, text, textCenter, textWidth, wrap, box, blob, drawCard, makeScroll, charSprite, drawTile, drawOver, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
+import { C, UI, text, textCenter, textWidth, wrap, box, blob, glow, drawCard, makeScroll, charSprite, drawTile, drawOver, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
 import { MAPS, LOOKS, NPCS, SCRIPT, cardName, decodeWord, VALUE_GRID, CHASED, CLASSES, SKINS, HAIRS } from './data.js';
 import * as Audio from './audio.js';
 
@@ -141,6 +141,7 @@ function updateParts(dt) {
     p.life -= dt; p.x += (p.vx || 0) * dt; p.y += (p.vy || 0) * dt;
     if (p.k === 'spark') { p.vx *= 0.92; p.vy *= 0.92; }
     if (p.k === 'z' || p.k === 'note') p.x += Math.sin(p.life * 5) * 0.3;
+    if (p.k === 'mote') p.x += Math.sin(p.life * 1.7 + p.p) * 0.15;
   }
   parts = parts.filter(p => p.life > 0);
 }
@@ -154,8 +155,37 @@ function drawParts(cx = 0, cy = 0) {
     } else if (p.k === 'z') text(ctx, 'Z', x, y, C.white);
     else if (p.k === 'note') text(ctx, '♪', x, y, '#ffe9a0');
     else if (p.k === 'wind') { ctx.fillStyle = p.col || 'rgba(255,255,255,0.7)'; ctx.fillRect(x, y, p.len, 1); }
+    else if (p.k === 'mote') {
+      const b = Math.sin(p.life * 5 + p.p);
+      if (b > -0.3) {
+        ctx.globalCompositeOperation = 'lighter';
+        if (b > 0.5) ctx.drawImage(glow(4, p.col), x - 4, y - 4);
+        ctx.fillStyle = p.col; ctx.fillRect(x, y, 1, 1);
+        ctx.globalCompositeOperation = 'source-over';
+      }
+    }
     else if (p.k === 'leaf') { ctx.fillStyle = p.col; ctx.fillRect(x, y, 2, 1); ctx.fillRect(x + (p.life * 4 % 2 > 1 ? 1 : 0), y + 1, 1, 1); }
   }
+}
+
+function mote(x, y, world = false) {
+  parts.push({ k: 'mote', x, y, vx: (Math.random() - 0.5) * 4, vy: -3 - Math.random() * 5, life: 3 + Math.random() * 3, p: Math.random() * 6, col: Math.random() < 0.55 ? '#7ae0ff' : '#ffd27a', world });
+}
+// Darkened corners, cached per screen size.
+let vig = null;
+function drawVignette() {
+  if (!vig || vig.width !== VW || vig.height !== VH) {
+    const [c, x] = makeCanvas(VW, VH);
+    const img = x.createImageData(VW, VH), d = img.data;
+    for (let j = 0; j < VH; j++) for (let i = 0; i < VW; i++) {
+      const nx = (i + 0.5 - VW / 2) / (VW / 2), ny = (j + 0.5 - VH / 2) / (VH / 2);
+      const lvl = Math.max(0, Math.min(4, Math.floor((Math.hypot(nx * 0.85, ny * 0.7) - 0.74) / 0.1) + 1));
+      const k = (j * VW + i) * 4;
+      d[k] = 8; d[k + 1] = 4; d[k + 2] = 18; d[k + 3] = lvl * 22;
+    }
+    x.putImageData(img, 0, 0); vig = c;
+  }
+  ctx.drawImage(vig, 0, 0);
 }
 
 // ================================================================ dialog
@@ -242,83 +272,93 @@ function drawDialog(by) {
 }
 
 // ================================================================ backdrop (title / end)
-const STARS = Array.from({ length: 50 }, (_, i) => ({ x: hash(i, 1), y: hash(i, 2), p: hash(i, 3) * 6 }));
+const STARS = Array.from({ length: 60 }, (_, i) => ({ x: hash(i, 1), y: hash(i, 2), p: hash(i, 3) * 6 }));
 let deco = null;
 function backdropArt() {
   if (deco) return deco;
-  const cloud = night => {
-    const [c, x] = makeCanvas(44, 20);
-    blob(x, 2, 2, [[9, 11, 6], [18, 8, 8], [28, 9, 7], [35, 12, 5], [20, 13, 6]], night ? { o: '#3e4488', g: '#7a80c8', l: '#9aa0e0', d: '#6268b0' } : { o: '#c890b8', g: '#fff4f4', l: '#ffffff', d: '#f6d8e2' }, 1, false);
+  // long thin dusk clouds
+  const cloud = (top, body) => {
+    const [c, x] = makeCanvas(60, 8);
+    for (const [a, b, w] of [[10, 1, 26], [0, 3, 50], [18, 5, 40]]) { x.fillStyle = body; x.fillRect(a, b, w, 2); x.fillStyle = top; x.fillRect(a + 2, b, w - 4, 1); }
     return c;
   };
-  const tree = (pal) => {
-    const [c, x] = makeCanvas(24, 26);
-    x.fillStyle = C.trunkD; x.fillRect(10, 17, 5, 8); x.fillStyle = C.trunk; x.fillRect(11, 17, 3, 7);
-    blob(x, 4, 6, [[8, 0.5, 5.2], [3.8, 5.5, 4.6], [12.2, 5.5, 4.6], [8, 6.5, 5.8]], pal, 5);
+  const fir = (h, col) => {
+    const [c, x] = makeCanvas(16, h + 2);
+    x.fillStyle = col;
+    for (let j = 0; j < h; j++) { const w = 1 + Math.floor(j * 7 / h) - (j % 4 === 3 ? 1 : 0); x.fillRect(8 - w, j, w * 2, 1); }
+    x.fillRect(7, h, 2, 2);
     return c;
   };
-  // a little castle with blue roofs
-  const [cs, x] = makeCanvas(72, 52);
-  const wallC = (ox, oy, w, h) => { x.fillStyle = C.stoneO; x.fillRect(ox, oy, w, h); x.fillStyle = C.stone; x.fillRect(ox + 1, oy + 1, w - 2, h - 1); x.fillStyle = C.stoneL; x.fillRect(ox + 1, oy + 1, 2, h - 1); x.fillStyle = C.stoneD; x.fillRect(ox + w - 3, oy + 1, 2, h - 1); };
-  const cone = (cx, top, half, h) => {
-    for (let j = 0; j < h; j++) { const hw = Math.round(1 + j * (half - 1) / (h - 1)); for (let i = -hw; i < hw; i++) { x.fillStyle = (i === -hw || i === hw - 1 || j === h - 1) ? '#2a3a6e' : i < -hw / 3 ? '#8cb8f4' : '#5a8ce0'; x.fillRect(cx + i, top + j, 1, 1); } }
-    x.fillStyle = C.ink; x.fillRect(cx, top - 6, 1, 6); x.fillStyle = C.red; x.fillRect(cx + 1, top - 6, 4, 2);
+  // stone castle, slate spires, glowing windows
+  const [cs, x] = makeCanvas(76, 60);
+  const S = { o: '#16121c', b: '#5e5a66', l: '#7a7682', d: '#46424e' };
+  const wallC = (ox, oy, w, h) => { x.fillStyle = S.o; x.fillRect(ox, oy, w, h); x.fillStyle = S.b; x.fillRect(ox + 1, oy + 1, w - 2, h - 1); x.fillStyle = S.l; x.fillRect(ox + 1, oy + 1, 2, h - 1); x.fillStyle = S.d; x.fillRect(ox + w - 3, oy + 1, 2, h - 1); for (let j = oy + 4; j < oy + h; j += 4) { x.fillStyle = S.d; x.fillRect(ox + 3, j, w - 6, 1); } };
+  const spire = (cx, top, half, h) => {
+    for (let j = 0; j < h; j++) { const hw = Math.round(1 + j * (half - 1) / (h - 1)); for (let i = -hw; i < hw; i++) { x.fillStyle = (i === -hw || i === hw - 1 || j === h - 1) ? '#14161c' : i < -hw / 3 ? '#5a6274' : '#3e4454'; x.fillRect(cx + i, top + j, 1, 1); } }
+    x.fillStyle = S.o; x.fillRect(cx, top - 7, 1, 7); x.fillStyle = C.purple; x.fillRect(cx + 1, top - 7, 5, 3); x.fillStyle = C.gold; x.fillRect(cx + 2, top - 6, 1, 1);
   };
-  wallC(14, 26, 44, 26);
-  for (let i = 14; i < 58; i += 6) { x.fillStyle = C.stoneO; x.fillRect(i, 23, 4, 4); x.fillStyle = C.stone; x.fillRect(i + 1, 24, 2, 3); }
-  wallC(29, 14, 14, 38); cone(36, 3, 9, 12);
-  wallC(6, 22, 12, 30); cone(12, 12, 8, 11);
-  wallC(54, 22, 12, 30); cone(60, 12, 8, 11);
-  x.fillStyle = C.stoneO; x.fillRect(31, 38, 10, 14); x.fillStyle = '#3a2a4a'; x.fillRect(32, 39, 8, 13); x.fillStyle = C.wood; x.fillRect(32, 40, 2, 12); x.fillRect(38, 40, 2, 12);
-  x.fillStyle = '#ffe9a0';
-  for (const [a, b] of [[35, 20], [10, 30], [58, 30], [20, 34], [48, 34]]) { x.fillRect(a, b, 2, 4); }
+  wallC(15, 32, 46, 28);
+  for (let i = 15; i < 61; i += 6) { x.fillStyle = S.o; x.fillRect(i, 29, 4, 4); x.fillStyle = S.b; x.fillRect(i + 1, 30, 2, 3); }
+  wallC(31, 18, 14, 42); spire(38, 4, 9, 15);
+  wallC(6, 26, 12, 34); spire(12, 14, 8, 13);
+  wallC(58, 26, 12, 34); spire(64, 14, 8, 13);
+  x.fillStyle = S.o; x.fillRect(33, 46, 10, 14); x.fillStyle = '#e89a3a'; x.fillRect(34, 48, 8, 12); x.fillStyle = '#ffd27a'; x.fillRect(36, 51, 4, 9);
+  const wins = [[37, 24], [11, 34], [63, 34], [21, 40], [53, 40], [37, 34]];
+  for (const [a, b] of wins) { x.fillStyle = S.o; x.fillRect(a - 1, b - 1, 4, 6); x.fillStyle = C.glass; x.fillRect(a, b, 2, 4); }
   deco = {
-    cloud: cloud(false), cloudN: cloud(true), castle: cs,
-    tree: tree({ o: C.leafO, g: C.leaf, l: C.leafL, d: C.leafD }),
-    pine: tree({ o: C.pineO, g: C.pine, l: C.pineL, d: C.pineD }),
+    cloud: cloud('#b06a6a', '#5a3a5a'), cloudN: cloud('#4a4a7a', '#2a2a48'), castle: cs, wins,
+    firs: [fir(22, '#121a18'), fir(30, '#121a18'), fir(18, '#18221e')],
   };
   return deco;
 }
 function drawBackdrop(t, night = false) {
   const art = backdropArt();
   const H = Math.round(VH * 0.62);
-  const sky = night ? ['#141a3a', '#1c2450', '#283068', '#363c80', '#4a4a96'] : ['#3a4a96', '#5462b4', '#7e7ccc', '#c892c8', '#ffbfa8'];
+  const sky = night ? ['#0c0a1c', '#141228', '#1c1834', '#261e40', '#32264a'] : ['#16132e', '#241c46', '#3e2a58', '#6e3e5e', '#b0624e'];
   const bh = Math.ceil(H / sky.length);
   for (let i = 0; i < sky.length; i++) {
     ctx.fillStyle = sky[i]; ctx.fillRect(0, i * bh, VW, bh + 1);
     if (i) { ctx.fillStyle = sky[i - 1]; for (let x = 0; x < VW; x += 2) { ctx.fillRect(x + (i % 2), i * bh, 1, 1); ctx.fillRect(x, i * bh + 2, 1, 1); } }
   }
   for (const s of STARS) {
-    if (!night && s.y > 0.45) continue;
-    const b = Math.sin(t * 2 + s.p), sx = (s.x * VW) | 0, sy = (s.y * H * 0.8) | 0;
-    if (b > -0.3) { ctx.fillStyle = b > 0.7 ? '#ffffff' : '#c8c8f0'; ctx.fillRect(sx, sy, 1, 1); if (b > 0.94) { ctx.fillRect(sx - 1, sy, 3, 1); ctx.fillRect(sx, sy - 1, 1, 3); } }
+    if (!night && s.y > 0.55) continue;
+    const b = Math.sin(t * 2 + s.p), sx = (s.x * VW) | 0, sy = (s.y * H * 0.85) | 0;
+    if (b > -0.3) { ctx.fillStyle = b > 0.7 ? '#f4ecd8' : '#9a90b8'; ctx.fillRect(sx, sy, 1, 1); if (b > 0.95) { ctx.fillRect(sx - 1, sy, 3, 1); ctx.fillRect(sx, sy - 1, 1, 3); } }
   }
-  // moon
-  const mx = Math.round(VW * 0.82), my = Math.round(H * 0.18);
-  ctx.fillStyle = '#fff6d0'; ctx.fillRect(mx - 4, my - 5, 9, 11); ctx.fillRect(mx - 5, my - 4, 11, 9);
-  ctx.fillStyle = '#f2e2a8'; ctx.fillRect(mx - 2, my - 2, 2, 2); ctx.fillRect(mx + 2, my + 1, 2, 1);
-  // clouds drift by
+  // crescent moon
+  const mx = Math.round(VW * 0.8), my = Math.round(H * 0.2);
+  ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(glow(14, '#6a6ab0'), mx - 14, my - 14); ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = '#efe6c8'; ctx.fillRect(mx - 4, my - 5, 9, 11); ctx.fillRect(mx - 5, my - 4, 11, 9);
+  ctx.fillStyle = sky[1]; ctx.fillRect(mx - 1, my - 6, 8, 10); ctx.fillRect(mx, my - 4, 7, 9);
   for (let i = 0; i < 3; i++) {
-    const span = VW + 60, x = ((hash(i, 5) * span + t * (3 + i * 1.5)) % span) - 50, y = Math.round(H * (0.22 + i * 0.17));
+    const span = VW + 70, x = ((hash(i, 5) * span + t * (2 + i)) % span) - 60, y = Math.round(H * (0.3 + i * 0.16));
     ctx.drawImage(night ? art.cloudN : art.cloud, Math.round(x), y);
   }
-  // far hills
-  ctx.fillStyle = night ? '#2c3a6a' : '#7a86c8';
-  for (let x = 0; x < VW; x++) { const h = H - 14 + Math.round(Math.sin(x / 23) * 4 + Math.sin(x / 9 + 2) * 2); ctx.fillRect(x, h, 1, VH - h); }
-  ctx.drawImage(art.castle, Math.round(VW / 2 - 36), H - 47);
-  // near hills and meadow
+  // far mountains
+  ctx.fillStyle = night ? '#1a1830' : '#2c2244';
+  for (let x = 0; x < VW; x++) {
+    const u = x / VW, h = H - 18 - Math.round(Math.abs(((u * 5.3) % 1) - 0.5) * 22 + Math.sin(u * 23) * 2);
+    ctx.fillRect(x, h, 1, VH - h);
+  }
+  ctx.fillStyle = night ? '#141228' : '#221a36';
+  for (let x = 0; x < VW; x++) { const u = x / VW, h = H - 8 - Math.round(Math.abs(((u * 3.1 + 0.4) % 1) - 0.5) * 14); ctx.fillRect(x, h, 1, VH - h); }
+  const cx0 = Math.round(VW / 2 - 38), cy0 = H - 54;
+  ctx.drawImage(art.castle, cx0, cy0);
+  ctx.globalCompositeOperation = 'lighter';
+  for (const [a, b] of art.wins) ctx.drawImage(glow(7, '#c87a2a'), cx0 + a - 6, cy0 + b - 5);
+  ctx.globalCompositeOperation = 'source-over';
+  // dark meadow and fir woods
   for (let x = 0; x < VW; x++) {
     const h = H + Math.round(Math.sin(x / 31 + 1) * 3);
-    ctx.fillStyle = night ? '#3f7a44' : C.grassL; ctx.fillRect(x, h, 1, 2);
-    ctx.fillStyle = night ? '#356a3a' : C.grass; ctx.fillRect(x, h + 2, 1, VH - h);
+    ctx.fillStyle = night ? '#24301e' : '#3e5030'; ctx.fillRect(x, h, 1, 2);
+    ctx.fillStyle = night ? '#1a2416' : '#2e3e24'; ctx.fillRect(x, h + 2, 1, VH - h);
   }
   for (let i = 0; i < 24; i++) {
     const a = (hash(i, 31) * VW) | 0, b = H + 6 + ((hash(i, 32) * (VH - H - 8)) | 0);
-    ctx.fillStyle = night ? '#2c5a32' : C.grassD; ctx.fillRect(a, b + 1, 1, 1); ctx.fillRect(a + 1, b, 1, 2); ctx.fillRect(a + 3, b, 1, 2); ctx.fillRect(a + 4, b + 1, 1, 1);
+    ctx.fillStyle = '#1e2a18'; ctx.fillRect(a, b + 1, 1, 1); ctx.fillRect(a + 1, b, 1, 2); ctx.fillRect(a + 3, b, 1, 2); ctx.fillRect(a + 4, b + 1, 1, 1);
   }
-  const trees = [[0.04, 0], [0.16, 1], [0.84, 1], [0.95, 0], [-0.02, 1]];
-  for (const [fx, k] of trees) ctx.drawImage(k ? art.pine : art.tree, Math.round(fx * VW) - 6, H - 20 + (k ? 0 : 2));
-  if (night) { ctx.fillStyle = 'rgba(20,20,60,0.25)'; ctx.fillRect(0, H, VW, VH - H); }
+  const firs = [[0.0, 1], [0.06, 0], [0.13, 2], [0.2, 0], [0.8, 2], [0.87, 0], [0.93, 1], [0.99, 2]];
+  for (const [fx, k] of firs) { const f = art.firs[k]; ctx.drawImage(f, Math.round(fx * VW) - 8, H + 2 - f.height + 2); }
 }
 // Draw a fixed 160x144 layout in the middle of the screen; returns the offset.
 function centre() { return [Math.round((VW - 160) / 2), Math.round((VH - 144) / 2)]; }
@@ -336,30 +376,28 @@ const Title = {
   },
   update(dt) {
     this.t += dt;
-    if (Math.random() < dt * 1.5) this.petals.push({ x: -4, y: Math.random() * VH * 0.7, p: Math.random() * 6, v: 14 + Math.random() * 10, col: ['#ffb0c8', '#ffffff', '#ffe066'][Math.random() * 3 | 0] });
-    for (const f of this.petals) { f.x += f.v * dt; f.y += Math.sin(this.t * 2 + f.p) * 0.2 + dt * 4; }
-    this.petals = this.petals.filter(f => f.x < VW + 4);
+    if (Math.random() < dt * 4) mote(Math.random() * VW, VH * (0.55 + Math.random() * 0.45));
   },
   draw() {
     drawBackdrop(this.t);
-    for (const f of this.petals) { ctx.fillStyle = f.col; ctx.fillRect(f.x | 0, f.y | 0, 2, 1); ctx.fillRect((f.x | 0) + (Math.sin(this.t * 6 + f.p) > 0 ? 1 : 0), (f.y | 0) + 1, 1, 1); }
     const bob = Math.round(Math.sin(this.t * 1.5)), cx = VW / 2, ly = Math.round(VH * 0.12);
     textCenter(ctx, 'ODDPAQ', cx + 2, ly + 3 + bob, '#2a1a3a', 3);
     textCenter(ctx, 'ODDPAQ', cx, ly + bob, C.gold, 3, C.ink);
     ctx.fillStyle = '#fff6b0'; ctx.fillRect(Math.round(cx - 50), ly + bob + 3, 2, 2);
-    textCenter(ctx, 'WINDS OF WONDER', cx, ly + 28, '#ffffff', 1, C.ink);
+    textCenter(ctx, 'WINDS OF WONDER', cx, ly + 28, '#e9dcb8', 1, C.ink);
     const S = startBox();
-    box(ctx, S.x, S.y, S.w, S.h, this.go ? '#ffe6a0' : UI.paper);
+    box(ctx, S.x, S.y, S.w, S.h, this.go ? '#f4d48a' : UI.paper);
     if (!this.go || Math.floor(this.t * 12) % 2) textCenter(ctx, 'START', cx, S.y + 5, UI.text);
-    if (!this.go && (this.t % 1.1) < 0.7) { text(ctx, '▶', S.x - 9, S.y + 5, '#ffffff'); }
-    textCenter(ctx, '@ODDPAQ', cx, VH - 12, '#eaffd8', 1, '#2f6a3a');
+    if (!this.go && (this.t % 1.1) < 0.7) { text(ctx, '▶', S.x - 9, S.y + 5, C.gold); }
+    textCenter(ctx, '@ODDPAQ', cx, VH - 12, '#c8b890', 1, C.ink);
     drawParts();
+    drawVignette();
     if (this.cheat) drawCheat();
   },
   onTap(x, y) {
     if (this.go) return;
     if (this.cheat) { this.cheat = false; return; }
-    spark(x, y, 5, '#ffffff');
+    spark(x, y, 5, '#ffe9a0');
     // performer cheat sheet: triple-tap the credit
     if (y >= VH - 20 && Math.abs(x - VW / 2) < 28) {
       const now = this.t; this.credit = this.credit.filter(c => now - c < 0.9); this.credit.push(now);
@@ -396,10 +434,10 @@ function drawCheat() {
   const gx = 20, gy = 24, cw = 30, ch = 13;
   VALUE_GRID.forEach((row, j) => row.forEach((v, i) => {
     ctx.fillStyle = UI.paperD; ctx.fillRect(gx + i * cw, gy + j * ch, cw - 2, ch - 2);
-    textCenter(ctx, VALUE_LABEL[v], gx + i * cw + cw / 2 - 1, gy + j * ch + 2, UI.text);
+    textCenter(ctx, String(v), gx + i * cw + cw / 2 - 1, gy + j * ch + 2, UI.text);
   }));
   ctx.fillStyle = UI.paperD; ctx.fillRect(gx, gy + 3 * ch, cw * 4 - 2, ch - 2);
-  textCenter(ctx, 'K', gx + cw * 2 - 1, gy + 3 * ch + 2, UI.text);
+  textCenter(ctx, '13', gx + cw * 2 - 1, gy + 3 * ch + 2, UI.text);
   text(ctx, 'TAP THE SKY FOR VALUE', 18, 79, UI.dim);
   ['C', 'H', 'S', 'D'].forEach((s, i) => {
     ctx.fillStyle = '#ecc890'; ctx.fillRect(32 + i * 24, 90, 22, 12);
@@ -407,7 +445,7 @@ function drawCheat() {
   });
   text(ctx, 'START = SUIT', 44, 105, UI.dim);
   const a = G.armed;
-  const lab = a.v || a.s ? `${a.v ? VALUE_LABEL[a.v] : '?'}${a.s ? { C: '♣', H: '♥', S: '♠', D: '♦' }[a.s] : '?'}` : '--';
+  const lab = a.v || a.s ? `${a.v ? a.v : '?'}${a.s ? { C: '♣', H: '♥', S: '♠', D: '♦' }[a.s] : '?'}` : '--';
   textCenter(ctx, a.word ? 'WORD: ' + a.word.slice(0, 16) : 'ARMED: ' + lab + (G.locked ? ' (URL)' : ''), 80, 116, UI.accent);
   textCenter(ctx, 'TAP TO CLOSE', 80, 126, UI.dim);
   ctx.restore();
@@ -425,7 +463,7 @@ const NameEntry = {
     ctx.save(); ctx.translate(ox, oy);
     box(ctx, 0, 0, 160, 144);
     textCenter(ctx, 'WHAT IS YOUR NAME?', 80, 8, UI.accent);
-    box(ctx, 22, 20, 116, 24, '#ffffff');
+    box(ctx, 22, 20, 116, 24, '#f4ead0');
     for (let i = 0; i < 8; i++) {
       const ch = this.name[i];
       if (ch) text(ctx, ch, 32 + i * 12, 25, UI.text, 2);
@@ -435,7 +473,7 @@ const NameEntry = {
     for (let r = 0; r < 4; r++) for (let c = 0; c < (r < 3 ? 9 : 2); c++) {
       const cc = r < 3 ? c : c * 5;
       const b = this.cell(r, cc), sel = this.r === r && (r < 3 ? this.c === c : (this.c < 5 ? 0 : 1) === c);
-      if (sel) { ctx.fillStyle = '#ffe6a0'; ctx.fillRect(b.x, b.y, b.w, b.h); ctx.fillStyle = UI.accent; ctx.fillRect(b.x, b.y + b.h - 1, b.w, 1); }
+      if (sel) { ctx.fillStyle = '#f4d48a'; ctx.fillRect(b.x, b.y, b.w, b.h); ctx.fillStyle = UI.accent; ctx.fillRect(b.x, b.y + b.h - 1, b.w, 1); }
       const label = r < 3 ? LETTERS[r][c] : (c ? 'END' : 'DEL');
       textCenter(ctx, label, b.x + b.w / 2, b.y + 3, sel ? UI.accent : UI.text);
     }
@@ -495,7 +533,8 @@ function makeHero(name, roll) {
   const tunic = pick(cls.tunics);
   const look = {
     kind: 'person', key: 'hero:' + name + ':' + roll, skin: pick(SKINS), hair: pick(HAIRS), tunic,
-    acc: cls.acc, hood: shade(tunic, 0.85), cap: pick(['#c04a3e', '#2f6f8a', '#3a9a5a', '#d9b45a']), long: r() < 0.4, boots: '#4a2d1a',
+    acc: cls.acc, hood: shade(tunic, 0.85), cap: pick(['#6a2a2a', '#2e3e5a', '#2e4a2e', '#6a5428']), long: r() < 0.4, boots: '#3e2a1a',
+    cloak: cls.acc === 'hood' ? shade(tunic, 0.85) : pick(['#4a3a2a', '#3a2e3e', '#2e3a2e', '#5a2424', '#3a3a44']),
   };
   const magic = cls.name === 'MAGE' || cls.name === 'CLERIC';
   return { look, cls: cls.name, hp: 10 + Math.floor(r() * 8) - (magic ? 3 : 0), mp: magic ? 8 + Math.floor(r() * 6) : Math.floor(r() * 4) };
@@ -507,7 +546,7 @@ const HeroScene = {
     drawBackdrop(this.t);
     const [ox, oy] = centre();
     ctx.save(); ctx.translate(ox, oy);
-    textCenter(ctx, 'A HERO APPEARS!', 80, 4, '#ffffff', 1, C.ink);
+    textCenter(ctx, 'A HERO APPEARS!', 80, 4, C.gold, 1, C.ink);
     // grassy spot to stand on
     ctx.fillStyle = C.grassDD; ctx.fillRect(50, 72, 60, 10); ctx.fillRect(56, 70, 48, 14);
     ctx.fillStyle = C.grass; ctx.fillRect(52, 72, 56, 7); ctx.fillRect(58, 70, 44, 10);
@@ -561,15 +600,25 @@ function loadMap(name) {
     for (let ty = 0; ty < h; ty++) for (let tx = 0; tx < w; tx++) drawOver(x, tiles[ty][tx][0], tx * 16, ty * 16, m, tx, ty);
     m.canvas.push(c);
   }
-  m.flames = [];
+  m.flames = []; m.lights = [];
   for (let ty = 0; ty < h; ty++) for (let tx = 0; tx < w; tx++) {
     const k = tiles[ty][tx][0];
     if (k === 'torch') m.flames.push({ x: tx * 16 + 8, y: ty * 16 + 7, big: false });
     if (k === 'hearth') m.flames.push({ x: tx * 16 + 8, y: ty * 16 + 15, big: true });
+    const L = LIGHTS[k];
+    if (L) m.lights.push({ x: tx * 16 + L[0], y: ty * 16 + L[1], r: L[2], col: L[3] });
+    if (k === 'tower' && m.kind(tx, ty - 1) !== 'tower') m.lights.push({ x: tx * 16 + 8, y: ty * 16 + 6, r: 10, col: '#c87a2a' });
   }
   return (mapCache[name] = m);
 }
 
+// Light sources by tile: [x, y, radius, colour]. Drawn additively over a dusk tint.
+const LIGHTS = {
+  lamp: [8, 1, 30, '#d88a30'], hwin: [8, 6, 16, '#d88a30'], cwin: [8, 8, 14, '#d88a30'], gate: [8, 10, 18, '#d88a30'],
+  torch: [8, 4, 36, '#e07a2a'], hearth: [8, 12, 46, '#e07a2a'], runestone: [8, 8, 22, '#3ab8e0'],
+  hwindow: [8, 6, 12, '#5a5aa0'],
+};
+const TINT = { world: 'rgba(28,18,66,0.28)', home: 'rgba(34,18,10,0.26)', castle: 'rgba(16,10,44,0.3)' };
 const SPEED = 5, NPC_SPEED = 2.6;
 const Play = {
   start() {
@@ -637,6 +686,8 @@ const Play = {
       if (n.sleep && Math.random() < dt * 0.8) parts.push({ k: 'z', x: n.px + 10, y: n.py - 2, vy: -8, life: 1.6, world: true });
       if (n.notes && Math.random() < dt * 0.7) parts.push({ k: 'note', x: n.px + 6, y: n.py - 4, vy: -10, life: 1.4, world: true });
     }
+    // drifting magic in the air
+    if (this.cam && this.map.name !== 'home' && Math.random() < dt * 3) mote(this.cam[0] + Math.random() * VW, this.cam[1] + Math.random() * VH, true);
     // script
     if (this.script && !G.fade) {
       if (!this.waitFn || this.waitFn()) {
@@ -730,7 +781,6 @@ const Play = {
     this.cam = [cx, cy];
     ctx.fillStyle = m.name === 'world' ? '#2f6a3e' : '#1e1424'; ctx.fillRect(0, 0, VW, VH);
     ctx.drawImage(m.canvas[m.water ? Math.floor(this.time * 1.6) % 2 : 0], -cx, -cy);
-    for (const f of m.flames) flame(ctx, f.x - cx, f.y - cy, this.time + f.x, f.big);
     // letter twinkle until read
     if (m.name === 'home' && !G.flags.letter && Math.floor(this.time * 2) % 3 === 0) {
       ctx.fillStyle = C.white; const sx = 4 * 16 + 12 - cx, sy = 4 * 16 + 3 - cy;
@@ -764,6 +814,19 @@ const Play = {
       const look = n.look;
       ctx.drawImage(charSprite(look, n.dir, n.frame), n.px - cx, n.py - cy - (look.kind === 'person' && !n.sleep ? 2 : 0));
     }
+    // dusk, then the lights
+    ctx.fillStyle = TINT[m.name]; ctx.fillRect(0, 0, VW, VH);
+    ctx.globalCompositeOperation = 'lighter';
+    const flick = Math.floor(this.time * 7);
+    for (const L of m.lights) {
+      const r = L.r - (hash(flick, L.x + L.y) < 0.3 ? 2 : 0), sx = L.x - cx - r, sy = L.y - cy - r;
+      if (sx > VW || sy > VH || sx + r * 2 < 0 || sy + r * 2 < 0) continue;
+      ctx.drawImage(glow(r, L.col), sx, sy);
+    }
+    if (wiz) ctx.drawImage(glow(wiz.frame ? 40 : 22, '#3ab8e0'), wiz.px - cx + 15 - (wiz.frame ? 40 : 22), wiz.py - cy - 6 - (wiz.frame ? 40 : 22));
+    ctx.globalCompositeOperation = 'source-over';
+    for (const f of m.flames) flame(ctx, f.x - cx, f.y - cy, this.time + f.x, f.big);
+    drawVignette();
     // talk bubble when facing someone
     if (!D.active && !this.script && !p.moving) {
       const [dx, dy] = DIRV[p.dir];
@@ -868,7 +931,8 @@ const End = {
   update(dt) {
     this.t += dt;
     if (Math.random() < dt * 14) parts.push({ k: 'wind', x: -20, y: Math.random() * VH, vx: 90 + Math.random() * 80, vy: 0, len: 4 + (Math.random() * 10 | 0), life: 2.5, col: 'rgba(220,240,255,0.5)' });
-    if (Math.random() < dt * 3) parts.push({ k: 'leaf', x: -4, y: Math.random() * VH * 0.8, vx: 50 + Math.random() * 40, vy: 8 + Math.random() * 10, life: 4, col: ['#7cc35f', '#f3c646', '#e0705a'][Math.random() * 3 | 0] });
+    if (Math.random() < dt * 3) parts.push({ k: 'leaf', x: -4, y: Math.random() * VH * 0.8, vx: 50 + Math.random() * 40, vy: 8 + Math.random() * 10, life: 4, col: ['#8a9a4a', '#c8902a', '#a8442e'][Math.random() * 3 | 0] });
+    if (Math.random() < dt * 3) mote(Math.random() * VW, VH * (0.5 + Math.random() * 0.5));
     updateParts(dt);
   },
   draw() {
@@ -882,8 +946,9 @@ const End = {
     box(ctx, Math.round(cx - 66), by, 132, 28);
     textCenter(ctx, 'THANKS FOR PLAYING,', cx, by + 7, UI.text);
     textCenter(ctx, G.name + '!', cx, by + 17, UI.accent);
-    if (this.t > 3 && Math.floor(this.t * 2) % 2) textCenter(ctx, 'PRESS A', cx, VH - 12, '#ffffff', 1, C.ink);
-    else textCenter(ctx, '@ODDPAQ', cx, VH - 12, '#eaffd8', 1, '#2f4a3a');
+    if (this.t > 3 && Math.floor(this.t * 2) % 2) textCenter(ctx, 'PRESS A', cx, VH - 12, '#e9dcb8', 1, C.ink);
+    else textCenter(ctx, '@ODDPAQ', cx, VH - 12, '#c8b890', 1, C.ink);
+    drawVignette();
   },
   onA() { if (this.t > 3) fadeTo(() => setScene(Title), 0.5); },
   onTap() { this.onA(); },

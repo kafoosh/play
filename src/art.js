@@ -2,27 +2,28 @@
 // procedural tiles in a soft "cute fantasy" style. Nothing is loaded from disk.
 
 export const C = {
-  ink: '#3b2335', white: '#fffaf0', black: '#000000', eye: '#2b1d3a',
-  grass: '#79c75b', grassD: '#5aa845', grassL: '#a3e277', grassDD: '#3f8a3a', woods: '#5aa34e',
-  path: '#efd59c', pathD: '#d8b679', pathL: '#fff2cc', pathE: '#c99f63',
-  leaf: '#4fb04f', leafD: '#2f8a45', leafL: '#8ad86a', leafO: '#1f5a3a', trunk: '#a0704a', trunkD: '#6b4430',
-  pine: '#3f9a86', pineD: '#2b7468', pineL: '#72caa8', pineO: '#1d4a48',
-  water: '#56aef0', waterD: '#3b8ad8', waterL: '#a6dcff', waterO: '#2d6ab0',
-  wood: '#c58a52', woodD: '#93613a', woodL: '#e8b67c', woodO: '#5a3a2a',
-  stone: '#b9b8cf', stoneD: '#8d8cad', stoneL: '#e2e1f2', stoneO: '#5a5878',
-  wall: '#fbefd2', wallD: '#e6d2a8',
-  gold: '#ffd24a', goldD: '#d49a2a', red: '#e04848', redD: '#a83040',
-  purple: '#7a5ac8', purpleD: '#553f9a', cyan: '#8af4ff', pink: '#ff9ab8',
-  floor: '#deaa70', floorK: '#b9844e', floorL: '#ecc08a', plaster: '#f6e6c6', plasterD: '#ead6ae',
-  cstone: '#b4b0d0', cstoneD: '#9894bc', cstoneL: '#cecbe4', cstoneO: '#6e6a94', carpet: '#d24a52', carpetD: '#a8343e',
+  ink: '#1e1418', white: '#f4ecd8', black: '#000000', eye: '#1a1014',
+  grass: '#5f7d3c', grassD: '#4b6531', grassL: '#7a9a4a', grassDD: '#3a4f27', woods: '#465f30',
+  path: '#8c8273', pathD: '#726a5e', pathL: '#a89c88', pathE: '#4e463e',
+  leaf: '#4a6a32', leafD: '#34502a', leafL: '#6e8c42', leafO: '#18240f', trunk: '#6e4e34', trunkD: '#43301f',
+  pine: '#2f4b3a', pineD: '#223a2c', pineL: '#46684e', pineO: '#101a13',
+  water: '#3d6a86', waterD: '#2e536c', waterL: '#7aa4b4', waterO: '#1f3a4c',
+  wood: '#7e5532', woodD: '#5c3c22', woodL: '#a07448', woodO: '#2a1a10',
+  stone: '#8a8a88', stoneD: '#686866', stoneL: '#aeaca6', stoneO: '#323230',
+  wall: '#d2c29c', wallD: '#b4a27c',
+  gold: '#e8b84a', goldD: '#a8782a', red: '#b8342e', redD: '#7a2222',
+  purple: '#5a3a8a', purpleD: '#3a2462', cyan: '#8ae8ff', pink: '#e8a0a8',
+  floor: '#8a6240', floorK: '#5e4228', floorL: '#a47852', plaster: '#7a7064', plasterD: '#5e564c',
+  cstone: '#6e6a7a', cstoneD: '#58546a', cstoneL: '#8a8698', cstoneO: '#24202e', carpet: '#8e2630', carpetD: '#661a22',
+  glass: '#f2c45a', glassL: '#fff0b0',
 };
 const ROOFS = {
-  roof: { b: '#e0604a', d: '#b0403a', l: '#f59478', o: '#6a2a2e' },
-  roofB: { b: '#5a8ce0', d: '#3e68bc', l: '#8cb8f4', o: '#2a3a6e' },
-  roofN: { b: '#5aae74', d: '#3e8a5a', l: '#8ad69a', o: '#24503a' },
+  roof: { b: '#a8823e', d: '#7a5a28', l: '#c8a052', o: '#2e2010', thatch: true },
+  roofB: { b: '#4e5668', d: '#383e4e', l: '#6a7488', o: '#16181e' },
+  roofN: { b: '#8a4632', d: '#663222', l: '#a85e44', o: '#24120c' },
 };
-// Text box colours.
-export const UI = { paper: '#fdf3dc', paperD: '#efdcb4', edge: '#c8955a', edgeD: '#8a5a3a', text: '#4a3040', accent: '#d0503a', dim: '#a08070' };
+// Text box colours: iron-bound parchment.
+export const UI = { paper: '#e9dcb8', paperD: '#d2c098', edge: '#5a3a22', edgeD: '#1c120c', text: '#2a1a12', accent: '#8e1e1e', dim: '#7a6448' };
 
 // ---------------------------------------------------------------- canvas helpers
 export function makeCanvas(w, h) {
@@ -174,15 +175,42 @@ export function wrap(str, max) {
   return out;
 }
 
-// Parchment window with a wooden frame and rounded corners.
+// Parchment in a dark wooden frame with gold corner studs.
 export function box(x, ox, oy, w, h, fill = UI.paper) {
   ox = Math.round(ox); oy = Math.round(oy);
-  x.fillStyle = UI.edgeD; x.fillRect(ox + 2, oy, w - 4, h); x.fillRect(ox, oy + 2, w, h - 4); x.fillRect(ox + 1, oy + 1, w - 2, h - 2);
-  x.fillStyle = UI.edge; x.fillRect(ox + 2, oy + 1, w - 4, h - 2); x.fillRect(ox + 1, oy + 2, w - 2, h - 4);
+  x.fillStyle = UI.edgeD; x.fillRect(ox + 1, oy, w - 2, h); x.fillRect(ox, oy + 1, w, h - 2);
+  x.fillStyle = UI.edge; x.fillRect(ox + 1, oy + 1, w - 2, h - 2);
+  x.fillStyle = '#7a5434'; x.fillRect(ox + 2, oy + 1, w - 4, 1);
   x.fillStyle = UI.edgeD; x.fillRect(ox + 3, oy + 3, w - 6, h - 6);
-  x.fillStyle = fill; x.fillRect(ox + 4, oy + 3, w - 8, h - 6); x.fillRect(ox + 3, oy + 4, w - 6, h - 8);
-  x.fillStyle = UI.paperD; x.fillRect(ox + 4, oy + h - 5, w - 8, 1);
-  x.fillStyle = '#ffffff'; x.fillRect(ox + 2, oy + 1, w - 4, 1);
+  x.fillStyle = fill; x.fillRect(ox + 4, oy + 4, w - 8, h - 8);
+  if (fill === UI.paper) {
+    x.fillStyle = '#f4ead0'; x.fillRect(ox + 4, oy + 4, w - 8, 1);
+    x.fillStyle = UI.paperD; x.fillRect(ox + 4, oy + h - 5, w - 8, 1); x.fillRect(ox + w - 5, oy + 4, 1, h - 8);
+  }
+  for (const [cx, cy] of [[ox, oy], [ox + w - 3, oy], [ox, oy + h - 3], [ox + w - 3, oy + h - 3]]) {
+    x.fillStyle = UI.edgeD; x.fillRect(cx, cy, 3, 3);
+    x.fillStyle = C.gold; x.fillRect(cx + 1, cy + 1, 1, 1);
+  }
+}
+
+// Soft pixel glow (stepped rings), drawn with 'lighter' blending for lamps and magic.
+const glowCache = new Map();
+export function glow(r, col) {
+  const key = r + col;
+  let c = glowCache.get(key);
+  if (c) return c;
+  let x;
+  [c, x] = makeCanvas(r * 2, r * 2);
+  const n = parseInt(col.slice(1), 16), rgb = `${(n >> 16) & 255},${(n >> 8) & 255},${n & 255}`;
+  for (let j = 0; j < r * 2; j++) for (let i = 0; i < r * 2; i++) {
+    const d = Math.hypot(i + 0.5 - r, j + 0.5 - r) / r;
+    if (d >= 1) continue;
+    const lvl = Math.ceil((1 - d) * 4); // 4 hard steps keeps it pixel-art
+    if ((i + j) % 2 && lvl === 1) continue; // dithered outer ring
+    x.fillStyle = `rgba(${rgb},${lvl * 0.07})`; x.fillRect(i, j, 1, 1);
+  }
+  glowCache.set(key, c);
+  return c;
 }
 
 // ---------------------------------------------------------------- playing card
@@ -245,24 +273,57 @@ export function makeScroll(word) {
 // 16x16 chibi: big head (rows 0-9), small body, legs per walk frame.
 const TOP = {
   down: [
-    '....oooooooo....', '...ohhhhhhhho...', '..ohhHHhhhhhho..', '.ohhHhhhhhhhhho.',
-    '.ohhhhhhhhhhhho.', '.ohssssssssssho.', '.ohsewssssewsho.', '.ohseesssseesho.',
-    '.ohpsssssssspho.', '..oossssssssoo..', '...oottttttoo...', '..osttttttttso..',
-    '...obbbbbbbbo...', '...oTTTTTTTTo...'],
+    '................',
+    '.....oooooo.....',
+    '....ohhhhhho....',
+    '...ohhHhhHhho...',
+    '...ohhhhhhhho...',
+    '...ohssssssho...',
+    '...ohsessesho...',
+    '...ohssssssho...',
+    '....osssssso....',
+    '...okkttttkko...',
+    '..okkttttttkko..',
+    '..oskttttttkso..',
+    '..okkbbbbbbkko..',
+    '..okKTTTTTTKko..',
+  ],
   up: [
-    '....oooooooo....', '...ohhhhhhhho...', '..ohhHHhhhhhho..', '.ohhHhhhhhhhhho.',
-    '.ohhhhhhhhhhhho.', '.ohhhhhhhhhhhho.', '.ohhhhhhhhhhhho.', '.ohhhhhhhhhhhho.',
-    '.ohhhhhhhhhhhho.', '..oohhhhhhhhoo..', '...oottttttoo...', '..osttttttttso..',
-    '...obbbbbbbbo...', '...oTTTTTTTTo...'],
+    '................',
+    '.....oooooo.....',
+    '....ohhhhhho....',
+    '...ohhHhhHhho...',
+    '...ohhhhhhhho...',
+    '...ohhhhhhhho...',
+    '...ohhhhhhhho...',
+    '...ohhhhhhhho...',
+    '....ohhhhhho....',
+    '...okkkkkkkko...',
+    '..okkkkkkkkkko..',
+    '..oskkkkkkkkso..',
+    '..okkkkkkkkkko..',
+    '..okKKKKKKKKko..',
+  ],
   side: [
-    '....oooooooo....', '...ohhhhhhhho...', '..ohhHHhhhhhho..', '.ohhHhhhhhhhhho.',
-    '.ohhhhhhhhhhhho.', '.ohhhhhhsssssso.', '.ohhhhhssssewso.', '.ohhhhhsssseeso.',
-    '.ohhhhhssssspso.', '..oohhhssssoo...', '....oottttoo....', '....otttsttto...',
-    '....obbbbbbo....', '....oTTTTTTo....'],
+    '................',
+    '.....oooooo.....',
+    '....ohhhhhho....',
+    '...ohhHhhhhho...',
+    '...ohhhhhhhho...',
+    '...ohhhhsssso...',
+    '...ohhhhsseso...',
+    '...ohhhhssssso..',
+    '....ohhhssso....',
+    '....okkkttto....',
+    '...okkkktttto...',
+    '...okkkktsto....',
+    '...okkkkbbbo....',
+    '...okKKKTTTo....',
+  ],
 };
 const LEGS = {
-  down: [['....obbo.obbo...', '....oooo.oooo...'], ['....oooo.obbo...', '.........oooo...'], ['....obbo.oooo...', '....oooo........']],
-  side: [['.....obbo.......', '.....oooo.......'], ['....obo.obo.....', '....oo...oo.....'], ['....obo.obo.....', '....oo...oo.....']],
+  down: [['...obbo..obbo...', '...oooo..oooo...'], ['...oooo..obbo...', '.........oooo...'], ['...obbo..oooo...', '...oooo.........']],
+  side: [['.....obbo.......', '.....oooo.......'], ['....obo..obo....', '....oo....oo....'], ['....obo..obo....', '....oo....oo....']],
 };
 const set = (rows, i, j, ch) => { if (rows[j]) rows[j] = rows[j].slice(0, i) + ch + rows[j].slice(i + 1); };
 
@@ -272,33 +333,34 @@ function personRows(look, dir, frame) {
   const legs = LEGS[face === 'side' ? 'side' : 'down'][frame % 3];
   rows.push(legs[0], legs[1]);
   if (look.long) {
-    for (let j = 9; j <= 11; j++) {
-      if (face === 'down') { set(rows, 1, j, 'o'); set(rows, 2, j, 'h'); set(rows, 13, j, 'h'); set(rows, 14, j, 'o'); }
-      else if (face === 'up') { set(rows, 1, j, 'o'); set(rows, 14, j, 'o'); for (let i = 2; i <= 13; i++) set(rows, i, j, 'h'); }
-      else { set(rows, 2, j, 'o'); set(rows, 3, j, 'h'); set(rows, 4, j, 'h'); }
-    }
+    if (face === 'down') for (let j = 8; j <= 10; j++) { set(rows, 3, j, 'h'); set(rows, 12, j, 'h'); set(rows, 2, j, 'o'); set(rows, 13, j, 'o'); }
+    else if (face === 'up') for (let j = 8; j <= 11; j++) for (let i = 4; i <= 11; i++) set(rows, i, j, 'h');
+    else for (let j = 8; j <= 10; j++) { set(rows, 4, j, 'h'); set(rows, 3, j, 'o'); }
   }
   if (look.beard) {
-    if (face === 'down') { for (let i = 4; i <= 11; i++) { set(rows, i, 8, 'W'); set(rows, i, 9, 'W'); } for (let i = 6; i <= 9; i++) set(rows, i, 10, 'W'); }
-    else if (face === 'side') { for (let i = 9; i <= 13; i++) set(rows, i, 8, 'W'); for (let i = 9; i <= 11; i++) set(rows, i, 9, 'W'); }
+    if (face === 'down') { for (let i = 5; i <= 10; i++) { set(rows, i, 7, 'W'); set(rows, i, 8, 'W'); } for (let i = 6; i <= 9; i++) set(rows, i, 9, 'W'); }
+    else if (face === 'side') { for (let i = 8; i <= 12; i++) set(rows, i, 7, 'W'); for (let i = 8; i <= 11; i++) set(rows, i, 8, 'W'); set(rows, 9, 9, 'W'); }
   }
   if (look.acc === 'cap') {
-    for (let j = 0; j <= 3; j++) rows[j] = rows[j].replace(/h/g, 'c').replace(/H/g, 'C');
-    if (face === 'down') { set(rows, 12, 0, 'f'); set(rows, 13, 0, 'f'); set(rows, 13, 1, 'f'); }
-    if (face === 'side') { set(rows, 3, 0, 'f'); set(rows, 2, 0, 'f'); set(rows, 2, 1, 'f'); }
+    for (let j = 1; j <= 3; j++) rows[j] = rows[j].replace(/h/g, 'c').replace(/H/g, 'C');
+    if (face === 'down') { set(rows, 11, 0, 'f'); set(rows, 12, 0, 'f'); set(rows, 12, 1, 'f'); }
+    if (face === 'side') { set(rows, 4, 0, 'f'); set(rows, 3, 0, 'f'); set(rows, 3, 1, 'f'); }
   }
-  if (look.acc === 'helmet') { set(rows, 7, 0, 'r'); set(rows, 8, 0, 'r'); }
+  if (look.acc === 'helmet') { set(rows, 7, 0, 'r'); set(rows, 8, 0, 'r'); if (face !== 'up') { set(rows, 7, 5, 'o'); set(rows, 8, 5, 'o'); } }
+  if (look.acc === 'hood' && face !== 'up') { set(rows, 4, 1, 'o'); set(rows, 11, 1, 'o'); }
   if (look.kid) { rows.splice(12, 1); rows.splice(3, 1); }
   return rows;
 }
 
 function personPal(look) {
-  const hair = look.acc === 'hood' ? look.hood : look.acc === 'helmet' ? '#b8bcd0' : look.hair;
-  const cap = look.cap || '#e0604a';
+  const hair = look.acc === 'hood' ? look.hood : look.acc === 'helmet' ? '#9a9ca6' : look.hair;
+  const cap = look.cap || '#7a2a2a';
+  const cloak = look.cloak || (look.acc === 'hood' ? look.hood : shade(look.tunic, 0.6));
   return {
-    o: C.ink, h: hair, H: shade(hair, 1.35), s: look.skin, e: C.eye, w: '#ffffff', p: '#f7a3a0',
-    t: look.tunic, T: look.tunicD || shade(look.tunic), b: look.boots || '#6b4430',
-    W: look.beardColor || '#f6f2ea', r: C.red, c: cap, C: shade(cap, 1.3), f: '#fffaf0',
+    o: C.ink, h: hair, H: shade(hair, 1.25), s: look.skin, e: C.eye,
+    t: look.tunic, T: look.tunicD || shade(look.tunic, 0.75), b: look.boots || '#3e2a1a',
+    k: cloak, K: shade(cloak, 0.72),
+    W: look.beardColor || '#dcd6c8', r: C.red, c: cap, C: shade(cap, 1.25), f: '#e8e0c8',
   };
 }
 
@@ -325,7 +387,7 @@ export function charSprite(look, dir = 'down', frame = 0) {
   let x;
   if (look.kind === 'wizard') {
     [c, x] = makeCanvas(20, 26);
-    grid(x, WIZARD, 0, 2, { o: C.ink, h: '#6a4ad0', H: '#4a3398', y: C.gold, s: '#f6d0a8', e: C.eye, w: '#ffffff', b: '#f6f2ea', B: '#cfc8bc', r: '#4a6ae0', R: '#3348b0' });
+    grid(x, WIZARD, 0, 2, { o: C.ink, h: '#4e2e8a', H: '#2e1c5a', y: C.gold, s: '#e8c09a', e: C.eye, w: '#e8e0cc', b: '#e0dccc', B: '#a8a294', r: '#2e3e7a', R: '#1e2858' });
     const up = frame ? 3 : 0;
     x.fillStyle = C.ink; x.fillRect(14, 9 - up, 3, 17 + up - (frame ? 2 : 0));
     x.fillStyle = C.wood; x.fillRect(15, 10 - up, 1, 15 + up - (frame ? 2 : 0));
@@ -334,14 +396,14 @@ export function charSprite(look, dir = 'down', frame = 0) {
   } else if (look.kind === 'cat' || look.kind === 'chicken' || look.kind === 'frog') {
     [c, x] = makeCanvas(16, 16);
     if (look.kind === 'cat') {
-      grid(x, CAT, 0, 0, { o: C.ink, G: '#f0a050', e: C.eye, p: C.pink, W: '#fff6e8' });
+      grid(x, CAT, 0, 0, { o: C.ink, G: '#6a6470', e: '#c8d84a', p: C.pink, W: '#c8c2b8' });
       x.fillStyle = C.ink;
       if (frame % 2) { x.fillRect(12, 11, 1, 4); x.fillRect(13, 10, 1, 2); } else { x.fillRect(12, 13, 3, 1); x.fillRect(14, 12, 1, 1); }
     } else if (look.kind === 'chicken') {
       const rows = frame % 2 ? ['................', ...CHICKEN.slice(0, 15)].map((r, j) => (j > 8 ? CHICKEN[j] : r)) : CHICKEN;
-      grid(x, rows, 0, 0, { o: C.ink, R: C.red, W: '#fffdf6', e: C.eye, y: C.gold }, dir === 'right');
+      grid(x, rows, 0, 0, { o: C.ink, R: C.red, W: '#d8cfb8', e: C.eye, y: C.goldD }, dir === 'right');
     } else {
-      grid(x, FROG, 0, frame % 2 ? -2 : 0, { o: C.ink, G: '#7ad05a', e: C.eye, R: '#3f8a3a' });
+      grid(x, FROG, 0, frame % 2 ? -2 : 0, { o: C.ink, G: '#5a7a34', e: C.eye, R: '#344a1e' });
     }
   } else {
     const rows = personRows(look, dir, frame);
@@ -381,10 +443,10 @@ const THRONE = ['...oooooooooo...', '...oyyyyyyyyo...', '...oyRRRRRRyo...', '...
 const PAL = {
   stump: { o: C.woodO, l: C.woodL, k: C.wood, g: C.wood, d: C.woodD, s: C.grassD },
   sign: { o: C.woodO, l: C.woodL, g: C.wood, k: C.woodD, s: C.grassD },
-  well: { o: C.stoneO, r: '#5a8ce0', R: '#3e68bc', k: C.woodD, l: C.stoneL, b: '#2d5aa0', g: C.stone, d: C.stoneD, s: C.grassD },
+  well: { o: C.stoneO, r: '#4e5668', R: '#383e4e', k: C.woodD, l: C.stoneL, b: '#1a2a3a', g: C.stone, d: C.stoneD, s: C.grassD },
   pillar: { o: C.stoneO, l: C.stoneL, g: C.stone, d: C.stoneD, m: C.leafD, s: C.grassD },
-  pot: { o: C.woodO, k: '#9a4a2a', g: '#d9784a', l: '#f2a070', d: '#b05a34', s: C.floorK },
-  bed: { o: C.woodO, k: C.woodD, g: C.wood, w: '#e8ecfa', W: '#ffffff', Q: '#d65a6a', q: '#f08a8a' },
+  pot: { o: C.woodO, k: '#5a2e1a', g: '#9a5a36', l: '#b8784a', d: '#6e3e24', s: C.floorK },
+  bed: { o: C.woodO, k: C.woodD, g: C.wood, w: '#cfc6b0', W: '#e8e0cc', Q: '#2e4a32', q: '#3e5e40' },
   throne: { o: C.ink, y: C.gold, Y: C.goldD, R: C.carpet },
 };
 
@@ -453,7 +515,7 @@ export function drawTile(x, kind, ox, oy, m, tx, ty, frame) {
       for (let k = 0; k < 2; k++) {
         const a = 2 + ((hash(tx, ty, k + 70) * 10) | 0), b = 3 + ((hash(tx, ty, k + 80) * 9) | 0);
         x.fillStyle = C.grassD; x.fillRect(ox + a, oy + b + 1, 4, 2);
-        x.fillStyle = '#6ab84e'; x.fillRect(ox + a, oy + b, 4, 2); x.fillRect(ox + a + 1, oy + b - 1, 2, 1);
+        x.fillStyle = '#6a8a40'; x.fillRect(ox + a, oy + b, 4, 2); x.fillRect(ox + a + 1, oy + b - 1, 2, 1);
         x.fillStyle = C.grassL; x.fillRect(ox + a + 1, oy + b - 1, 1, 1);
       }
       break;
@@ -468,26 +530,34 @@ export function drawTile(x, kind, ox, oy, m, tx, ty, frame) {
     case 'flowers': grass(x, ox, oy, tx, ty);
       for (let k = 0; k < 3; k++) {
         const a = ox + 3 + ((hash(tx, ty, k + 30) * 10) | 0), b = oy + 3 + ((hash(tx, ty, k + 40) * 10) | 0);
-        const pet = ['#ffffff', '#ffe066', '#ff9ab8', '#c6a8ff', '#ff8a6a'][(hash(tx, ty, k + 60) * 5) | 0];
+        const pet = ['#e8e0d0', '#d8b84a', '#b86a8a', '#8a7ac8', '#c85a4a'][(hash(tx, ty, k + 60) * 5) | 0];
         x.fillStyle = C.grassDD; x.fillRect(a, b + 2, 1, 2); x.fillStyle = C.leafD; x.fillRect(a + 1, b + 3, 1, 1);
         x.fillStyle = shade(pet, 0.8); x.fillRect(a - 1, b, 3, 2); x.fillRect(a, b - 1, 1, 3);
         x.fillStyle = pet; x.fillRect(a - 1, b - 1, 1, 1); x.fillRect(a + 1, b - 1, 1, 1); x.fillRect(a - 1, b, 1, 1); x.fillRect(a, b - 1, 1, 1);
-        x.fillStyle = '#ffb02a'; x.fillRect(a, b, 1, 1);
+        x.fillStyle = '#e8c860'; x.fillRect(a, b, 1, 1);
       }
       break;
     case 'path': {
       const isP = k => ['path', 'bridge', 'door', 'gate'].includes(k);
       const sides = [!isP(n(0, -1)) && n(0, -1) !== 'water' && !n(0, -1).startsWith('h') && n(0, -1) !== 'fence', !isP(n(0, 1)) && n(0, 1) !== 'water', !isP(n(-1, 0)), !isP(n(1, 0))];
       grass(x, ox, oy, tx, ty);
+      const shades = [C.path, C.pathD, C.pathL, '#7e7466'];
       for (let j = 0; j < 16; j++) for (let i = 0; i < 16; i++) {
         if (edgeMask(sides, i, j, tx, ty)) continue;
         const rim = edgeMask(sides, i, j - 1, tx, ty) || edgeMask(sides, i - 1, j, tx, ty) || edgeMask(sides, i + 1, j, tx, ty) || edgeMask(sides, i, j + 1, tx, ty);
-        dot(x, ox, oy, i, j, rim ? C.pathE : C.path);
+        if (rim) { dot(x, ox, oy, i, j, C.grassDD); continue; }
+        // cobbles: rows of stones 4px tall, staggered, with dark mortar
+        const row = (ty * 4 + (j >> 2)), off = row % 2 ? 3 : 0, gi = tx * 16 + i + off;
+        const stone = Math.floor(gi / 5);
+        let col;
+        if ((j & 3) === 3 || gi % 5 === 0) col = C.pathE;
+        else {
+          col = shades[(hash(stone, row, 4) * 4) | 0];
+          if ((j & 3) === 0) col = shade(col, 1.12);
+        }
+        dot(x, ox, oy, i, j, col);
       }
-      for (let k = 0; k < 3; k++) {
-        const a = 3 + ((hash(tx, ty, k + 11) * 10) | 0), b = 3 + ((hash(tx, ty, k + 21) * 10) | 0);
-        dot(x, ox, oy, a, b, C.pathD); dot(x, ox, oy, a + 1, b, C.pathD); dot(x, ox, oy, a, b - 1, C.pathL);
-      }
+      if (hash(tx, ty, 6) < 0.4) { dot(x, ox, oy, 3 + ((hash(tx, ty, 7) * 9) | 0), 3 + ((hash(tx, ty, 8) * 9) | 0), C.grassD); }
       break;
     }
     case 'water': {
@@ -500,11 +570,11 @@ export function drawTile(x, kind, ox, oy, m, tx, ty, frame) {
         x.fillRect(ox + a, oy + b, 1, 1); x.fillRect(ox + a + 1, oy + b + 1, 2, 1); x.fillRect(ox + a + 3, oy + b, 1, 1);
       }
       const land = k => k && k !== 'water' && k !== 'bridge';
-      x.fillStyle = '#ffffff';
-      if (land(n(0, -1))) { x.fillStyle = C.grassDD; x.fillRect(ox, oy, 16, 2); x.fillStyle = C.waterO; x.fillRect(ox, oy + 2, 16, 1); x.fillStyle = '#ffffff'; for (let i = frame * 2; i < 16; i += 4) x.fillRect(ox + i, oy + 3, 2, 1); }
-      if (land(n(-1, 0))) { x.fillStyle = C.waterO; x.fillRect(ox, oy, 1, 16); x.fillStyle = C.waterL; x.fillRect(ox + 1, oy, 1, 16); x.fillStyle = '#ffffff'; for (let j = frame * 2; j < 16; j += 5) x.fillRect(ox + 1, oy + j, 1, 2); }
-      if (land(n(1, 0))) { x.fillStyle = C.waterO; x.fillRect(ox + 15, oy, 1, 16); x.fillStyle = C.waterL; x.fillRect(ox + 14, oy, 1, 16); x.fillStyle = '#ffffff'; for (let j = frame * 2 + 1; j < 16; j += 5) x.fillRect(ox + 14, oy + j, 1, 2); }
-      if (land(n(0, 1))) { x.fillStyle = C.waterL; x.fillRect(ox, oy + 14, 16, 1); x.fillStyle = '#ffffff'; for (let i = frame * 2 + 1; i < 16; i += 4) x.fillRect(ox + i, oy + 14, 2, 1); x.fillStyle = C.pathE; x.fillRect(ox, oy + 15, 16, 1); }
+      x.fillStyle = '#9ab8c4';
+      if (land(n(0, -1))) { x.fillStyle = C.grassDD; x.fillRect(ox, oy, 16, 2); x.fillStyle = C.waterO; x.fillRect(ox, oy + 2, 16, 1); x.fillStyle = '#9ab8c4'; for (let i = frame * 2; i < 16; i += 4) x.fillRect(ox + i, oy + 3, 2, 1); }
+      if (land(n(-1, 0))) { x.fillStyle = C.waterO; x.fillRect(ox, oy, 1, 16); x.fillStyle = C.waterL; x.fillRect(ox + 1, oy, 1, 16); x.fillStyle = '#9ab8c4'; for (let j = frame * 2; j < 16; j += 5) x.fillRect(ox + 1, oy + j, 1, 2); }
+      if (land(n(1, 0))) { x.fillStyle = C.waterO; x.fillRect(ox + 15, oy, 1, 16); x.fillStyle = C.waterL; x.fillRect(ox + 14, oy, 1, 16); x.fillStyle = '#9ab8c4'; for (let j = frame * 2 + 1; j < 16; j += 5) x.fillRect(ox + 14, oy + j, 1, 2); }
+      if (land(n(0, 1))) { x.fillStyle = C.waterL; x.fillRect(ox, oy + 14, 16, 1); x.fillStyle = '#9ab8c4'; for (let i = frame * 2 + 1; i < 16; i += 4) x.fillRect(ox + i, oy + 14, 2, 1); x.fillStyle = C.pathE; x.fillRect(ox, oy + 15, 16, 1); }
       break;
     }
     case 'bridge':
@@ -557,19 +627,26 @@ export function drawTile(x, kind, ox, oy, m, tx, ty, frame) {
       const L = n(-1, 0) !== 'stall', R = n(1, 0) !== 'stall';
       for (let k = 0; k < 3; k++) {
         const a = ox + 2 + k * 5;
-        blob(x, a, oy + 2, [[2, 2.5, 2.4]], [{ o: '#8a2a2a', g: '#ff5a4a', l: '#ffb0a0', d: '#c83a3a' }, { o: '#8a6a1a', g: '#ffd24a', l: '#fff0a0', d: '#d49a2a' }, { o: '#2a6a2a', g: '#8ad86a', l: '#d0ffb0', d: '#4fae4f' }][(tx + k) % 3], k, false);
+        blob(x, a, oy + 2, [[2, 2.5, 2.4]], [{ o: '#3a1010', g: '#a83a2e', l: '#d06a50', d: '#7a2420' }, { o: '#3a2a0a', g: '#c89a3a', l: '#e8c870', d: '#8a6a22' }, { o: '#1a2a12', g: '#6a8a3a', l: '#9ab860', d: '#46602a' }][(tx + k) % 3], k, false);
       }
       x.fillStyle = C.woodO; x.fillRect(ox, oy + 6, 16, 10);
       x.fillStyle = C.woodL; x.fillRect(ox + (L ? 1 : 0), oy + 7, 16 - (L ? 1 : 0) - (R ? 1 : 0), 2);
       for (let i = 0; i < 16; i += 4) {
-        x.fillStyle = (i / 4) % 2 ? '#fffaf0' : '#5a8ce0';
+        x.fillStyle = (i / 4) % 2 ? '#d8ccb0' : '#7a2228';
         x.fillRect(ox + i + (L && i === 0 ? 1 : 0), oy + 9, 4 - (L && i === 0 ? 1 : 0) - (R && i === 12 ? 1 : 0), 6);
       }
       break; }
     case 'roof': case 'roofB': case 'roofN': {
       const P = ROOFS[kind], isR = k => k.startsWith('roof');
       x.fillStyle = P.b; x.fillRect(ox, oy, 16, 16);
-      for (let r = 0; r < 4; r++) {
+      if (P.thatch) {
+        for (let i = 0; i < 16; i++) for (let j = 0; j < 16; j++) {
+          const hsh = hash(tx * 16 + i, ty * 16 + j, 9);
+          if (hsh < 0.18) dot(x, ox, oy, i, j, P.d); else if (hsh > 0.86) dot(x, ox, oy, i, j, P.l);
+        }
+        x.fillStyle = P.d; x.fillRect(ox, oy + 7, 16, 1); x.fillRect(ox, oy + 15, 16, 1);
+        x.fillStyle = P.l; x.fillRect(ox, oy + 8, 16, 1);
+      } else for (let r = 0; r < 4; r++) {
         const y = oy + r * 4, off = r % 2 ? 2 : 0;
         x.fillStyle = P.l; x.fillRect(ox, y, 16, 1);
         x.fillStyle = P.d; x.fillRect(ox, y + 3, 16, 1);
@@ -585,26 +662,28 @@ export function drawTile(x, kind, ox, oy, m, tx, ty, frame) {
     case 'hwall': case 'hwin': case 'door': {
       const isW = k => ['hwall', 'hwin', 'door'].includes(k);
       x.fillStyle = C.wall; x.fillRect(ox, oy, 16, 16);
-      x.fillStyle = C.wallD; x.fillRect(ox, oy, 16, 2); x.fillRect(ox, oy + 11, 16, 1);
-      x.fillStyle = C.stone; x.fillRect(ox, oy + 12, 16, 4);
-      x.fillStyle = C.stoneD; x.fillRect(ox + 4, oy + 12, 1, 4); x.fillRect(ox + 11, oy + 12, 1, 4); x.fillRect(ox, oy + 15, 16, 1);
-      x.fillStyle = C.wood;
-      if (!isW(n(-1, 0))) { x.fillRect(ox, oy, 2, 12); x.fillStyle = C.woodO; x.fillRect(ox, oy, 1, 16); x.fillStyle = C.wood; }
+      x.fillStyle = C.wallD; for (let k = 0; k < 4; k++) x.fillRect(ox + ((hash(tx, ty, k) * 14) | 0), oy + 2 + ((hash(tx, ty, k + 5) * 8) | 0), 2, 1);
+      x.fillStyle = C.woodD; x.fillRect(ox, oy, 16, 2); x.fillRect(ox, oy + 10, 16, 2);
+      if (kind === 'hwall') for (let k = 0; k < 8; k++) { x.fillRect(ox + 2 + k, oy + 2 + k, 2, 1); x.fillRect(ox + 12 - k, oy + 2 + k, 2, 1); }
+      x.fillStyle = C.stoneD; x.fillRect(ox, oy + 12, 16, 4);
+      x.fillStyle = C.stone; x.fillRect(ox + 1, oy + 12, 5, 1); x.fillRect(ox + 8, oy + 13, 6, 1); x.fillRect(ox + 3, oy + 14, 4, 1);
+      x.fillStyle = C.stoneO; x.fillRect(ox, oy + 15, 16, 1);
+      x.fillStyle = C.woodD;
+      if (!isW(n(-1, 0))) { x.fillRect(ox, oy, 2, 12); x.fillStyle = C.woodO; x.fillRect(ox, oy, 1, 16); x.fillStyle = C.woodD; }
       if (!isW(n(1, 0))) { x.fillRect(ox + 14, oy, 2, 12); x.fillStyle = C.woodO; x.fillRect(ox + 15, oy, 1, 16); }
       if (kind === 'hwin') {
-        x.fillStyle = C.woodO; x.fillRect(ox + 4, oy + 2, 8, 8); x.fillRect(ox + 5, oy + 1, 6, 1);
-        x.fillStyle = '#9fdcff'; x.fillRect(ox + 5, oy + 3, 6, 6); x.fillRect(ox + 6, oy + 2, 4, 1);
-        x.fillStyle = '#ffffff'; x.fillRect(ox + 6, oy + 3, 1, 2);
-        x.fillStyle = C.woodO; x.fillRect(ox + 8, oy + 2, 1, 7); x.fillRect(ox + 5, oy + 5, 6, 1);
-        x.fillStyle = C.woodD; x.fillRect(ox + 3, oy + 9, 10, 2);
-        x.fillStyle = '#ff7a8a'; x.fillRect(ox + 4, oy + 8, 1, 1); x.fillRect(ox + 7, oy + 8, 1, 1); x.fillRect(ox + 10, oy + 8, 1, 1);
-        x.fillStyle = C.leaf; x.fillRect(ox + 5, oy + 8, 2, 1); x.fillRect(ox + 8, oy + 8, 2, 1);
+        x.fillStyle = C.woodO; x.fillRect(ox + 4, oy + 2, 8, 8);
+        x.fillStyle = C.glass; x.fillRect(ox + 5, oy + 3, 6, 6);
+        x.fillStyle = C.glassL; x.fillRect(ox + 5, oy + 3, 2, 2);
+        x.fillStyle = C.woodO; x.fillRect(ox + 7, oy + 3, 2, 6); x.fillRect(ox + 5, oy + 5, 6, 1);
+        x.fillStyle = C.wood; x.fillRect(ox + 2, oy + 2, 2, 8); x.fillRect(ox + 12, oy + 2, 2, 8);
+        x.fillStyle = C.woodD; x.fillRect(ox + 2, oy + 5, 2, 1); x.fillRect(ox + 12, oy + 5, 2, 1);
       }
       if (kind === 'door') {
         x.fillStyle = C.woodO; x.fillRect(ox + 3, oy + 3, 10, 13); x.fillRect(ox + 4, oy + 2, 8, 1); x.fillRect(ox + 5, oy + 1, 6, 1);
-        x.fillStyle = C.wood; x.fillRect(ox + 4, oy + 4, 8, 12); x.fillRect(ox + 5, oy + 3, 6, 1); x.fillRect(ox + 6, oy + 2, 4, 1);
-        x.fillStyle = C.woodD; x.fillRect(ox + 6, oy + 4, 1, 12); x.fillRect(ox + 9, oy + 4, 1, 12);
-        x.fillStyle = C.woodL; x.fillRect(ox + 4, oy + 4, 1, 11);
+        x.fillStyle = C.woodD; x.fillRect(ox + 4, oy + 4, 8, 12); x.fillRect(ox + 5, oy + 3, 6, 1); x.fillRect(ox + 6, oy + 2, 4, 1);
+        x.fillStyle = C.wood; x.fillRect(ox + 5, oy + 4, 1, 12); x.fillRect(ox + 8, oy + 4, 1, 12);
+        x.fillStyle = '#3a3a3e'; x.fillRect(ox + 4, oy + 6, 8, 1); x.fillRect(ox + 4, oy + 12, 8, 1);
         x.fillStyle = C.gold; x.fillRect(ox + 10, oy + 9, 1, 2);
       }
       break;
@@ -619,6 +698,15 @@ export function drawTile(x, kind, ox, oy, m, tx, ty, frame) {
         x.fillStyle = C.woodO; x.fillRect(ox, oy + 5, 16, 3); x.fillRect(ox, oy + 10, 16, 3);
         x.fillStyle = C.woodL; x.fillRect(ox, oy + 6, 16, 1); x.fillRect(ox, oy + 11, 16, 1);
       }
+      break;
+    case 'lamp': grass(x, ox, oy, tx, ty);
+      x.fillStyle = C.grassDD; x.fillRect(ox + 4, oy + 14, 8, 2);
+      x.fillStyle = C.ink; x.fillRect(ox + 7, oy + 4, 2, 11); x.fillRect(ox + 5, oy + 14, 6, 2);
+      x.fillStyle = '#4a4a50'; x.fillRect(ox + 7, oy + 5, 1, 9);
+      x.fillStyle = C.ink; x.fillRect(ox + 4, oy - 2, 8, 8); x.fillRect(ox + 5, oy - 3, 6, 1);
+      x.fillStyle = C.glass; x.fillRect(ox + 5, oy - 1, 6, 5);
+      x.fillStyle = C.glassL; x.fillRect(ox + 7, oy, 2, 3);
+      x.fillStyle = C.ink; x.fillRect(ox + 4, oy + 1, 8, 1);
       break;
     case 'ctop': {
       x.fillStyle = C.woods; x.fillRect(ox, oy, 16, 16);
@@ -656,27 +744,27 @@ export function drawTile(x, kind, ox, oy, m, tx, ty, frame) {
     // ---- home
     case 'htop': x.fillStyle = '#5a3a3a'; x.fillRect(ox, oy, 16, 16); x.fillStyle = '#7a5040'; x.fillRect(ox, oy + 12, 16, 2); x.fillStyle = '#3a2228'; x.fillRect(ox, oy + 14, 16, 2); break;
     case 'paper': case 'hwindow': case 'shelf': case 'hearth': {
-      x.fillStyle = C.plaster; x.fillRect(ox, oy, 16, 16);
-      x.fillStyle = C.plasterD; for (let i = 2; i < 16; i += 5) x.fillRect(ox + i, oy + 1, 1, 9);
-      x.fillStyle = C.woodL; x.fillRect(ox, oy, 16, 1);
+      bricks(x, ox, oy, C.plaster, C.plasterD, '#8e8476', ty);
+      x.fillStyle = C.woodD; x.fillRect(ox, oy, 16, 2);
       x.fillStyle = C.wood; x.fillRect(ox, oy + 10, 16, 6);
       x.fillStyle = C.woodL; x.fillRect(ox, oy + 10, 16, 1);
       x.fillStyle = C.woodD; for (let i = 3; i < 16; i += 6) x.fillRect(ox + i, oy + 11, 1, 5); x.fillRect(ox, oy + 15, 16, 1);
       if (kind === 'hwindow') {
         x.fillStyle = C.woodO; x.fillRect(ox + 2, oy + 1, 12, 9);
-        x.fillStyle = '#9fdcff'; x.fillRect(ox + 3, oy + 2, 10, 7);
-        x.fillStyle = C.leafL; x.fillRect(ox + 3, oy + 6, 4, 3); x.fillStyle = C.leaf; x.fillRect(ox + 9, oy + 7, 4, 2);
-        x.fillStyle = '#ffffff'; x.fillRect(ox + 4, oy + 3, 2, 1);
-        x.fillStyle = C.woodL; x.fillRect(ox + 7, oy + 2, 2, 7);
-        x.fillStyle = '#e86a7a'; x.fillRect(ox + 2, oy + 1, 3, 9); x.fillRect(ox + 11, oy + 1, 3, 9);
-        x.fillStyle = '#ff9aa8'; x.fillRect(ox + 2, oy + 1, 1, 9); x.fillRect(ox + 11, oy + 1, 1, 9);
+        x.fillStyle = '#2c3058'; x.fillRect(ox + 3, oy + 2, 10, 7);
+        x.fillStyle = '#4a4a7a'; x.fillRect(ox + 3, oy + 7, 10, 2);
+        x.fillStyle = C.pineO; x.fillRect(ox + 3, oy + 6, 3, 3); x.fillRect(ox + 10, oy + 5, 3, 4);
+        x.fillStyle = '#f4ecd8'; x.fillRect(ox + 5, oy + 3, 1, 1); x.fillRect(ox + 10, oy + 3, 1, 1);
+        x.fillStyle = C.woodD; x.fillRect(ox + 7, oy + 2, 2, 7);
+        x.fillStyle = '#6a2a2a'; x.fillRect(ox + 2, oy + 1, 3, 9); x.fillRect(ox + 11, oy + 1, 3, 9);
+        x.fillStyle = '#8a3a34'; x.fillRect(ox + 2, oy + 1, 1, 9); x.fillRect(ox + 11, oy + 1, 1, 9);
       }
       if (kind === 'shelf') {
         x.fillStyle = C.woodO; x.fillRect(ox + 1, oy, 14, 16);
         x.fillStyle = C.woodD; x.fillRect(ox + 2, oy + 1, 12, 14);
         for (const sy of [1, 8]) for (let i = 0; i < 6; i++) {
           const h = 5 + ((hash(tx, i, sy) * 2) | 0);
-          x.fillStyle = ['#e0604a', '#5a8ce0', '#ffd24a', '#5aae74', '#a07ae0', '#f09a4a'][(hash(tx + i, sy, 2) * 6) | 0];
+          x.fillStyle = ['#7a2a2a', '#2e4a6a', '#a8823e', '#3e5a3a', '#4a2e6a', '#6a4226'][(hash(tx + i, sy, 2) * 6) | 0];
           x.fillRect(ox + 2 + i * 2, oy + sy + 7 - h, 2, h);
         }
         x.fillStyle = C.wood; x.fillRect(ox + 2, oy + 7, 12, 1); x.fillRect(ox + 2, oy + 14, 12, 1);
@@ -694,13 +782,13 @@ export function drawTile(x, kind, ox, oy, m, tx, ty, frame) {
     case 'rug': planks(x, ox, oy, tx, ty); {
       const r = k => k === 'rug';
       const sides = [!r(n(0, -1)), !r(n(0, 1)), !r(n(-1, 0)), !r(n(1, 0))];
-      x.fillStyle = '#e06a5a'; x.fillRect(ox + (sides[2] ? 1 : 0), oy + (sides[0] ? 1 : 0), 16 - (sides[2] ? 1 : 0) - (sides[3] ? 1 : 0), 16 - (sides[0] ? 1 : 0) - (sides[1] ? 1 : 0));
-      x.fillStyle = '#fff0c8';
+      x.fillStyle = '#7e2228'; x.fillRect(ox + (sides[2] ? 1 : 0), oy + (sides[0] ? 1 : 0), 16 - (sides[2] ? 1 : 0) - (sides[3] ? 1 : 0), 16 - (sides[0] ? 1 : 0) - (sides[1] ? 1 : 0));
+      x.fillStyle = C.goldD;
       if (sides[0]) x.fillRect(ox, oy + 3, 16, 1);
       if (sides[1]) x.fillRect(ox, oy + 12, 16, 1);
       if (sides[2]) x.fillRect(ox + 3, oy, 1, 16);
       if (sides[3]) x.fillRect(ox + 12, oy, 1, 16);
-      x.fillStyle = '#ffd24a'; x.fillRect(ox + 7, oy + 6, 2, 4); x.fillRect(ox + 6, oy + 7, 4, 2);
+      x.fillStyle = C.gold; x.fillRect(ox + 7, oy + 6, 2, 4); x.fillRect(ox + 6, oy + 7, 4, 2);
       if (sides[0]) { x.fillStyle = C.floor; x.fillRect(ox, oy, 16, 1); }
       if (sides[1]) { x.fillStyle = C.floor; x.fillRect(ox, oy + 15, 16, 1); }
       if (sides[2]) { x.fillStyle = C.floor; x.fillRect(ox, oy, 1, 16); }
@@ -732,9 +820,9 @@ export function drawTile(x, kind, ox, oy, m, tx, ty, frame) {
     case 'exit':
       x.fillStyle = '#3a2228'; x.fillRect(ox, oy, 16, 16);
       x.fillStyle = C.floor; x.fillRect(ox + 1, oy, 14, 10);
-      x.fillStyle = '#5aae74'; x.fillRect(ox + 2, oy + 1, 12, 7);
-      x.fillStyle = '#8ad69a'; for (let i = 3; i < 14; i += 2) x.fillRect(ox + i, oy + 2, 1, 5);
-      x.fillStyle = '#9fdcff'; x.fillRect(ox + 1, oy + 10, 14, 6);
+      x.fillStyle = '#5a3a2a'; x.fillRect(ox + 2, oy + 1, 12, 7);
+      x.fillStyle = '#7a5236'; for (let i = 3; i < 14; i += 2) x.fillRect(ox + i, oy + 2, 1, 5);
+      x.fillStyle = '#3a3a6a'; x.fillRect(ox + 1, oy + 10, 14, 6);
       x.fillStyle = C.grass; x.fillRect(ox + 1, oy + 13, 14, 3);
       break;
     // ---- castle interior
@@ -784,15 +872,15 @@ export function drawTile(x, kind, ox, oy, m, tx, ty, frame) {
 export function drawOver(x, kind, ox, oy, m, tx, ty) {
   if (kind === 'tree') {
     const h = hash(tx, ty, 77), dx = h < 0.33 ? -1 : h > 0.66 ? 1 : 0;
-    x.fillStyle = C.trunkD; x.fillRect(ox + 6, oy + 10, 5, 6);
-    x.fillStyle = C.trunk; x.fillRect(ox + 7, oy + 10, 3, 5);
-    x.fillStyle = C.trunkD; x.fillRect(ox + 5, oy + 15, 7, 1);
+    // twisted trunk with roots
+    x.fillStyle = C.ink; x.fillRect(ox + 5, oy + 9, 6, 7); x.fillRect(ox + 3, oy + 14, 10, 2);
+    x.fillStyle = C.trunkD; x.fillRect(ox + 6, oy + 9, 4, 6); x.fillRect(ox + 4, oy + 14, 2, 1); x.fillRect(ox + 10, oy + 14, 2, 1);
+    x.fillStyle = C.trunk; x.fillRect(ox + 6, oy + 10, 2, 4); x.fillRect(ox + 8, oy + 12, 1, 2);
+    const j = k => (hash(tx, ty, k) - 0.5) * 1.6;
     const pal = { o: C.leafO, g: C.leaf, l: C.leafL, d: C.leafD };
-    blob(x, ox + dx, oy, [[8, 0.5, 5.2], [3.8, 5.5, 4.6], [12.2, 5.5, 4.6], [8, 6.5, 5.8]], pal, tx * 7 + ty);
-    if (hash(tx, ty, 88) < 0.18) {
-      const col = hash(tx, ty, 89) < 0.5 ? '#ff6a5a' : '#ffb0c8';
-      for (const [a, b] of [[5, 3], [10, 1], [11, 7], [4, 8]]) { x.fillStyle = col; x.fillRect(ox + dx + a, oy + b, 2, 2); x.fillStyle = '#ffffff'; x.fillRect(ox + dx + a, oy + b, 1, 1); }
-    }
+    blob(x, ox + dx, oy, [[5 + j(1), 0 + j(2), 4.2], [11 + j(3), 0.5 + j(4), 4.4], [2.6, 5.5 + j(5), 4], [13.4, 5 + j(6), 4], [8 + j(7), 2 + j(8), 5], [5.5, 7.5, 4.4], [10.5, 7.5, 4.4]], pal, tx * 7 + ty);
+  } else if (kind === 'lamp') {
+    // nothing extra: the light is added at run time
   } else if (kind === 'pine') {
     const tiers = [[-6, 6, 3.5], [-2, 7, 5.5], [3, 9, 7.5]];
     const inT = (i, j) => {
@@ -826,12 +914,12 @@ export function drawOver(x, kind, ox, oy, m, tx, ty) {
       const half = Math.round(1 + j * 0.62);
       for (let i = 8 - half; i < 8 + half; i++) {
         const edge = i === 8 - half || i === 8 + half - 1 || j === 12;
-        x.fillStyle = edge ? '#2a3a6e' : i < 7 ? '#8cb8f4' : (j % 3 === 2 ? '#3e68bc' : '#5a8ce0');
+        x.fillStyle = edge ? '#16181e' : i < 7 ? '#6a7488' : (j % 3 === 2 ? '#383e4e' : '#4e5668');
         x.fillRect(ox + i, oy - 10 + j, 1, 1);
       }
     }
     x.fillStyle = C.ink; x.fillRect(ox + 7, oy - 15, 1, 6);
-    x.fillStyle = C.red; x.fillRect(ox + 8, oy - 15, 4, 2); x.fillRect(ox + 8, oy - 13, 2, 1);
+    x.fillStyle = C.purple; x.fillRect(ox + 8, oy - 15, 4, 3); x.fillRect(ox + 8, oy - 12, 2, 1); x.fillStyle = C.gold; x.fillRect(ox + 9, oy - 14, 1, 1);
   }
 }
 

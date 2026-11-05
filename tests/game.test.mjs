@@ -78,9 +78,13 @@ test('every song channel loops on the same length', () => {
 test('URL force parsing', () => {
   assert.deepEqual(parseForce('7D'), { v: 7, s: 'D' });
   assert.deepEqual(parseForce('10h99x'), { v: 10, s: 'H' });
-  assert.deepEqual(parseForce('qs'), { v: 12, s: 'S' });
-  assert.deepEqual(parseForce('AC'), { v: 1, s: 'C' });
-  assert.equal(parseForce('1D'), null);
+  assert.deepEqual(parseForce('12s'), { v: 12, s: 'S' });
+  assert.deepEqual(parseForce('13H'), { v: 13, s: 'H' });
+  assert.deepEqual(parseForce('11c'), { v: 11, s: 'C' });
+  assert.deepEqual(parseForce('1C'), { v: 1, s: 'C' });
+  assert.equal(parseForce('14D'), null);
+  assert.equal(parseForce('QS'), null); // letters are words now, never cards
+  assert.equal(parseForce('AC'), null);
   assert.equal(cardName(13, 'C'), 'KING OF CLUBS');
 });
 

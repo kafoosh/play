@@ -7,7 +7,7 @@ const WORLD_LEGEND = {
   '=': ['path'], '~': ['water', 1], '#': ['bridge'], R: ['rock', 1], S: ['sign', 1], u: ['stump', 1],
   P: ['pillar', 1], x: ['rubble'], O: ['runestone', 1], L: ['log', 1], W: ['well', 1], m: ['stall', 1],
   '^': ['roof', 1], B: ['roofB', 1], N: ['roofN', 1], H: ['hwall', 1], w: ['hwin', 1], d: ['door', 1], D: ['door'], F: ['fence', 1],
-  K: ['ctop', 1], C: ['cwall', 1], Q: ['tower', 1], v: ['cwin', 1], G: ['gate'],
+  l: ['lamp', 1], K: ['ctop', 1], C: ['cwall', 1], Q: ['tower', 1], v: ['cwin', 1], G: ['gate'],
 };
 const HOME_LEGEND = {
   '#': ['htop', 1], W: ['paper', 1], n: ['hwindow', 1], k: ['shelf', 1], h: ['hearth', 1], _: ['floor'],
@@ -55,42 +55,42 @@ export const MAPS = {
       'YYYYYYYYYYYQCCvCCCvCCQYYYYYYYYYYYY',
       'YYYYYYYYYYYQCCCCCCCCCQYYYYYYYYYYYY',
       'YYYYYYYYYYYQCvCCGCCvCQYYYYYYYYYYYY',
-      'YYYYYYYYYY.f...,=,...f.YYYYYYYYYYY',
+      'YYYYYYYYYY.f...l=,.l.f.YYYYYYYYYYY',
       'YYYYYYYYYYY..R..=....YYYYYYYYYYYYY',
       'YYYYYYYYYYYYY...=...YYYYYYYYYYYYYY',
       'YYYYYYYYYYYYYY..=..YYYYYYYYYYYYYYY',
       'YY...,..YYY.=====YYYYY....YYYYYYYY',
-      'Y..P...P..Y.=.YYYYYYY.u.....YYYYYY',
+      'Y..P...P..Yl=.YYYYYYY.u.....YYYYYY',
       'Y..x.O.x..Y.=SYYYYYYY.....u.YYYYYY',
       'Y.P...x.=====.YYYYYYY...,...YYYYYY',
       'Y...Px..u.Y.=======.........YYYYYY',
       'YY.....YYYYYY.....=YY..u..u.YYYYYY',
       'YYYYYYYYYYYYYYYYY.=.Y.......YYYYYY',
-      'YYYYYYYYYYYYYYYYY.=.YYYYYYYYYYYYYY',
+      'YYYYYYYYYYYYYYYYYl=.YYYYYYYYYYYYYY',
       'YYYYYYYYYYYYYYY...=.L...YYYYYYYYYY',
       'YYYYYYYYYYYYYY..,.=....,YYYYYYYYYY',
       '~~~~~~~~~~~~~~~~~~#~~~~~~~~~~~~~~~',
       '~~~~~~~~~~~~~~~~~~#~~~~~~~~~~~~~~~',
       'TTTTT.T...........=.......~~~~~~~~',
-      'TTTTT...T."".T..f.=..T..~~~~~~~~~~',
+      'TTTTT...T."".T..f.=l.T..~~~~~~~~~~',
       'TTTTTf.........R..=...f.~~~~~~~~~~',
       'TTTTT,....f.......=....~~~~~~~~~~~',
       'TTT..............S=====~~~~~~~~~~~',
       'TT..BBBBB..NNNN...=..,.~~~~~~~~~~~',
-      'TT..BBBBB..NNNN...=...."~~~~~~~~~~',
+      'TT..BBBBB..NNNN...=l..."~~~~~~~~~~',
       'TT..HwdwH..HdwH...=.f.....~~~~~~~~',
       'TT....=.....=.....=..f..f...~~~~~T',
       'TT.f..=======.....=..."..TTTTTTTTT',
       'TT.f.....==========......TTTTTTTTT',
       'TT.......W........=...R...TTTTTTTT',
-      'TT.,..........ff..=.....T.TTTTTTTT',
+      'TT.,..........ff.l=.....T.TTTTTTTT',
       'TT..mmm......f.f..="".....TTTTTTTT',
       'TT........,...f...=..".T..TTTTTTTT',
       'TT.f..""..........=...TTTTTTTTTTTT',
       'TT.........f.^^^^.=...TTTTTTTTTTTT',
       'TTTTTT.f....F^^^^F=.f.TTTTTTTTTTTT',
       'TTTTTT......FHwDHF=...TTTTTTTTTTTT',
-      'TTTTTT.....RF..=..=.,.TTTTTTTTTTTT',
+      'TTTTTT.....RF..=..=l,.TTTTTTTTTTTT',
       'TTTTTT.......======...TTTTTTTTTTTT',
       'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT',
       'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT',
@@ -109,7 +109,8 @@ export const MAPS = {
       well: ['A DEEP WELL. YOU SHOUT DOWN IT.', 'NOTHING SHOUTS BACK.'],
       stump: ['A STUMP. SOMEONE TRIED TO COUNT THE RINGS AND GAVE UP.'],
       log: ['A MOSSY LOG. GOOD FOR SITTING.'],
-      hwin: ['YOU PEEK IN THE WINDOW. NOBODY IS HOME.'],
+      hwin: ['YOU PEEK IN THE WINDOW. A CANDLE BURNS. NOBODY IS HOME.'],
+      lamp: ['AN OLD LANTERN. NOBODY EVER FILLS IT, BUT IT NEVER GOES OUT.'],
       water: [],
     },
   },
@@ -138,18 +139,18 @@ export const MAPS = {
 };
 
 // ---------------------------------------------------------------- people
-const P = (o) => ({ kind: 'person', skin: '#f5d0a9', boots: '#4a2d1a', acc: 'none', ...o });
+const P = (o) => ({ kind: 'person', skin: '#e8c09a', boots: '#3e2a1a', acc: 'none', ...o });
 export const LOOKS = {
-  oldman: P({ hair: '#e8e4da', tunic: '#7d7a8c', beard: true, skin: '#e8b98a' }),
-  lady: P({ hair: '#c2452d', tunic: '#e07aa0', long: true }),
-  kid: P({ hair: '#3a2a1e', tunic: '#e8903a', kid: true, skin: '#b97a50' }),
-  merchant: P({ hair: '#3a2a1e', tunic: '#4f9a4a', acc: 'cap', cap: '#2f6f8a', skin: '#e0ac7e' }),
-  fisher: P({ hair: '#7a4a22', tunic: '#3f6fc4', acc: 'cap', cap: '#d9b45a', beard: true, beardColor: '#7a4a22', skin: '#e8b98a' }),
-  guard: P({ hair: '#3a2a1e', tunic: '#3f55c6', acc: 'helmet', skin: '#e0ac7e' }),
-  gate: P({ hair: '#3a2a1e', tunic: '#8f2330', acc: 'helmet', skin: '#8a5534' }),
-  woodcutter: P({ hair: '#c2452d', tunic: '#b03a2e', beard: true, beardColor: '#c2452d' }),
-  bard: P({ hair: '#d9a441', tunic: '#7a4ab0', acc: 'cap', cap: '#3a9a5a' }),
-  sleeper: P({ hair: '#5a3a22', tunic: '#a5683a', sleep: true, skin: '#e0ac7e' }),
+  oldman: P({ hair: '#d8d4ca', tunic: '#6a6458', cloak: '#4a4038', beard: true, skin: '#d8a882' }),
+  lady: P({ hair: '#8a3a22', tunic: '#7a3a4a', cloak: '#3e4a2e', long: true }),
+  kid: P({ hair: '#3a2a1e', tunic: '#8a6a3a', cloak: '#5a4630', kid: true, skin: '#b97a50' }),
+  merchant: P({ hair: '#3a2a1e', tunic: '#5a6a34', cloak: '#6a3a22', acc: 'cap', cap: '#6a2a2a', skin: '#d8a882' }),
+  fisher: P({ hair: '#6a4422', tunic: '#3e5468', cloak: '#5a5040', acc: 'cap', cap: '#8a7448', beard: true, beardColor: '#6a4422', skin: '#d8a882' }),
+  guard: P({ hair: '#3a2a1e', tunic: '#2e3e6a', cloak: '#6a6c74', acc: 'helmet', skin: '#d8a882' }),
+  gate: P({ hair: '#3a2a1e', tunic: '#6a1e24', cloak: '#6a6c74', acc: 'helmet', skin: '#8a5534' }),
+  woodcutter: P({ hair: '#8a3a22', tunic: '#7a2e24', cloak: '#4a3a24', beard: true, beardColor: '#8a3a22' }),
+  bard: P({ hair: '#b8903a', tunic: '#5a3a7a', cloak: '#2e4a3a', acc: 'cap', cap: '#2e5a3a' }),
+  sleeper: P({ hair: '#5a3a22', tunic: '#7a5232', sleep: true, skin: '#d8a882' }),
   cat: { kind: 'cat' }, chicken: { kind: 'chicken' }, frog: { kind: 'frog' }, wizard: { kind: 'wizard' },
 };
 for (const k in LOOKS) LOOKS[k].key = k;
@@ -225,13 +226,10 @@ export function cardName(v, s) { return `${VALUE_NAMES[v]} OF ${SUIT_NAMES[s]}`;
 // Title-screen value grid (reading order), King is the band underneath.
 export const VALUE_GRID = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]];
 
-// Parse a URL force like "7D", "10h", "QS". Returns {v,s} or null.
+// Parse a URL force like "7D", "12h", "1S" (numbers only: 1 = Ace, 11-13 = J Q K).
 export function parseForce(str) {
-  const m = /^(10|[2-9]|[ajqk])([chsd])/i.exec(str || '');
-  if (!m) return null;
-  const t = m[1].toUpperCase();
-  const v = t === 'A' ? 1 : t === 'J' ? 11 : t === 'Q' ? 12 : t === 'K' ? 13 : parseInt(t, 10);
-  return { v, s: m[2].toUpperCase() };
+  const m = /^(1[0-3]|[1-9])([chsd])/i.exec(str || '');
+  return m ? { v: parseInt(m[1], 10), s: m[2].toUpperCase() } : null;
 }
 
 // Word force cipher: each letter is typed one key to the RIGHT on its QWERTY row,
@@ -253,12 +251,12 @@ export function decodeWord(code) {
 
 // Hero classes for the character generator.
 export const CLASSES = [
-  { name: 'KNIGHT', acc: 'helmet', tunics: ['#3f55c6', '#7d7a8c', '#8f2330'] },
-  { name: 'RANGER', acc: 'hood', tunics: ['#3a8a4a', '#6b8a3a', '#2f6f5a'] },
-  { name: 'BARD', acc: 'cap', tunics: ['#c04a3e', '#e8903a', '#7a4ab0'] },
-  { name: 'MAGE', acc: 'hood', tunics: ['#6a4aa8', '#3f4fa8', '#2c2f6a'] },
-  { name: 'ROGUE', acc: 'none', tunics: ['#4a4a5a', '#6b4428', '#2f3a4a'] },
-  { name: 'CLERIC', acc: 'none', tunics: ['#e8e4da', '#d9b45a', '#a8c8e8'] },
+  { name: 'KNIGHT', acc: 'helmet', tunics: ['#2e3e6a', '#5e5e66', '#6a1e24'] },
+  { name: 'RANGER', acc: 'hood', tunics: ['#3e5a2e', '#4e4a2a', '#2e4a3a'] },
+  { name: 'BARD', acc: 'cap', tunics: ['#7a2e2e', '#8a5a2a', '#4e2e6a'] },
+  { name: 'MAGE', acc: 'hood', tunics: ['#3e2a6a', '#2a3a6a', '#4a2a4a'] },
+  { name: 'ROGUE', acc: 'hood', tunics: ['#2e2e34', '#43301f', '#2a3036'] },
+  { name: 'CLERIC', acc: 'none', tunics: ['#c8c0a8', '#a8823e', '#6a7a8a'] },
 ];
-export const SKINS = ['#f5d0a9', '#e0ac7e', '#b97a50', '#8a5534'];
-export const HAIRS = ['#3a2a1e', '#7a4a22', '#d9a441', '#c2452d', '#e8e4da', '#2c2f4a', '#5a3a22'];
+export const SKINS = ['#e8c09a', '#d8a882', '#b07a52', '#7e5234'];
+export const HAIRS = ['#2e2018', '#6a4422', '#b8903a', '#8a3a22', '#c8c4ba', '#1e2028', '#4a3022'];

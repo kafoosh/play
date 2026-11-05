@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>ODDPAQ: Winds of Wonder</title>
   <script>
-    // Backup URL force: "/7D" or "?=7D" arms the 7 of Diamonds. Anything may follow the card.
-    // The address is reset to the bare site before first paint. This works for "/7D" because the
-    // deploy also publishes this page as 404.html. Values A 2-10 J Q K, suits C H S D, any case.
+    // Backup URL force: "/7D" or "?=7D" arms the 7 of Diamonds. Values are numbers only:
+    // 1 = Ace, 11 = Jack, 12 = Queen, 13 = King. Suits C H S D, any case. Anything may follow
+    // the card. The address is reset to the bare site before first paint. "/7D" works because
+    // the deploy also publishes this page as 404.html.
     (function () {
-      var card = /^(10|[2-9]|[ajqk])([chsd])/i, base = location.pathname, m = null;
+      var card = /^(1[0-3]|[1-9])([chsd])/i, base = location.pathname, m = null;
       var segs = location.pathname.split('/');
       for (var i = 1; i < segs.length && !m; i++) {
         var seg = segs[i];
@@ -18,9 +19,9 @@
       }
       var q = location.search.replace(/^\?=?/, '');
       if (!m && location.search) {
-        // "?=" is a card only if it is exactly a card ("7D", "qs") or starts with a digit
-        // ("7D90"). Letters only means a QWERTY+1 ciphered word ("?=jraap" = HELLO).
-        if (/^(10|[2-9]|[ajqk])[chsd]$/i.test(q) || (/^\d/.test(q) && card.test(q))) m = card.exec(q);
+        // "?=" starting with a number is a card ("12H"); letters only is a QWERTY+1
+        // ciphered word ("?=jraap" = HELLO).
+        if (/^\d/.test(q)) m = card.exec(q);
         else if (/^([a-z+_-]|%20)+$/i.test(q)) {
           window.__forceWord = q;
           try { history.replaceState(null, '', location.pathname); } catch (e) {}
@@ -28,8 +29,7 @@
         }
       }
       if (!m) return;
-      var v = m[1].toUpperCase();
-      window.__force = { v: v === 'A' ? 1 : v === 'J' ? 11 : v === 'Q' ? 12 : v === 'K' ? 13 : parseInt(v, 10), s: m[2].toUpperCase() };
+      window.__force = { v: parseInt(m[1], 10), s: m[2].toUpperCase() };
       // Load the game's files from the real site folder, not from under "/7D/...".
       var b = document.createElement('base'); b.href = base; document.head.appendChild(b);
       try { history.replaceState(null, '', base); } catch (e) {}
