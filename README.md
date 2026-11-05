@@ -119,7 +119,7 @@ crisp, and at least 10 tiles are visible across the short side.
   the controls; in landscape the text box sits between them. Tapping the text box also
   advances it, and YES/NO can be tapped directly. The ♫ button (top right) mutes.
 - **Keyboard:** WASD or arrows to walk; **P** (or Enter/Space) is A; **O** is B. On a
-  computer the on-screen A and B buttons are labelled with their keys (P and O), and the
+  computer the on-screen buttons simply read P and O (instead of A and B), and the
   opening text says which key talks. On the name screen
   you can just type, with Backspace and Enter.
 
