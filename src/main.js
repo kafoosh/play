@@ -1,5 +1,5 @@
-import { C, UI, text, textCenter, textWidth, tinyText, hatSprite, wingSprite, keySprite, potionSprite, wrap, box, blob, glow, glyphDots, drawCard, makeScroll, charSprite, drawTile, drawOver, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
-import { MAPS, LOOKS, NPCS, SCRIPT, cardName, decodeWord, VALUE_GRID, CHASED, CLASSES, SKINS, HAIRS, OUCH, GRUDGE, KONAMI, EGG, squawk, QUEST } from './data.js';
+import { C, UI, text, textCenter, textWidth, tinyText, hatSprite, wingSprite, keySprite, potionSprite, fishSprite, dogBellySprite, wrap, box, blob, glow, glyphDots, drawCard, makeScroll, charSprite, drawTile, drawOver, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
+import { MAPS, LOOKS, NPCS, SCRIPT, cardName, decodeWord, VALUE_GRID, CHASED, CLASSES, SKINS, HAIRS, OUCH, GRUDGE, KONAMI, EGG, squawk, QUEST, FISH } from './data.js';
 import * as Audio from './audio.js';
 
 // The game draws at a low resolution that follows the screen's shape: VW x VH game pixels.
@@ -637,12 +637,13 @@ function loadMap(name) {
     for (let ty = 0; ty < h; ty++) for (let tx = 0; tx < w; tx++) drawOver(x, tiles[ty][tx][0], tx * 16, ty * 16, m, tx, ty);
     m.canvas.push(c);
   }
-  m.flames = []; m.lights = []; m.bubbles = [];
+  m.flames = []; m.lights = []; m.bubbles = []; m.worms = [];
   for (let ty = 0; ty < h; ty++) for (let tx = 0; tx < w; tx++) {
     const k = tiles[ty][tx][0];
     if (k === 'torch') m.flames.push({ x: tx * 16 + 8, y: ty * 16 + 7, big: false });
     if (k === 'hearth') m.flames.push({ x: tx * 16 + 8, y: ty * 16 + 15, big: true });
     if (k === 'cauldron') m.bubbles.push({ x: tx * 16, y: ty * 16 });
+    if (k === 'worms') m.worms.push({ x: tx * 16, y: ty * 16 });
     const L = LIGHTS[k];
     if (L) m.lights.push({ x: tx * 16 + L[0], y: ty * 16 + L[1], r: L[2], col: L[3] });
     if (k === 'tower' && m.kind(tx, ty - 1) !== 'tower') m.lights.push({ x: tx * 16 + 8, y: ty * 16 + 6, r: 10, col: '#c87a2a' });
@@ -674,7 +675,7 @@ const Play = {
   load(mapName, x, y, dir) {
     this.map = loadMap(mapName);
     this.p = { x, y, px: x * 16, py: y * 16, dir, moving: false, t: 0, anim: 0 };
-    this.prop = null;
+    this.prop = null; this.fishing = null; this.fire = null;
     this.time = this.time || 0; this.fx = { dark: 0, flash: 0 }; this.card = null; this.bumpT = 0; this.shots = []; this.swing = null;
     parts = [];
     this.flies = [];
@@ -784,6 +785,7 @@ const Play = {
         else if (G.flags.guard && this.guardBlocking(n)) this.run(guardStepAside);
       }
       if (n.moving) { if (this.step(n, dt)) { n.t = 0; if (n.faceAfter) { n.dir = n.faceAfter; n.faceAfter = null; } } n.frame = [0, 1, 0, 2][Math.floor(n.anim * 7) % 4]; continue; }
+      if (n.belly) { n.frame = Math.floor(n.anim * 6) % 2; continue; } // wriggling on its back
       n.frame = n.look.kind === 'person' ? 0 : Math.floor(n.anim * (n.look.kind === 'chicken' ? 3 : 1.5)) % 2;
       if (n.wander && !busy) {
         n.timer -= dt;
@@ -978,6 +980,8 @@ const Play = {
       this.run(function* () { Audio.sfx('select'); yield* talk(QUEST.unlock); this.enterWitches(); });
       return;
     }
+    if (kind === 'worms') { this.run(wormScene); return; }
+    if (kind === 'water' && G.flags.rod) { this.run(function* () { yield* castScene.call(this, fx, fy); }); return; }
     const looks = this.map.def.looks;
     const lines = looks[`${fx},${fy}`] || looks[kind];
     if (lines && lines.length) {
@@ -1002,6 +1006,11 @@ const Play = {
         lines = [...QUEST.witchTalk[n.id], ...(all ? [] : QUEST.othersToo)];
         if (all) after = () => this.run(function* () { yield* potionScene.call(this, n); });
       } else lines = QUEST.witchWait[n.id];
+    }
+    else if (n.id === 'dog' && n.talked % 3 === 2 && !n.moving) { n.talked++; this.run(function* () { yield* bellyScene.call(this, n); }); return; }
+    else if (n.id === 'bard' && !n.chicken && !n.awake) {
+      if (!G.flags.rod) { lines = FISH.bard; after = () => this.run(rodScene); }
+      else lines = G.flags.fished ? FISH.bardDone : FISH.bardAgain;
     }
     else if (n.awake) { const w = EGG.woke[n.id] || EGG.woke.hen1; lines = n.wokeTalked ? w.again : w.talk; n.wokeTalked = true; }
     else if (n.chicken) lines = lines.map(l => squawk(fill(l)));
@@ -1039,6 +1048,14 @@ const Play = {
       ctx.fillRect(fxp | 0, fyp | 0, 1, 1); ctx.fillRect((fxp | 0) - 1 - o, (fyp | 0) - 1 + o, 1, 1); ctx.fillRect((fxp | 0) + 1 + o, (fyp | 0) - 1 + o, 1, 1);
     }
     if (m.name === 'world') this.drawFrogPrints(cx, cy);
+    // the worm pile: little pink worms poking out and wriggling
+    for (const w of m.worms) for (let i = 0; i < 4; i++) {
+      const bx = w.x - cx + [4, 9, 6, 11][i], by = w.y - cy + [8, 7, 11, 11][i], ph = this.time * 5 + i * 1.7;
+      for (let j = 0; j < 4; j++) {
+        ctx.fillStyle = j === 3 ? '#e8a0a8' : '#c8707e';
+        ctx.fillRect(bx + j - 1, by - Math.round(Math.abs(Math.sin(ph + j * 0.9)) * 2) - (j === 3 && Math.sin(ph * 0.7) > 0.3 ? 1 : 0), 1, 1);
+      }
+    }
     // things lying on the ground
     for (const it of this.items) if (it.map === m.name) {
       ctx.drawImage(keySprite(), it.x * 16 - cx + 3, it.y * 16 - cy + 6 + Math.round(Math.sin(this.time * 3)));
@@ -1069,9 +1086,15 @@ const Play = {
         ctx.fillStyle = C.stoneL; ctx.fillRect(n.px - cx + 14, n.py - cy - 8, 1, 3);
       }
       const look = n.look;
+      if (n.belly) { // on its back, paws up, wriggling side to side
+        ctx.drawImage(dogBellySprite(n.frame, n.dir === 'right'), n.px - cx + Math.round(Math.sin(this.time * 7)), n.py - cy);
+        continue;
+      }
       ctx.drawImage(charSprite(look, n.dir, n.frame), n.px - cx, n.py - cy - (look.kind === 'person' && !n.sleep ? 2 : 0));
       if (n.hat && !n.chicken) ctx.drawImage(hatSprite(n.hat), n.px - cx + 2, n.py - cy - 6);
     }
+    if (this.fishing) this.drawFishing(cx, cy);
+    if (this.fire) this.drawFire(cx, cy, false);
     // dusk, then the lights
     ctx.fillStyle = TINT[m.name]; ctx.fillRect(0, 0, VW, VH);
     ctx.globalCompositeOperation = 'lighter';
@@ -1084,13 +1107,14 @@ const Play = {
     if (wiz) { const r = wiz.frame ? 40 : 22, ox = wiz.chicken ? 12 : 15, oy = wiz.chicken ? -3 : -6; ctx.drawImage(glow(r, '#3ab8e0'), wiz.px - cx + ox - r, wiz.py - cy + oy - r); }
     ctx.globalCompositeOperation = 'source-over';
     for (const f of m.flames) flame(ctx, f.x - cx, f.y - cy, this.time + f.x, f.big);
+    if (this.fire) this.drawFire(cx, cy, true);
     for (const b of m.bubbles) for (let i = 0; i < 3; i++) {
       const ph = (this.time * 1.2 + i / 3) % 1;
       ctx.fillStyle = `rgba(168,255,138,${(1 - ph).toFixed(2)})`; ctx.fillRect(b.x - cx + 5 + i * 3, Math.round(b.y - cy + 4 - ph * 9), 1, 1);
     }
     this.drawShots(cx, cy);
     drawVignette();
-    if (this.prop) ctx.drawImage(potionSprite(), Math.round(this.prop.x - cx - 4), Math.round(this.prop.y - cy - 4));
+    if (this.prop) this.drawProp(cx, cy);
     // talk bubble when facing someone
     if (!D.active && !this.script && !p.moving) {
       const [dx, dy] = DIRV[p.dir];
@@ -1114,6 +1138,45 @@ const Play = {
     if (this.fx.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${Math.min(1, this.fx.flash)})`; ctx.fillRect(0, 0, VW, VH); }
     this.dialogY = dialogBoxY(p.py - cy);
     drawDialog(this.dialogY);
+  },
+  // Something held up or flying through the air: the Crimson Cow, the rod, a fish.
+  drawProp(cx, cy) {
+    const pr = this.prop, x = Math.round(pr.x - cx), y = Math.round(pr.y - cy);
+    if (pr.kind === 'rod') {
+      for (let i = 0; i <= 12; i++) { ctx.fillStyle = i > 9 ? C.woodL : C.wood; ctx.fillRect(x - 5 + i, y + 6 - i, 1, 2); }
+      ctx.fillStyle = '#8a909c'; ctx.fillRect(x - 3, y + 2, 2, 2);
+      ctx.fillStyle = 'rgba(232,226,208,0.8)'; for (let j = 0; j < 7; j++) ctx.fillRect(x + 8, y - 5 + j, 1, 1);
+    } else if (pr.kind === 'fish' || pr.kind === 'cooked') ctx.drawImage(fishSprite(pr.kind === 'cooked'), x - 7, y - 3);
+    else ctx.drawImage(potionSprite(), x - 4, y - 4);
+  },
+  // The rod in your hands and the line out to the float.
+  rodTip() {
+    const p = this.p, R = { right: [12, 8, 23, -3], left: [4, 8, -7, -3], up: [11, 6, 14, -9], down: [11, 9, 17, 2] }[p.dir];
+    return [p.px + R[0], p.py + R[1], p.px + R[2], p.py + R[3]];
+  },
+  drawFishing(cx, cy) {
+    const f = this.fishing, [hx, hy, tx, ty] = this.rodTip();
+    for (let i = 0; i <= 12; i++) { const k = i / 12; ctx.fillStyle = i > 9 ? C.woodL : C.wood; ctx.fillRect(Math.round(hx + (tx - hx) * k - cx), Math.round(hy + (ty - hy) * k - cy), 1, 1); }
+    const bx = f.x, by = f.y + (f.dip ? 2 + Math.round(Math.sin(this.time * 30)) : Math.round(Math.sin(this.time * 3) * 0.6));
+    ctx.fillStyle = 'rgba(232,226,208,0.7)';
+    for (let i = 0; i <= 16; i++) { const k = i / 16; ctx.fillRect(Math.round(tx + (bx - tx) * k - cx), Math.round(ty + (by - ty) * k + Math.sin(k * Math.PI) * 3 * f.sag - cy), 1, 1); }
+    if (f.fish) ctx.drawImage(fishSprite(false), Math.round(bx - cx - 7), Math.round(by - cy - 1));
+    else { ctx.fillStyle = C.ink; ctx.fillRect(bx - cx - 1, by - cy - 1, 3, 3); ctx.fillStyle = '#e83a2a'; ctx.fillRect(bx - cx, by - cy - 1, 1, 1); ctx.fillStyle = C.white; ctx.fillRect(bx - cx, by - cy, 1, 1); }
+    if (f.ripple) { const r = (this.time * 6) % 4; ctx.fillStyle = 'rgba(200,230,255,0.5)'; ctx.fillRect(Math.round(bx - cx - 2 - r), Math.round(by - cy + 2), Math.round(5 + r * 2), 1); }
+  },
+  // The fisher's little cooking fire: logs first, then (after the tint) the flame and its glow.
+  drawFire(cx, cy, lit) {
+    const x = this.fire.x - cx, y = this.fire.y - cy;
+    if (!lit) {
+      ctx.fillStyle = C.woodO; ctx.fillRect(x + 3, y + 12, 10, 3);
+      ctx.fillStyle = C.wood; ctx.fillRect(x + 4, y + 12, 8, 1); ctx.fillRect(x + 5, y + 14, 6, 1);
+      ctx.fillStyle = C.stoneL; for (const sx of [2, 6, 10, 13]) ctx.fillRect(x + sx, y + 14, 2, 1);
+      return;
+    }
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.drawImage(glow(26, '#e07a2a'), x + 8 - 26, y + 10 - 26);
+    ctx.globalCompositeOperation = 'source-over';
+    flame(ctx, x + 8, y + 12, this.time, false);
   },
   // A few small wet frog prints leading away from under the blue house's window toward
   // the lake. Faint, and they fade out after a few steps.
@@ -1365,6 +1428,147 @@ function* wingsScene() {
   G.flags.wings = 1;
   yield wait(0.6);
   yield* talk(QUEST.wings, false, null, G.name);
+}
+
+// The dachshund, third time you talk to it: flops over for belly scratches.
+function* bellyScene(n) {
+  n.dir = OPP[this.p.dir];
+  Audio.sfx('bump');
+  n.belly = true; n.anim = 0;
+  yield wait(0.9);
+  yield* talk(FISH.belly);
+  yield wait(1.2);
+  n.belly = false; n.timer = 2;
+}
+
+// The worm pile: pick one up, or bait your hook if you have the rod.
+function* wormScene() {
+  const hero = G.name;
+  if (G.flags.bait) { yield* talk(FISH.baited); return; }
+  if (G.flags.worm) { yield* talk(FISH.haveWorm); return; }
+  Audio.sfx('select');
+  if (G.flags.rod) { G.flags.bait = 1; yield* talk(FISH.bait); yield* talk(FISH.canFish, false, null, hero); return; }
+  G.flags.worm = 1;
+  yield* talk(FISH.pickWorm);
+  yield* talk(FISH.wormFriend, false, null, hero);
+}
+
+// The bard hands over his old fishing rod (and you bait it, if you're carrying a worm).
+function* rodScene() {
+  const p = this.p;
+  G.flags.rod = 1;
+  this.prop = { x: p.px + 8, y: p.py - 10, kind: 'rod' }; p.dir = 'down';
+  Audio.sfx('item');
+  for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; parts.push({ k: 'spark', x: p.px + 8, y: p.py - 10, vx: Math.cos(a) * 26, vy: Math.sin(a) * 26, life: 0.6, col: i % 2 ? '#ffd27a' : '#ffffff', world: true }); }
+  yield* talk(FISH.gotRod);
+  this.prop = null;
+  if (G.flags.worm) {
+    G.flags.worm = 0; G.flags.bait = 1;
+    yield* talk(FISH.bait);
+    yield* talk(FISH.canFish, false, null, G.name);
+  }
+}
+
+// Pressing A at the water with the rod.
+function* castScene(wx, wy) {
+  const hero = G.name, p = this.p, f = this.npc('fisher');
+  if (!G.flags.bait) { yield* talk(FISH.noBait, false, null, hero); return; }
+  // the good spot: the lake, right by the old fisher
+  const spot = this.map.name === 'world' && wx >= 23 && Math.abs(p.x - f.home.x) + Math.abs(p.y - f.home.y) <= 4;
+  if (!spot) { yield* talk(FISH.badSpot, false, null, hero); return; }
+  if (G.flags.fished) { yield* castLine.call(this, wx, wy, false); yield* talk(FISH.quiet); return; }
+  yield* fishingScene.call(this, wx, wy);
+}
+// Cast out, wait, and (with luck) reel one in.
+function* castLine(wx, wy, bite) {
+  const [, , tx, ty] = this.rodTip(), bx = wx * 16 + 8, by = wy * 16 + 9, F = this.fishing = { x: tx, y: ty, sag: 0 };
+  Audio.sfx('swish');
+  let t0 = this.time;
+  while (this.time - t0 < 0.45) { const k = (this.time - t0) / 0.45; F.x = tx + (bx - tx) * k; F.y = ty + (by - ty) * k - Math.sin(k * Math.PI) * 14; yield null; }
+  F.x = bx; F.y = by; F.sag = 1; F.ripple = true; Audio.sfx('plop');
+  yield wait(bite ? 2.2 : 1.6);
+  if (bite) {
+    F.dip = true; F.ripple = false; Audio.sfx('splash');
+    parts.push({ k: 'say', text: '!', x: this.p.px + 8, y: this.p.py - 9, vy: -10, life: 0.9, world: true });
+    for (let i = 0; i < 10; i++) parts.push({ k: 'spark', x: bx, y: by, vx: (Math.random() - 0.5) * 40, vy: -20 - Math.random() * 20, life: 0.5, col: i % 2 ? '#c8e8ff' : '#ffffff', world: true });
+    yield wait(0.7);
+    F.dip = false; F.fish = bite; F.sag = 0; Audio.sfx('swish');
+  } else F.ripple = false;
+  t0 = this.time;
+  while (this.time - t0 < 0.5) { const k = (this.time - t0) / 0.5; F.x = bx + (tx - bx) * k; F.y = by + (ty - by) * k - Math.sin(k * Math.PI) * 10; yield null; }
+  this.fishing = null;
+}
+// The big catch: a red fish. The old fisher can't believe it, and cooks it for you.
+function* fishingScene(wx, wy) {
+  const p = this.p, f = this.npc('fisher'), hero = G.name, fl = l => (f.chicken ? l.map(x => squawk(x)) : l);
+  G.flags.fished = 1; G.flags.bait = 0;
+  const face = p.dir;
+  yield* castLine.call(this, wx, wy, true);
+  this.prop = { x: p.px + 8, y: p.py - 10, kind: 'fish' }; p.dir = 'down';
+  Audio.sfx('item');
+  for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; parts.push({ k: 'spark', x: p.px + 8, y: p.py - 10, vx: Math.cos(a) * 26, vy: Math.sin(a) * 26, life: 0.6, col: i % 2 ? '#ffd27a' : '#ffffff', world: true }); }
+  yield* talk(FISH.caught);
+  yield* talk(FISH.red, false, null, hero);
+  // the fisher spots it and comes over
+  parts.push({ k: 'say', text: '!', x: f.px + 8, y: f.py - 9, vy: -10, life: 0.9, world: true });
+  Audio.sfx('select');
+  yield wait(0.7);
+  for (let i = 0; i < 10 && Math.abs(f.x - p.x) + Math.abs(f.y - p.y) > 1; i++) {
+    const d = this.bfsDir(f, (x, y) => Math.abs(x - p.x) + Math.abs(y - p.y) === 1);
+    if (!d) break;
+    this.move(f, d, NPC_SPEED * 1.3); f.t = 0;
+    yield () => !f.moving;
+  }
+  const dx = p.x - f.x, dy = p.y - f.y;
+  f.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+  p.dir = OPP[f.dir];
+  yield* talk(fl(FISH.fisherSees), false, null, f.name);
+  // a little fire on open ground beside him
+  const m = this.map, OPEN = new Set(['grass', 'grass2', 'flowers', 'tall', 'path']);
+  let spotXY = null, best = 1e9;
+  for (const [ddx, ddy] of [[0, 1], [0, -1], [-1, 0], [1, 0], [-1, 1], [1, 1], [-1, -1], [1, -1]]) {
+    const x = f.x + ddx, y = f.y + ddy;
+    if (!OPEN.has(m.kind(x, y)) || this.npcAt(x, y) || (x === p.x && y === p.y)) continue;
+    const dd = Math.abs(x - p.x) + Math.abs(y - p.y);
+    if (dd < best) { best = dd; spotXY = [x, y]; }
+  }
+  const [fx0, fy0] = spotXY || [f.x, f.y + 1];
+  this.fire = { x: fx0 * 16, y: fy0 * 16 };
+  // the fish goes from your hands to over the fire
+  let t0 = this.time; const sx = this.prop.x, sy = this.prop.y, ex = fx0 * 16 + 8, ey = fy0 * 16 + 2;
+  while (this.time - t0 < 0.5) { const k = (this.time - t0) / 0.5; this.prop.x = sx + (ex - sx) * k; this.prop.y = sy + (ey - sy) * k - Math.sin(k * Math.PI) * 10; yield null; }
+  Audio.sfx('sizzle');
+  t0 = this.time; let hiss = t0 + 0.8;
+  while (this.time - t0 < 2.4) {
+    const k = (this.time - t0) / 2.4;
+    if (this.time > hiss) { Audio.sfx('sizzle'); hiss += 0.8; }
+    if (k > 0.55) this.prop.kind = 'cooked';
+    if (Math.random() < 0.25) parts.push({ k: 'spark', x: ex + (Math.random() - 0.5) * 8, y: ey - 2, vx: 0, vy: -10 - Math.random() * 8, life: 0.9, col: 'rgba(200,196,210,0.7)', world: true });
+    yield null;
+  }
+  this.prop.kind = 'cooked';
+  yield* talk(fl(FISH.cooked), false, null, f.name);
+  // back to you, held up high
+  t0 = this.time;
+  while (this.time - t0 < 0.5) { const k = (this.time - t0) / 0.5; this.prop.x = ex + (p.px + 8 - ex) * k; this.prop.y = ey + (p.py - 10 - ey) * k - Math.sin(k * Math.PI) * 10; yield null; }
+  this.fire = null; p.dir = 'down';
+  Audio.sfx('item');
+  yield* talk(FISH.gotHerring);
+  yield* talk(FISH.eat);
+  for (let i = 0; i < 3; i++) { Audio.sfx('bump'); this.prop.y += 3; yield wait(0.3); }
+  this.prop = null;
+  yield wait(0.4);
+  yield* talk(FISH.better, false, null, hero);
+  // he goes back to his spot
+  f.talk = f.again = FISH.fisherAfter;
+  for (let i = 0; i < 12 && !(f.x === f.home.x && f.y === f.home.y); i++) {
+    const d = this.bfsDir(f, (x, y) => x === f.home.x && y === f.home.y);
+    if (!d) break;
+    this.move(f, d, NPC_SPEED * 1.3); f.t = 0;
+    yield () => !f.moving;
+  }
+  if (f.x === f.home.x && f.y === f.home.y) f.dir = 'right';
+  p.dir = face;
 }
 
 function* wizardScene() {

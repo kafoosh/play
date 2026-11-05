@@ -14,7 +14,7 @@ A play-through takes about 2–3 minutes.
 
 Arm the card on the **title screen**, then hand over the phone.
 
-1. **Value**: tap the sky. The sky is painted in five equal colour bands: four purple
+1. **Value**: tap the sky. The sky is painted in five colour bands: four equal purple
    bands, then an orange band at the horizon. The four purple bands are the rows, split
    into three equal columns across the screen:
 
@@ -32,8 +32,10 @@ Arm the card on the **title screen**, then hand over the phone.
    +--------------------+
    ```
 
-   Go by the colour, not the scenery: the tips of the castle spires poke up into the
-   last purple band and count as 10-12. Taps on the grass below the horizon don't change
+   The sky fits itself to the screen: the purple bands always sit above the castle's
+   flags, and the orange band holds all the scenery, so all five colours show on any
+   phone, tablet or computer, upright or sideways. On a wide screen the purple bands are
+   thinner and the orange band is relatively taller. Go by the colour. Taps on the grass below the horizon don't change
    anything (they just sparkle), so a stray tap near START is harmless.
 
    Values are always numbers, here and in the URL: 1 = Ace, 11 = Jack, 12 = Queen,
@@ -155,6 +157,22 @@ door key and escaped out the window. Each tells her part of the story when you t
 her; talk to all three (any order). The third one tosses you a can of **Crimson Cow** (silver and blue): you
 hold it up, drink it (it does nothing, but you feel energised), and when you step back
 outside you've grown a pair of wings: "HUH. I GUESS CRIMSON COW GIVES YOU FEATHERS."
+
+### Side quest: the worms, the rod and the big red herring
+
+- Talk to the dachshund at home a third time and it flops onto its back and wriggles
+  for belly scratches.
+- In the top-left corner of the ruins (by the runestone) there's a pile of wriggling
+  worms. Press A on it to pick one up: "I'D LOVE FISHING WITH YOU, EVEN IF YOU ARE A WORM."
+- The bard across the bridge used to fish the lake, until the wizard hummed his tune back
+  to him. Now he plays all day, so he gives you his old fishing rod. (If you're already
+  carrying a worm it goes straight on the hook; otherwise press A on the worms again.)
+- Press A facing water with the rod: no worm and you need to bait the hook; anywhere but
+  the lake beside the old fisher and "THIS DOESN'T LOOK LIKE A GOOD PLACE TO FISH."
+- By the fisher: you cast, get a bite and reel in a red fish ("MAYBE A SNAPPER OR
+  SOMETHING"). The fisher can't believe it, cooks it on a little fire, tells you it's a
+  BIG RED HERRING and hands it back. You eat it: "WOW. I WONDER IF I COULD HAVE SPENT MY
+  TIME BETTER." It only bites once.
 
 ### Along the way
 
