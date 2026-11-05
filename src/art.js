@@ -484,6 +484,14 @@ export function wingSprite() {
   return wingCanvas;
 }
 
+// The Crimson Cow: a slim energy-drink can, silver and blue, with a small red-and-gold emblem.
+const POTION = ['.oooo.', 'osssso', 'oBBWWo', 'oBBWWo', 'oBrYWo', 'oWYrBo', 'oWWBBo', 'oWWBBo', 'osssso', '.oooo.'];
+let potionCanvas = null;
+export function potionSprite() {
+  if (!potionCanvas) { let x; [potionCanvas, x] = makeCanvas(8, 10); grid(x, POTION, 1, 0, { o: C.ink, s: '#8a909c', B: '#2a4aa8', W: '#dfe3ea', r: '#d8302a', Y: '#f2c838' }); }
+  return potionCanvas;
+}
+
 // A small rusty key lying on the ground.
 const KEY = ['.oo.......', 'oyyo......', 'oy.yoooooo', 'oyyoyyyyyo', '.oo.o.oo.o', '....o..o..'];
 let keyCanvas = null;
