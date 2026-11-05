@@ -69,14 +69,14 @@ may follow the card in the path form (`/7D-x9`, `/QH/foo`); in the `?=` form see
 `C H S D`, any case. While a URL force is armed, the title-screen taps are ignored, so the
 spectator can press START themselves. The cheat sheet shows `(URL)` in this mode.
 
-### Word force (`?=` with a ciphered word)
+### Word force (a ciphered word in the address)
 
 To reveal a **word** instead of a card, send the spectator to the site with the word
-after `?=`, ciphered as **QWERTY + 1**: type each letter using the key one to its
+after the slash, ciphered as **QWERTY + 1**: type each letter using the key one to its
 **right** on the same keyboard row, wrapping round at the end of the row.
 
 ```
-hello  ->  play.oddpaq.com/?=jraap
+hello  ->  play.oddpaq.com/jraap        (or play.oddpaq.com/?=jraap)
 ```
 
 | real   | q w e r t y u i o p | a s d f g h j k l | z x c v b n m |
@@ -84,16 +84,16 @@ hello  ->  play.oddpaq.com/?=jraap
 | type   | w e r t y u i o p q | s d f g h j k l a | x c v b n m z |
 
 So the row ends wrap: `p` → `q`, `l` → `a`, `m` → `z`. For more than one word, put `+`,
-`-` or `_` between them (`?=jraap+eptaf` = HELLO WORLD). Case doesn't matter.
+`-` or `_` between them (`/jraap+eptaf` = HELLO WORLD). Case doesn't matter.
 
 The address bar is reset to the plain site before the page appears, and title-screen
 taps are ignored. The wizard then asks **"ARE YOU THINKING OF A WORD?"** and the word
 appears on a scroll ("THE WIND SAYS:"). Short words (up to 10 letters) are shown big;
 longer phrases wrap onto up to four lines. The cheat sheet shows `WORD: HELLO`.
 
-**Card or word?** After `?=`, anything starting with a number is a **card** (`?=7D`,
-`?=12h`, `?=1s90x`) and anything made only of letters (plus `+ - _`) is a **word**.
-There are no exceptions. The `/7D` path form is always a card.
+**Card or word?** Anything starting with a number is a **card** (`/7D`, `/12h`,
+`/1s90x`, or the same after `?=`). Anything made only of letters (plus `+ - _`) is a
+**word** (`/jraap`, or `?=jraap`). There are no exceptions.
 
 ### The reveal
 

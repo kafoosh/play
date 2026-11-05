@@ -7,8 +7,9 @@
   <script>
     // Backup URL force: "/7D" or "?=7D" arms the 7 of Diamonds. Values are numbers only:
     // 1 = Ace, 11 = Jack, 12 = Queen, 13 = King. Suits C H S D, any case. Anything may follow
-    // the card. The address is reset to the bare site before first paint. "/7D" works because
-    // the deploy also publishes this page as 404.html.
+    // the card. A word is letters only, ciphered QWERTY+1: "/jraap" or "?=jraap" = HELLO.
+    // The address is reset to the bare site before first paint. The "/..." forms work
+    // because the deploy also publishes this page as 404.html.
     (function () {
       var card = /^(1[0-3]|[1-9])([chsd])/i, base = location.pathname, m = null;
       var segs = location.pathname.split('/');
@@ -17,12 +18,22 @@
         try { seg = decodeURIComponent(seg); } catch (e) {}
         if (card.test(seg)) { m = card.exec(seg); base = segs.slice(0, i).join('/') + '/'; }
       }
+      var word = /^([a-z+_-]|%20)+$/i;
+      // "/jraap": the last part of the address, letters only, is a ciphered word
+      var last = segs[segs.length - 1];
+      if (!m && last && word.test(last)) {
+        window.__forceWord = last;
+        base = segs.slice(0, -1).join('/') + '/';
+        var bw = document.createElement('base'); bw.href = base; document.head.appendChild(bw);
+        try { history.replaceState(null, '', base); } catch (e) {}
+        return;
+      }
       var q = location.search.replace(/^\?=?/, '');
       if (!m && location.search) {
         // "?=" starting with a number is a card ("12H"); letters only is a QWERTY+1
         // ciphered word ("?=jraap" = HELLO).
         if (/^\d/.test(q)) m = card.exec(q);
-        else if (/^([a-z+_-]|%20)+$/i.test(q)) {
+        else if (word.test(q)) {
           window.__forceWord = q;
           try { history.replaceState(null, '', location.pathname); } catch (e) {}
           return;
