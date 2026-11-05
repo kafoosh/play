@@ -122,6 +122,14 @@ const F = {
 };
 const GLYPHS = Object.keys(F);
 export const GLYPH_SET = new Set([...GLYPHS, ' ']);
+// Pixel positions [x, y] of a string in the 5x7 font (6px per character).
+export function glyphDots(str) {
+  const out = [];
+  [...String(str)].forEach((ch, k) => (F[ch] || []).forEach((row, j) => {
+    for (let i = 0; i < 5; i++) if (row & (16 >> i)) out.push([k * 6 + i, j]);
+  }));
+  return out;
+}
 const GI = Object.fromEntries(GLYPHS.map((g, i) => [g, i]));
 const fontCache = new Map();
 function fontSheet(color) {

@@ -1,5 +1,5 @@
-import { C, UI, text, textCenter, textWidth, wrap, box, blob, glow, drawCard, makeScroll, charSprite, drawTile, drawOver, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
-import { MAPS, LOOKS, NPCS, SCRIPT, cardName, decodeWord, VALUE_GRID, CHASED, CLASSES, SKINS, HAIRS } from './data.js';
+import { C, UI, text, textCenter, textWidth, wrap, box, blob, glow, glyphDots, drawCard, makeScroll, charSprite, drawTile, drawOver, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
+import { MAPS, LOOKS, NPCS, SCRIPT, cardName, decodeWord, VALUE_GRID, CHASED, CLASSES, SKINS, HAIRS, OUCH, GRUDGE } from './data.js';
 import * as Audio from './audio.js';
 
 // The game draws at a low resolution that follows the screen's shape: VW x VH game pixels.
@@ -44,6 +44,7 @@ function dirDown(d) {
 function dirUp(d) { held[d] = false; dirStack = dirStack.filter(x => x !== d); }
 const heldDir = () => dirStack[dirStack.length - 1] || null;
 function pressA() { Audio.unlock(); if (!G.fade && G.scene.onA) G.scene.onA(); }
+function pressB() { Audio.unlock(); if (!G.fade && G.scene.onB) G.scene.onB(); }
 
 const KEYDIR = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', w: 'up', s: 'down', a: 'left', d: 'right' };
 addEventListener('keydown', e => {
@@ -52,7 +53,8 @@ addEventListener('keydown', e => {
   if (G.scene.onKey && !G.fade && G.scene.onKey(e)) { e.preventDefault(); return; }
   const d = KEYDIR[e.key.length === 1 ? e.key.toLowerCase() : e.key];
   if (d) { e.preventDefault(); if (!e.repeat) dirDown(d); return; }
-  if (['z', 'x', ' ', 'enter'].includes(e.key.toLowerCase())) { e.preventDefault(); if (!e.repeat) pressA(); }
+  if (['z', ' ', 'enter'].includes(e.key.toLowerCase())) { e.preventDefault(); if (!e.repeat) pressA(); }
+  if (['x', 'c'].includes(e.key.toLowerCase())) { e.preventDefault(); if (!e.repeat) pressB(); }
 });
 addEventListener('keyup', e => {
   const d = KEYDIR[e.key.length === 1 ? e.key.toLowerCase() : e.key];
@@ -82,6 +84,9 @@ for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) pad.addEv
 const btnA = document.getElementById('btnA');
 btnA.addEventListener('pointerdown', e => { e.preventDefault(); btnA.classList.add('down'); pressA(); });
 for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) btnA.addEventListener(ev, () => btnA.classList.remove('down'));
+const btnB = document.getElementById('btnB');
+btnB.addEventListener('pointerdown', e => { e.preventDefault(); btnB.classList.add('down'); pressB(); });
+for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) btnB.addEventListener(ev, () => btnB.classList.remove('down'));
 
 const muteBtn = document.getElementById('mute');
 const showMute = () => { muteBtn.classList.toggle('off', Audio.isMuted()); muteBtn.setAttribute('aria-pressed', Audio.isMuted()); };
@@ -118,12 +123,12 @@ function layout() {
 function measureUI() {
   UIB = VH; UIX0 = 0; UIX1 = VW;
   if (!document.body.classList.contains('playing')) return;
-  const a = pad.getBoundingClientRect(), b = btnA.getBoundingClientRect();
+  const a = pad.getBoundingClientRect(), b = btnA.getBoundingClientRect(), bb = btnB.getBoundingClientRect();
   const s = VW / screen.getBoundingClientRect().width;
   if (!a.height) return;
-  const x0 = Math.ceil(a.right * s) + 3, x1 = Math.floor(b.left * s) - 3;
+  const x0 = Math.ceil(a.right * s) + 3, x1 = Math.floor(Math.min(b.left, bb.left) * s) - 3;
   if (x1 - x0 >= 170) { UIX0 = x0; UIX1 = x1; } // text box fits between the controls
-  else UIB = Math.floor(Math.min(a.top, b.top) * s) - 4;
+  else UIB = Math.floor(Math.min(a.top, b.top, bb.top) * s) - 4;
 }
 addEventListener('resize', layout);
 if (window.visualViewport) window.visualViewport.addEventListener('resize', layout);
@@ -141,6 +146,7 @@ function updateParts(dt) {
     p.life -= dt; p.x += (p.vx || 0) * dt; p.y += (p.vy || 0) * dt;
     if (p.k === 'spark') { p.vx *= 0.92; p.vy *= 0.92; }
     if (p.k === 'z' || p.k === 'note') p.x += Math.sin(p.life * 5) * 0.3;
+    if (p.k === 'say') { p.vy = (p.vy || -18) * 0.9; }
     if (p.k === 'mote') p.x += Math.sin(p.life * 1.7 + p.p) * 0.15;
   }
   parts = parts.filter(p => p.life > 0);
@@ -164,12 +170,44 @@ function drawParts(cx = 0, cy = 0) {
         ctx.globalCompositeOperation = 'source-over';
       }
     }
+    else if (p.k === 'pix') {
+      const age = p.max - p.life - p.d;
+      if (age < 0) continue;
+      const k = Math.min(1, age / 0.14), drift = Math.max(0, age - 0.32) * 0.9;
+      const px = p.ox + (p.tx - p.ox) * (k + drift), py = p.oy + (p.ty - p.oy) * (k + drift);
+      const a = Math.min(1, p.life / 0.3) * 0.75;
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.fillStyle = `rgba(240,226,180,${a.toFixed(2)})`; ctx.fillRect(Math.round(px), Math.round(py), 1, 1);
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    else if (p.k === 'say') {
+      const w = textWidth(p.text) + 6, x0 = Math.round(x - w / 2), y0 = Math.round(y);
+      ctx.fillStyle = UI.edgeD; ctx.fillRect(x0 - 1, y0 - 1, w + 2, 11); ctx.fillRect(x0 + w / 2 - 1 | 0, y0 + 10, 3, 2);
+      ctx.fillStyle = UI.paper; ctx.fillRect(x0, y0, w, 9);
+      text(ctx, p.text, x0 + 3, y0 + 1, UI.accent);
+    }
+    else if (p.k === 'ring') {
+      const r = (1 - p.life / 0.45) * 30;
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.fillStyle = '#ffd27a';
+      for (let i = 0; i < 20; i++) { const a = i / 20 * Math.PI * 2 + r * 0.05; ctx.fillRect(Math.round(x + Math.cos(a) * r), Math.round(y + Math.sin(a) * r), 1, 1); }
+      ctx.globalCompositeOperation = 'source-over';
+    }
     else if (p.k === 'leaf') { ctx.fillStyle = p.col; ctx.fillRect(x, y, 2, 1); ctx.fillRect(x + (p.life * 4 % 2 > 1 ? 1 : 0), y + 1, 1, 1); }
   }
 }
 
 function mote(x, y, world = false) {
   parts.push({ k: 'mote', x, y, vx: (Math.random() - 0.5) * 4, vy: -3 - Math.random() * 5, life: 3 + Math.random() * 3, p: Math.random() * 6, col: Math.random() < 0.55 ? '#7ae0ff' : '#ffd27a', world });
+}
+// A sky tap: a little burst of sparkles that gathers into the number's shape for a
+// moment, then scatters and fades. Pale and quick, so it reads as a twinkle.
+function numberBurst(x, y, v) {
+  const dots = glyphDots(String(v)), w = String(v).length * 6 - 1;
+  for (const [i, j] of dots) {
+    const tx = x + (i - w / 2) * 2, ty = y + (j - 3.5) * 2;
+    parts.push({ k: 'pix', x, y, tx, ty, ox: x, oy: y, life: 0.85, max: 0.85, d: Math.random() * 0.06 });
+  }
 }
 // Darkened corners, cached per screen size.
 let vig = null;
@@ -387,9 +425,11 @@ const Title = {
     textCenter(ctx, 'WINDS OF WONDER', cx, ly + 28, '#e9dcb8', 1, C.ink);
     const S = startBox();
     box(ctx, S.x, S.y, S.w, S.h, this.go ? '#f4d48a' : UI.paper);
+    // the 2nd and 4th quarters (Hearts, Diamonds) are a shade darker
+    ctx.fillStyle = 'rgba(120,80,30,0.08)';
+    for (const q of [1, 3]) { const a = Math.max(S.x + 4, Math.round(S.x + q * S.w / 4)), b = Math.min(S.x + S.w - 4, Math.round(S.x + (q + 1) * S.w / 4)); ctx.fillRect(a, S.y + 4, b - a, S.h - 8); }
     if (!this.go || Math.floor(this.t * 12) % 2) textCenter(ctx, 'START', cx, S.y + 5, UI.text);
     if (!this.go && (this.t % 1.1) < 0.7) { text(ctx, '▶', S.x - 9, S.y + 5, C.gold); }
-    textCenter(ctx, '@ODDPAQ', cx, VH - 12, '#c8b890', 1, C.ink);
     drawParts();
     drawVignette();
     if (this.cheat) drawCheat();
@@ -397,8 +437,7 @@ const Title = {
   onTap(x, y) {
     if (this.go) return;
     if (this.cheat) { this.cheat = false; return; }
-    spark(x, y, 5, '#ffe9a0');
-    // performer cheat sheet: triple-tap the credit
+    // performer cheat sheet: triple-tap the empty grass at the bottom middle
     if (y >= VH - 20 && Math.abs(x - VW / 2) < 28) {
       const now = this.t; this.credit = this.credit.filter(c => now - c < 0.9); this.credit.push(now);
       if (this.credit.length >= 3) { this.cheat = true; this.credit = []; }
@@ -412,9 +451,10 @@ const Title = {
     }
     const top = S.y - 4;
     if (y < top && !G.locked) {
-      const row = Math.min(3, Math.floor(y / (top / 4)));
-      G.armed.v = row < 3 ? VALUE_GRID[row][Math.max(0, Math.min(3, Math.floor(x / (VW / 4))))] : 13;
-    }
+      const row = Math.min(4, Math.floor(y / (top / 5)));
+      G.armed.v = row < 4 ? VALUE_GRID[row][Math.max(0, Math.min(2, Math.floor(x / (VW / 3))))] : 13;
+      numberBurst(x, y, G.armed.v);
+    } else spark(x, y, 5, '#ffe9a0');
   },
   onA() { if (!this.cheat) this.begin(); else this.cheat = false; },
   begin() {
@@ -431,13 +471,13 @@ function drawCheat() {
   ctx.save(); ctx.translate(ox, oy);
   box(ctx, 6, 6, 148, 132);
   textCenter(ctx, 'CHEAT SHEET', 80, 13, UI.accent);
-  const gx = 20, gy = 24, cw = 30, ch = 13;
+  const gx = 22, gy = 22, cw = 39, ch = 11;
   VALUE_GRID.forEach((row, j) => row.forEach((v, i) => {
     ctx.fillStyle = UI.paperD; ctx.fillRect(gx + i * cw, gy + j * ch, cw - 2, ch - 2);
-    textCenter(ctx, String(v), gx + i * cw + cw / 2 - 1, gy + j * ch + 2, UI.text);
+    textCenter(ctx, String(v), gx + i * cw + cw / 2 - 1, gy + j * ch + 1, UI.text);
   }));
-  ctx.fillStyle = UI.paperD; ctx.fillRect(gx, gy + 3 * ch, cw * 4 - 2, ch - 2);
-  textCenter(ctx, '13', gx + cw * 2 - 1, gy + 3 * ch + 2, UI.text);
+  ctx.fillStyle = UI.paperD; ctx.fillRect(gx, gy + 4 * ch, cw * 3 - 2, ch - 2);
+  textCenter(ctx, '13', gx + cw * 1.5 - 1, gy + 4 * ch + 1, UI.text);
   text(ctx, 'TAP THE SKY FOR VALUE', 18, 79, UI.dim);
   ['C', 'H', 'S', 'D'].forEach((s, i) => {
     ctx.fillStyle = '#ecc890'; ctx.fillRect(32 + i * 24, 90, 22, 12);
@@ -502,9 +542,10 @@ const NameEntry = {
     const n = this.name.replace(/^-+|-+$/g, '');
     if (!n) { Audio.sfx('bump'); return; }
     G.name = n; Audio.sfx('start');
-    fadeTo(() => setScene(HeroScene), 0.3);
+    fadeTo(() => setScene(ClassScene), 0.3);
   },
   onA() { this.pick(); },
+  onB() { this.del(); },
   onTap(x, y) {
     const [ox, oy] = centre(); x -= ox; y -= oy;
     for (let r = 0; r < 4; r++) for (let c = 0; c < 9; c++) {
@@ -525,58 +566,55 @@ const NameEntry = {
 
 // ================================================================ hero
 function rng(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; }
-function makeHero(name, roll) {
+function makeHero(name, ci) {
   let h = 2166136261;
-  for (const ch of name + '#' + roll) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
+  for (const ch of name) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
   const r = rng(h), pick = a => a[Math.floor(r() * a.length)];
-  const cls = CLASSES[Math.floor(r() * CLASSES.length)];
-  const tunic = pick(cls.tunics);
-  const look = {
-    kind: 'person', key: 'hero:' + name + ':' + roll, skin: pick(SKINS), hair: pick(HAIRS), tunic,
-    acc: cls.acc, hood: shade(tunic, 0.85), cap: pick(['#6a2a2a', '#2e3e5a', '#2e4a2e', '#6a5428']), long: r() < 0.4, boots: '#3e2a1a',
-    cloak: cls.acc === 'hood' ? shade(tunic, 0.85) : pick(['#4a3a2a', '#3a2e3e', '#2e3a2e', '#5a2424', '#3a3a44']),
-  };
-  const magic = cls.name === 'MAGE' || cls.name === 'CLERIC';
-  return { look, cls: cls.name, hp: 10 + Math.floor(r() * 8) - (magic ? 3 : 0), mp: magic ? 8 + Math.floor(r() * 6) : Math.floor(r() * 4) };
+  const cls = CLASSES[ci];
+  const look = { kind: 'person', key: 'hero:' + name + ':' + cls.id, skin: pick(SKINS), hair: pick(HAIRS), long: r() < 0.4, boots: '#3e2a1a', ...cls.look };
+  return { look, cls: cls.name, id: cls.id, def: cls, hp: cls.hp, mp: cls.mp };
 }
-const HeroScene = {
-  enter() { this.roll = 0; this.t = 0; this.choice = 0; G.hero = makeHero(G.name, 0); },
+// Pick a path: four heroes side by side, each with their own weapon.
+const ClassScene = {
+  enter() { this.t = 0; this.i = 0; this.heroes = CLASSES.map((c, i) => makeHero(G.name, i)); },
   update(dt) { this.t += dt; },
   draw() {
     drawBackdrop(this.t);
     const [ox, oy] = centre();
     ctx.save(); ctx.translate(ox, oy);
-    textCenter(ctx, 'A HERO APPEARS!', 80, 4, C.gold, 1, C.ink);
-    // grassy spot to stand on
-    ctx.fillStyle = C.grassDD; ctx.fillRect(50, 72, 60, 10); ctx.fillRect(56, 70, 48, 14);
-    ctx.fillStyle = C.grass; ctx.fillRect(52, 72, 56, 7); ctx.fillRect(58, 70, 44, 10);
-    ctx.fillStyle = C.grassL; ctx.fillRect(60, 71, 30, 1);
-    ctx.fillStyle = 'rgba(40,60,30,0.45)'; ctx.fillRect(62, 74, 36, 4);
-    const dirs = ['down', 'left', 'up', 'right'];
-    const dir = dirs[Math.floor(this.t / 1.2) % 4], frame = [0, 1, 0, 2][Math.floor(this.t * 6) % 4];
-    ctx.drawImage(charSprite(G.hero.look, dir, frame), 48, 13, 64, 64);
-    const h = G.hero;
-    box(ctx, 14, 82, 132, 39);
-    text(ctx, 'NAME', 22, 88, UI.dim); text(ctx, G.name, 64, 88, UI.text);
-    text(ctx, 'CLASS', 22, 98, UI.dim); text(ctx, h.cls, 64, 98, UI.text);
-    text(ctx, 'LV 1', 22, 108, UI.dim); text(ctx, `HP ${h.hp}  MP ${h.mp}`, 64, 108, UI.text);
-    box(ctx, 6, 123, 148, 20);
-    text(ctx, 'IS THIS YOU?', 14, 130, UI.text);
-    text(ctx, 'YES', 104, 130, this.choice === 0 ? UI.accent : UI.text);
-    text(ctx, 'NO', 134, 130, this.choice === 1 ? UI.accent : UI.text);
-    text(ctx, '▶', this.choice === 0 ? 97 : 127, 130, UI.accent);
+    textCenter(ctx, 'CHOOSE YOUR PATH', 80, 3, C.gold, 1, C.ink);
+    this.heroes.forEach((h, i) => {
+      const x = 1 + i * 40, sel = i === this.i;
+      box(ctx, x, 13, 38, 44, sel ? '#f4d48a' : UI.paper);
+      const frame = sel ? [0, 1, 0, 2][Math.floor(this.t * 6) % 4] : 0;
+      ctx.drawImage(charSprite(h.look, 'down', frame), x + 3, 19, 32, 32);
+      textCenter(ctx, h.cls, x + 19, 60, sel ? C.gold : '#e9dcb8', 1, C.ink);
+    });
+    const c = this.heroes[this.i].def;
+    box(ctx, 6, 70, 148, 50);
+    text(ctx, c.name, 14, 77, UI.accent);
+    text(ctx, `WEAPON: ${c.weapon} (${c.range})`, 14, 87, UI.text);
+    text(ctx, c.about, 14, 97, UI.dim);
+    text(ctx, `HP ${c.hp}  MP ${c.mp}`, 14, 107, UI.text);
+    box(ctx, 48, 123, 64, 19);
+    textCenter(ctx, 'CHOOSE', 80, 129, UI.text);
+    if ((this.t % 1.1) < 0.7) text(ctx, '▶', 40, 129, C.gold);
     drawParts();
     ctx.restore();
   },
-  onDir(d) { if (d === 'left' || d === 'right') { this.choice = 1 - this.choice; Audio.sfx('move'); } },
-  onA() { this.choose(this.choice); },
-  onTap(x, y) { const [ox, oy] = centre(); x -= ox; y -= oy; if (y > 120 && x > 90) this.choose(x < 124 ? 0 : 1); },
-  choose(i) {
-    if (i === 1) {
-      this.roll++; G.hero = makeHero(G.name, this.roll); Audio.sfx('sparkle'); spark(80, 48, 14, C.cyan); this.choice = 0;
-      return;
-    }
-    Audio.sfx('start');
+  onDir(d) {
+    if (d === 'left' || d === 'right') { this.i = (this.i + (d === 'left' ? 3 : 1)) % 4; Audio.sfx('move'); }
+  },
+  onA() { this.choose(); },
+  onTap(x, y) {
+    const [ox, oy] = centre(); x -= ox; y -= oy;
+    if (y >= 12 && y < 68) { const i = Math.max(0, Math.min(3, Math.floor((x - 1) / 40))); if (i !== this.i) { this.i = i; Audio.sfx('move'); } else this.choose(); }
+    else if (y >= 120) this.choose();
+  },
+  choose() {
+    if (G.fade) return;
+    G.hero = this.heroes[this.i];
+    Audio.sfx('start'); spark(20 + this.i * 40, 34, 12, C.gold);
     fadeTo(() => { setScene(Play); Play.start(); }, 0.4);
   },
 };
@@ -628,14 +666,16 @@ const Play = {
       moving: false, t: 0, timer: 1 + Math.random() * 2, frame: 0, anim: Math.random() * 3, talked: 0,
     }));
     this.load('home', 2, 3, 'right');
-    const wake = SCRIPT.wake.slice();
-    if (!window.matchMedia('(pointer: coarse)').matches) wake[2] = 'USE THE ARROW KEYS TO WALK. PRESS Z TO TALK OR LOOK.';
+    const wake = SCRIPT.wake.slice(), keys = !window.matchMedia('(pointer: coarse)').matches;
+    if (keys) wake[2] = 'USE THE ARROW KEYS TO WALK. PRESS Z TO TALK OR LOOK.';
+    wake.push(keys ? G.hero.def.tip.replace('PRESS B', 'PRESS X') : G.hero.def.tip, 'IT WON\'T HURT ANYONE. IT MIGHT ANNOY THEM.');
+    this.shots = []; this.cool = 0; this.swing = null;
     this.run(function* () { yield wait(0.7); yield* talk(wake); });
   },
   load(mapName, x, y, dir) {
     this.map = loadMap(mapName);
     this.p = { x, y, px: x * 16, py: y * 16, dir, moving: false, t: 0, anim: 0 };
-    this.time = this.time || 0; this.fx = { dark: 0, flash: 0 }; this.card = null; this.bumpT = 0;
+    this.time = this.time || 0; this.fx = { dark: 0, flash: 0 }; this.card = null; this.bumpT = 0; this.shots = []; this.swing = null;
     parts = [];
     this.flies = [];
     if (mapName === 'world') for (let i = 0; i < 7; i++) {
@@ -671,7 +711,8 @@ const Play = {
     // npcs
     for (const n of this.npcsHere()) {
       n.anim += dt;
-      if (n.moving) { if (this.step(n, dt)) n.t = 0; n.frame = [0, 1, 0, 2][Math.floor(n.anim * 7) % 4]; continue; }
+      if (n.hitT > 0) n.hitT -= dt;
+      if (n.moving) { if (this.step(n, dt)) { n.t = 0; if (n.faceAfter) { n.dir = n.faceAfter; n.faceAfter = null; } } n.frame = [0, 1, 0, 2][Math.floor(n.anim * 7) % 4]; continue; }
       n.frame = n.look.kind === 'person' ? 0 : Math.floor(n.anim * (n.look.kind === 'chicken' ? 3 : 1.5)) % 2;
       if (n.wander && !busy) {
         n.timer -= dt;
@@ -708,10 +749,80 @@ const Play = {
     } else if (!D.active && !this.script && !G.fade) this.tryMove();
     if (!p.moving) p.anim = 0;
     this.bumpT -= dt;
+    this.cool -= dt;
+    if (this.swing && (this.swing.t += dt) > 0.25) this.swing = null;
+    this.updateShots(dt);
     // effects
     this.fx.flash = Math.max(0, this.fx.flash - dt * 1.4);
     if (this.card) this.card.t += dt;
     updateParts(dt);
+  },
+  // ---- weapons: B button. Close weapons hit what is in front (or around) you;
+  // far weapons aim themselves at the nearest person roughly in front of you.
+  onB() {
+    if (D.active || this.script || G.fade || this.cool > 0 || this.card) return;
+    const p = this.p, id = G.hero.id, pcx = p.px + 8, pcy = p.py + 8;
+    this.cool = id === 'bard' ? 0.6 : 0.4;
+    this.swing = { t: 0, dir: p.dir, id };
+    const at = (n, a, b) => (n.x === a && n.y === b) || (n.moving && n.tx === a && n.ty === b);
+    if (id === 'knight') {
+      Audio.sfx('swish');
+      const [dx, dy] = DIRV[p.dir], fx = p.x + dx, fy = p.y + dy;
+      const spots = [[fx, fy], [fx + dy, fy + dx], [fx - dy, fy - dx]];
+      for (const n of this.npcsHere()) if (spots.some(([a, b]) => at(n, a, b))) this.hit(n, p.dir);
+    } else if (id === 'bard') {
+      Audio.sfx('strum');
+      parts.push({ k: 'ring', x: pcx, y: pcy, life: 0.45, world: true });
+      for (let i = 0; i < 3; i++) parts.push({ k: 'note', x: pcx - 8 + i * 8, y: pcy - 10, vy: -16, life: 0.9, world: true });
+      for (const n of this.npcsHere()) {
+        const dx = n.px + 8 - pcx, dy = n.py + 8 - pcy;
+        if (Math.hypot(dx, dy) <= 30) this.hit(n, Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
+      }
+    } else {
+      Audio.sfx(id === 'mage' ? 'zap' : 'twang');
+      const t = this.aim();
+      let vx, vy;
+      if (t) { const dx = t.px + 8 - pcx, dy = t.py + 8 - pcy, l = Math.hypot(dx, dy); vx = dx / l; vy = dy / l; } else [vx, vy] = DIRV[p.dir];
+      const sp = id === 'mage' ? 150 : 210;
+      this.shots.push({ id, x: pcx + vx * 6, y: pcy + vy * 6, vx: vx * sp, vy: vy * sp, dist: 0 });
+    }
+  },
+  aim() {
+    const p = this.p, [fx, fy] = DIRV[p.dir];
+    let best = null, bd = 1e9;
+    for (const n of this.npcsHere()) {
+      const dx = n.px - p.px, dy = n.py - p.py, d = Math.hypot(dx, dy);
+      if (d < 2 || d > 7 * 16 || (dx * fx + dy * fy) / d < 0.6) continue;
+      if (d < bd) { bd = d; best = n; }
+    }
+    return best;
+  },
+  updateShots(dt) {
+    for (const s of this.shots) {
+      s.x += s.vx * dt; s.y += s.vy * dt; s.dist += Math.hypot(s.vx, s.vy) * dt;
+      const tx = Math.floor(s.x / 16), ty = Math.floor(s.y / 16), k = this.map.kind(tx, ty);
+      const dir = Math.abs(s.vx) > Math.abs(s.vy) ? (s.vx > 0 ? 'right' : 'left') : (s.vy > 0 ? 'down' : 'up');
+      if (s.id === 'mage' && Math.random() < 0.6) parts.push({ k: 'spark', x: s.x, y: s.y, vx: 0, vy: 0, life: 0.3, col: '#b89aff', world: true });
+      if (s.dist > 7 * 16 || (this.map.solid(tx, ty) && k !== 'water')) { s.dead = true; spark(s.x, s.y, 4, s.id === 'mage' ? '#b89aff' : '#c8b890', true); continue; }
+      const n = this.npcsHere().find(n => s.x >= n.px + 1 && s.x < n.px + 15 && s.y >= n.py - (n.tall ? 10 : 3) && s.y < n.py + 15);
+      if (n) { s.dead = true; this.hit(n, dir); }
+    }
+    this.shots = this.shots.filter(s => !s.dead);
+  },
+  // Nobody gets hurt: they blink, hop back a step and complain.
+  hit(n, dir) {
+    const key = n.id === 'wizard' ? 'wizard' : OUCH[n.id] ? n.id : OUCH[n.look.kind] ? n.look.kind : 'person';
+    const lines = OUCH[key];
+    n.hurt = (n.hurt || 0) + 1;
+    parts.push({ k: 'say', text: lines[(n.hurt - 1) % lines.length], x: n.px + 8, y: n.py - (n.tall ? 26 : 15), vy: -18, life: 1.5, world: true });
+    if (n.id === 'wizard') { Audio.sfx('fizzle'); spark(n.px + 8, n.py, 10, C.cyan, true); return; }
+    Audio.sfx('hit');
+    n.hitT = 0.45; n.timer = 2.5; n.grudged = false;
+    if (n.look.kind === 'chicken') spark(n.px + 8, n.py + 8, 8, '#e8e2d0', true);
+    if (n.sleep || n.moving) return;
+    const [dx, dy] = DIRV[dir];
+    if (this.free(n.x + dx, n.y + dy, n)) { this.move(n, dir, NPC_SPEED * 2.2); n.t = 0; }
+    n.faceAfter = OPP[dir]; if (!n.moving) n.dir = OPP[dir];
   },
   tryMove() {
     const p = this.p, d = heldDir();
@@ -760,7 +871,8 @@ const Play = {
   talkTo(n) {
     if (n.id === 'wizard') { if (!G.flags.met) this.run(wizardScene); return; }
     if (!n.sleep && n.look.kind !== 'frog') n.dir = OPP[this.p.dir];
-    const lines = n.talked && n.again ? n.again : n.talk;
+    let lines = n.talked && n.again ? n.again : n.talk;
+    if (n.hurt && !n.grudged && n.look.kind === 'person' && !n.sleep) { lines = [GRUDGE[(n.hurt - 1) % GRUDGE.length], ...lines]; n.grudged = true; }
     n.talked++;
     say(lines, {
       name: n.name,
@@ -802,10 +914,12 @@ const Play = {
       if (!e.n) {
         const frame = p.moving ? [0, 1, 0, 2][Math.floor(p.anim * 8) % 4] : 0;
         ctx.drawImage(charSprite(G.hero.look, p.dir, frame), p.px - cx, p.py - cy - 2);
+        if (this.swing) this.drawSwing(cx, cy);
         continue;
       }
       const n = e.n;
       if (n.tall) { wiz = n; this.drawWizard(n, cx, cy); continue; }
+      if (n.hitT > 0 && Math.floor(n.hitT * 20) % 2) continue; // blink when hit
       if (n.spear) {
         ctx.fillStyle = C.ink; ctx.fillRect(n.px - cx + 13, n.py - cy - 5, 3, 19);
         ctx.fillStyle = C.woodL; ctx.fillRect(n.px - cx + 14, n.py - cy - 4, 1, 17);
@@ -826,6 +940,7 @@ const Play = {
     if (wiz) ctx.drawImage(glow(wiz.frame ? 40 : 22, '#3ab8e0'), wiz.px - cx + 15 - (wiz.frame ? 40 : 22), wiz.py - cy - 6 - (wiz.frame ? 40 : 22));
     ctx.globalCompositeOperation = 'source-over';
     for (const f of m.flames) flame(ctx, f.x - cx, f.y - cy, this.time + f.x, f.big);
+    this.drawShots(cx, cy);
     drawVignette();
     // talk bubble when facing someone
     if (!D.active && !this.script && !p.moving) {
@@ -849,6 +964,39 @@ const Play = {
     if (this.fx.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${Math.min(1, this.fx.flash)})`; ctx.fillRect(0, 0, VW, VH); }
     this.dialogY = dialogBoxY(p.py - cy);
     drawDialog(this.dialogY);
+  },
+  drawSwing(cx, cy) {
+    const s = this.swing, p = this.p, x = p.px - cx + 8, y = p.py - cy + 7, k = s.t / 0.25;
+    const base = { right: 0, down: Math.PI / 2, left: Math.PI, up: -Math.PI / 2 }[s.dir];
+    if (s.id === 'knight') {
+      // a quick white arc in front of the hero
+      ctx.globalCompositeOperation = 'lighter';
+      for (let a = -1.2; a <= -1.2 + 2.4 * Math.min(1, k * 1.6); a += 0.08) {
+        const fade = 1 - Math.max(0, k - 0.5) * 2;
+        ctx.fillStyle = `rgba(220,230,255,${0.9 * fade})`;
+        for (const r of [11, 12, 13]) ctx.fillRect(Math.round(x + Math.cos(base + a) * r), Math.round(y + Math.sin(base + a) * r), 1, 1);
+      }
+      ctx.globalCompositeOperation = 'source-over';
+    } else if (s.id === 'ranger') {
+      const bx = Math.round(x + Math.cos(base) * 8), by = Math.round(y + Math.sin(base) * 8);
+      ctx.fillStyle = C.woodO;
+      for (let a = -1.2; a <= 1.2; a += 0.2) ctx.fillRect(Math.round(bx + Math.cos(base + a) * 5 - Math.cos(base) * 3), Math.round(by + Math.sin(base + a) * 5 - Math.sin(base) * 3), 1, 1);
+    } else if (s.id === 'mage') {
+      const bx = Math.round(x + Math.cos(base) * 9), by = Math.round(y + Math.sin(base) * 9);
+      ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(glow(8, '#9a6aff'), bx - 8, by - 8); ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(bx, by, 1, 1);
+    }
+  },
+  drawShots(cx, cy) {
+    for (const s of this.shots) {
+      const x = s.x - cx, y = s.y - cy, l = Math.hypot(s.vx, s.vy), ux = s.vx / l, uy = s.vy / l;
+      if (s.id === 'mage') {
+        ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(glow(7, '#9a6aff'), Math.round(x) - 7, Math.round(y) - 7); ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(Math.round(x) - 1, Math.round(y) - 1, 2, 2);
+      } else {
+        for (let i = 0; i < 7; i++) { ctx.fillStyle = i === 0 ? '#d0d0d8' : i > 5 ? '#e8e0cc' : C.woodL; ctx.fillRect(Math.round(x - ux * i), Math.round(y - uy * i), 1, 1); }
+      }
+    }
   },
   drawWizard(n, cx, cy) {
     const bob = n.frame ? 0 : Math.round(Math.sin(this.time * 2) * 0.6);
@@ -982,11 +1130,11 @@ function frame(now) {
 // Debug: ?scene=world|castle|end jumps ahead with a test hero.
 const dbg = new URLSearchParams(location.search).get('scene');
 if (dbg) {
-  G.name = 'KEN'; G.hero = makeHero(G.name, 0);
+  G.name = 'KEN'; G.hero = makeHero(G.name, +(new URLSearchParams(location.search).get('cls') || 0));
   if (!G.armed.v && !G.armed.word) G.armed = { v: 7, s: 'D' };
   if (dbg === 'end') setScene(End);
   else if (dbg === 'name') setScene(NameEntry);
-  else if (dbg === 'hero') setScene(HeroScene);
+  else if (dbg === 'hero' || dbg === 'class') setScene(ClassScene);
   else {
     setScene(Play); Play.start(); Play.script = null; D.active = false;
     if (dbg === 'castle') Play.load('castle', 4, 7, 'up');
@@ -996,4 +1144,4 @@ if (dbg) {
 } else setScene(Title);
 requestAnimationFrame(frame);
 window.__G = G; window.__D = D;
-window.__sceneName = () => (G.scene === Title ? 'title' : G.scene === NameEntry ? 'name' : G.scene === HeroScene ? 'hero' : G.scene === Play ? 'play' : 'end');
+window.__sceneName = () => (G.scene === Title ? 'title' : G.scene === NameEntry ? 'name' : G.scene === ClassScene ? 'class' : G.scene === Play ? 'play' : 'end');

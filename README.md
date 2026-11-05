@@ -17,34 +17,43 @@ Arm the card on the **title screen**, then hand over the phone.
 1. **Value**: tap the sky. The area above the START button is an invisible grid:
 
    ```
-   +----+----+----+----+
-   | 1  | 2  | 3  | 4  |      1 = Ace
-   +----+----+----+----+
-   | 5  | 6  | 7  | 8  |
-   +----+----+----+----+
-   | 9  | 10 | 11 | 12 |      11 = Jack, 12 = Queen
-   +----+----+----+----+
-   |         13        |   <- the band just above START (King)
-   +-------------------+
+   +------+------+------+
+   |  1   |  2   |  3   |      1 = Ace
+   +------+------+------+
+   |  4   |  5   |  6   |
+   +------+------+------+
+   |  7   |  8   |  9   |
+   +------+------+------+
+   |  10  |  11  |  12  |      11 = Jack, 12 = Queen
+   +------+------+------+
+   |         13         |   <- the band just above START (King)
+   +--------------------+
    ```
 
    Values are always numbers, here and in the URL: 1 = Ace, 11 = Jack, 12 = Queen,
    13 = King. The revealed card still shows a real J, Q or K.
 
-   The grid covers the full width, from the top of the screen down to just above
-   START, in four equal rows. Every tap makes a little sparkle wherever you touch, so
+   The grid covers the full width, three columns across, from the top of the screen
+   down to just above START, in five equal rows. Every tap makes a little sparkle wherever you touch, so
    the value tap looks like playing with the screen. The last tap counts.
 
+   **Confirmation:** a sky tap makes a quick, pale burst of sparkle-dots that gathers
+   into the shape of the number you hit (for example a dotted "7"), then scatters and
+   fades in under a second. To anyone else it looks like a twinkle.
+
 2. **Suit**: tap **START** in one of its four quarters, left to right in CHaSeD order:
-   **Clubs, Hearts, Spades, Diamonds**. This also starts the game.
+   **Clubs, Hearts, Spades, Diamonds**. This also starts the game. The 2nd and 4th
+   quarters (Hearts, Diamonds) are a very slightly darker parchment, so you can see
+   the four sections if you look for them.
 
 If you skip the value tap, the card defaults to an Ace. If the game is started with the
 A button or keyboard instead of a tap on START, the suit defaults to Spades.
 
 ### Cheat sheet
 
-**Triple-tap `@ODDPAQ`** at the bottom of the title screen to see the value grid, the
-suit order and the card that is currently armed. Tap anywhere to close it.
+**Triple-tap the empty grass at the bottom middle** of the title screen (below START)
+to see the value grid, the suit order and the card that is currently armed. Tap anywhere
+to close it.
 
 ### Backup: URL force
 
@@ -97,15 +106,38 @@ windows and torches glow, and motes of magic drift in the air. It works in portr
 landscape, on phones and on desktop. The pixel size is chosen so the art always stays
 crisp, and at least 10 tiles are visible across the short side.
 
-- **Phone:** while walking around, a see-through D-pad (bottom left) and **A** button
-  (bottom right) float over the game. They are hidden on the title, name, hero and
-  ending screens, which are tap-only. In portrait the camera and text box stay above
+- **Phone:** while walking around, a see-through D-pad (bottom left) and **A** (talk)
+  and **B** (weapon) buttons (bottom right) float over the game. They are hidden on
+  the title, name, path and ending screens, which are tap-only. In portrait the camera and text box stay above
   the controls; in landscape the text box sits between them. Tapping the text box also
   advances it, and YES/NO can be tapped directly. The ♫ button (top right) mutes.
-- **Keyboard:** arrows or WASD to walk; Z, X, Space or Enter for A. On the name screen
+- **Keyboard:** arrows or WASD to walk; Z, Space or Enter for A; X or C for B. On the name screen
   you can just type, with Backspace and Enter.
 
 People's names show on a tab above their text box (GUARD, WIZARD and so on).
+
+### Heroes and weapons
+
+After the name, the player chooses one of four paths. Hair and skin come from their
+name; the outfit and weapon come from the path.
+
+| Path   | Weapon | Range | How it works (B button) |
+|--------|--------|-------|-------------------------|
+| KNIGHT | Sword  | Close | Swings in a short arc in front of you. |
+| RANGER | Bow    | Far   | Fires an arrow that aims itself at the nearest person roughly in front of you. |
+| MAGE   | Staff  | Far   | Casts a glowing spark, aimed the same way. |
+| BARD   | Lute   | Close | A loud chord that hits everyone right around you. |
+
+No aiming is needed: face roughly the right way and press B. Nobody gets hurt. People
+and animals blink, hop back a step and shout something ("OW!", "MY BACK!", "BAWK!!").
+The next time you talk to someone you hit, they mention it first. The wizard is not
+impressed.
+
+### Music
+
+The title theme is unchanged. The road theme is a slow D-dorian tune over a drone-like
+bass, the castle theme is in E minor, the reveal is a minor arpeggio that opens into
+major, and the ending is bittersweet A minor.
 
 ## Run locally
 
@@ -114,8 +146,8 @@ python3 -m http.server 8000   # or: npm start
 ```
 
 Open http://localhost:8000. Debug shortcuts with a test hero (arms 7♦ if nothing is
-armed): `?scene=world`, `?scene=north`, `?scene=castle`, `?scene=hero`, `?scene=name`,
-`?scene=end`.
+armed): `?scene=world`, `?scene=north`, `?scene=castle`, `?scene=class`, `?scene=name`,
+`?scene=end`. Add `&cls=0`–`3` to pick the test hero's path (knight, ranger, mage, bard).
 
 Tests (map walkability, NPC placement, every character of every line drawable by the
 pixel font and fitting the text box, music timing, URL force parsing, word cipher):
@@ -140,7 +172,7 @@ game files. It also copies `index.html` to `404.html` so the `/7D` URL force wor
 ```
 index.html        page shell, controls, URL force script (card or word)
 styles.css        handheld-style layout (portrait and landscape)
-src/main.js       game loop, input, scenes (title, name, hero, play, end), dialogue, reveal
+src/main.js       game loop, input, scenes (title, name, path, play, end), dialogue, weapons, reveal
 src/data.js       maps, NPCs and every line of text
 src/art.js        5x7 pixel font, sprites, tiles, playing card
 src/audio.js      chiptune engine (pulse, triangle, noise) and the songs
