@@ -678,3 +678,27 @@ export function flame(x, ox, oy, t, big) {
   x.fillStyle = '#ffe47a'; x.fillRect(ox - (f === 2 ? 1 : 0), oy - h + 3 + (f === 0 ? 1 : 0), 2, h - 4);
   x.fillStyle = '#ffffff'; x.fillRect(ox, oy - 2, 1, 1);
 }
+
+// A parchment scroll with a word on it, for the word reveal. Returns a canvas.
+export function makeScroll(word) {
+  const big = word.length <= 10;
+  const sc = big ? 2 : 1;
+  const lines = big ? [word] : wrap(word, 20).slice(0, 4);
+  const tw = Math.max(...lines.map(l => textWidth(l, sc)));
+  const w = Math.max(60, tw + 20), lh = 7 * sc + 5, h = lines.length * lh + 26;
+  const [c, x] = makeCanvas(w + 6, h);
+  // paper
+  x.fillStyle = C.ink; x.fillRect(3, 4, w, h - 8);
+  x.fillStyle = '#f2e2b8'; x.fillRect(4, 5, w - 2, h - 10);
+  x.fillStyle = '#d9c08a'; x.fillRect(4, 5, 2, h - 10); x.fillRect(w - 1, 5, 2, h - 10);
+  x.fillStyle = '#e6d19c'; for (let i = 0; i < 6; i++) x.fillRect(8 + ((hash(i, w) * (w - 12)) | 0), 9 + ((hash(i, h) * (h - 20)) | 0), 3, 1);
+  // rolls at top and bottom
+  for (const ry of [0, h - 8]) {
+    x.fillStyle = C.ink; x.fillRect(0, ry, w + 6, 8);
+    x.fillStyle = C.woodL; x.fillRect(1, ry + 1, w + 4, 6);
+    x.fillStyle = C.wood; x.fillRect(1, ry + 4, w + 4, 3);
+    x.fillStyle = C.woodD; x.fillRect(1, ry + 6, w + 4, 1); x.fillRect(0, ry + 1, 1, 6); x.fillRect(w + 5, ry + 1, 1, 6);
+  }
+  lines.forEach((l, i) => textCenter(x, l, (w + 6) / 2, 13 + i * lh, '#3a1f4a', sc));
+  return c;
+}

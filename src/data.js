@@ -210,6 +210,10 @@ export const SCRIPT = {
   askNo: ['THEN THINK OF ONE NOW. ANY CARD AT ALL.', 'TAKE YOUR TIME. I AM VERY OLD. I CAN WAIT.'],
   askAgain: 'DO YOU HAVE ONE?',
   wizard2: ['GOOD. DON\'T SAY IT. JUST SEE IT IN YOUR MIND. CLEAR AS DAY.', 'NOW... LET THE WIND IN.'],
+  // word mode (URL "?=" with a ciphered word)
+  askWord: 'TELL ME. ARE YOU THINKING OF A WORD?',
+  askNoWord: ['THEN THINK OF ONE NOW. ANY WORD AT ALL.', 'TAKE YOUR TIME. I AM VERY OLD. I CAN WAIT.'],
+  wizard2Word: ['GOOD. DON\'T SAY IT. SPELL IT OUT IN YOUR HEAD. ONE LETTER AT A TIME.', 'NOW... LET THE WIND IN.'],
   wizard3: ['THE WIND IS NEVER WRONG.', 'THANK YOU, {N}. IT FEELS GOOD TO HEAR IT BLOW AGAIN.'],
 };
 
@@ -228,6 +232,23 @@ export function parseForce(str) {
   const t = m[1].toUpperCase();
   const v = t === 'A' ? 1 : t === 'J' ? 11 : t === 'Q' ? 12 : t === 'K' ? 13 : parseInt(t, 10);
   return { v, s: m[2].toUpperCase() };
+}
+
+// Word force cipher: each letter is typed one key to the RIGHT on its QWERTY row,
+// wrapping at the row's end. "hello" is sent as "jraap". Spaces may be + - _ or %20.
+const QWERTY = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
+function shiftKey(ch, by) {
+  for (const row of QWERTY) {
+    const i = row.indexOf(ch);
+    if (i >= 0) return row[(i + by + row.length) % row.length];
+  }
+  return ch;
+}
+export function encodeWord(word) { return [...word.toLowerCase()].map(c => (c === ' ' ? '+' : shiftKey(c, 1))).join(''); }
+export function decodeWord(code) {
+  let s = code;
+  try { s = decodeURIComponent(s.replace(/\+/g, ' ')); } catch (e) { /* keep raw */ }
+  return [...s.toLowerCase().replace(/[-_]/g, ' ')].map(c => shiftKey(c, -1)).join('').replace(/\s+/g, ' ').trim().toUpperCase();
 }
 
 // Hero classes for the character generator.

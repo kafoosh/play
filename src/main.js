@@ -1,5 +1,5 @@
-import { C, text, textCenter, wrap, box, drawCard, charSprite, drawTile, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
-import { MAPS, LOOKS, NPCS, SCRIPT, cardName, VALUE_GRID, CHASED, CLASSES, SKINS, HAIRS } from './data.js';
+import { C, text, textCenter, wrap, box, drawCard, makeScroll, charSprite, drawTile, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
+import { MAPS, LOOKS, NPCS, SCRIPT, cardName, decodeWord, VALUE_GRID, CHASED, CLASSES, SKINS, HAIRS } from './data.js';
 import * as Audio from './audio.js';
 
 const VW = 160, VH = 144;
@@ -13,6 +13,7 @@ const G = {
   name: '', hero: null, flags: {}, time: 0, fade: null, scene: null,
 };
 if (window.__force) { G.armed = { ...window.__force }; G.locked = true; }
+if (window.__forceWord) { const w = decodeWord(window.__forceWord); if (w) { G.armed = { v: null, s: null, word: w }; G.locked = true; } }
 const armedCard = () => ({ v: G.armed.v || 1, s: G.armed.s || 'S' });
 const fill = s => s.replace(/\{N\}/g, G.name || 'HERO');
 
@@ -313,7 +314,7 @@ function drawCheat() {
   text(ctx, 'START = SUIT', 44, 105, '#8f8cc0');
   const a = G.armed;
   const lab = a.v || a.s ? `${a.v ? VALUE_LABEL[a.v] : '?'}${a.s ? { C: '♣', H: '♥', S: '♠', D: '♦' }[a.s] : '?'}` : '--';
-  textCenter(ctx, 'ARMED: ' + lab + (G.locked ? ' (URL)' : ''), 80, 116, C.gold);
+  textCenter(ctx, a.word ? 'WORD: ' + a.word.slice(0, 16) : 'ARMED: ' + lab + (G.locked ? ' (URL)' : ''), 80, 116, C.gold);
   textCenter(ctx, 'TAP TO CLOSE', 80, 127, '#8f8cc0');
 }
 
@@ -683,7 +684,6 @@ const Play = {
   drawReveal() {
     const c = this.card, k = Math.min(1, c.t / 0.6);
     const step = Math.max(1, Math.round(k * 8)) / 8;
-    const w = Math.round(48 * step), h = Math.round(64 * step);
     // light rays
     const cxp = 80, cyp = 60;
     ctx.fillStyle = 'rgba(243,198,70,0.25)';
@@ -691,9 +691,10 @@ const Play = {
       const a = c.t * 0.6 + i * Math.PI / 4;
       for (let r = 34; r < 70; r += 2) ctx.fillRect(Math.round(cxp + Math.cos(a) * r), Math.round(cyp + Math.sin(a) * r), 2, 2);
     }
-    if (!this.cardCanvas) { const [cc, cx2] = makeCanvas(48, 64); drawCard(cx2, 0, 0, c.v, c.s); this.cardCanvas = cc; }
-    ctx.drawImage(this.cardCanvas, cxp - w / 2 | 0, cyp - h / 2 | 0, w, h);
-    if (c.t > 0.9) textCenter(ctx, cardName(c.v, c.s), 80, 14, C.gold, 1, C.ink);
+    if (!this.cardCanvas) this.cardCanvas = revealCanvas(c);
+    const rc = this.cardCanvas, rw = Math.round(rc.width * step), rh = Math.round(rc.height * step);
+    ctx.drawImage(rc, cxp - rw / 2 | 0, cyp - rh / 2 | 0, rw, rh);
+    if (c.t > 0.9) textCenter(ctx, c.word ? 'THE WIND SAYS:' : cardName(c.v, c.s), 80, 14, C.gold, 1, C.ink);
     if (c.waitA && c.t > 1.6 && Math.floor(G.time * 3) % 2) text(ctx, '▼', 146, 132, C.gold);
   },
 };
@@ -703,13 +704,21 @@ const wait = s => { const until = Play.time + s; return () => Play.time >= until
 function* talk(lines, low = false, pos) { say(lines, { low, pos }); yield () => !D.active; }
 // "NO" loops back until they say yes.
 const ask = (q = SCRIPT.ask) => ({ ask: q, yes: [], no: () => [...SCRIPT.askNo, ask(SCRIPT.askAgain)] });
+const askWord = (q = SCRIPT.askWord) => ({ ask: q, yes: [], no: () => [...SCRIPT.askNoWord, askWord(SCRIPT.askAgain)] });
+// The thing the wizard reveals: the armed word on a scroll, or the armed card.
+const armedReveal = () => (G.armed.word ? { word: G.armed.word } : armedCard());
+function revealCanvas(r) {
+  if (r.word) return makeScroll(r.word);
+  const [c, x] = makeCanvas(48, 64); drawCard(x, 0, 0, r.v, r.s); return c;
+}
 
 function* wizardScene() {
   G.flags.met = 1;
   const wiz = this.npc('wizard');
   this.p.dir = 'up';
   yield wait(0.3);
-  yield* talk([...SCRIPT.wizard1, ask(), ...SCRIPT.wizard2], true);
+  const word = G.armed.word;
+  yield* talk([...SCRIPT.wizard1, word ? askWord() : ask(), ...(word ? SCRIPT.wizard2Word : SCRIPT.wizard2)], true);
   // the wind returns
   Audio.stopMusic();
   wiz.frame = 1;
@@ -729,9 +738,8 @@ function* wizardScene() {
   }
   Audio.sfx('flash');
   this.fx.flash = 1.2;
-  const card = armedCard();
   this.cardCanvas = null;
-  this.card = { t: 0, v: card.v, s: card.s, waitA: true };
+  this.card = { t: 0, ...armedReveal(), waitA: true };
   setTimeout(() => Audio.music('fanfare'), 250);
   for (let i = 0; i < 30; i++) parts.push({ k: 'wind', x: cx - Math.random() * 60, y: cy + Math.random() * VH, vx: 200 + Math.random() * 100, vy: 0, len: 8 + (Math.random() * 10 | 0), life: 1.5, world: true });
   yield () => !this.card.waitA && this.card.t > 1.2;
@@ -743,8 +751,7 @@ function* wizardScene() {
 // ================================================================ the end
 const End = {
   enter() {
-    this.t = 0; this.card = armedCard();
-    const [c, x] = makeCanvas(48, 64); drawCard(x, 0, 0, this.card.v, this.card.s); this.cc = c;
+    this.t = 0; this.cc = revealCanvas(armedReveal());
     Audio.music('end');
   },
   update(dt) {
@@ -757,7 +764,7 @@ const End = {
     drawSky(this.t);
     drawParts();
     textCenter(ctx, 'THE END', 80, 8, C.gold, 2, C.ink);
-    ctx.drawImage(this.cc, 56, 28 + Math.round(Math.sin(this.t * 1.6)));
+    ctx.drawImage(this.cc, Math.round(80 - this.cc.width / 2), Math.round(60 - this.cc.height / 2) + Math.round(Math.sin(this.t * 1.6)));
     box(ctx, 14, 98, 132, 26);
     textCenter(ctx, 'THANKS FOR PLAYING,', 80, 104, C.white);
     textCenter(ctx, G.name + '!', 80, 114, C.gold);
@@ -797,7 +804,7 @@ function frame(now) {
 const dbg = new URLSearchParams(location.search).get('scene');
 if (dbg) {
   G.name = 'KEN'; G.hero = makeHero(G.name, 0);
-  if (!G.armed.v) G.armed = { v: 7, s: 'D' };
+  if (!G.armed.v && !G.armed.word) G.armed = { v: 7, s: 'D' };
   if (dbg === 'end') setScene(End);
   else if (dbg === 'name') setScene(NameEntry);
   else if (dbg === 'hero') setScene(HeroScene);

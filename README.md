@@ -47,9 +47,38 @@ suit order and the card that is currently armed. Tap anywhere to close it.
 
 Open `play.oddpaq.com/7D` (or `play.oddpaq.com/?=7D`) to arm the 7 of Diamonds before
 the page appears. The address bar is reset to the plain site straight away. Anything
-may follow the card (`/7D-x9`, `/QH/foo`). Values `A 2-10 J Q K`, suits `C H S D`,
+may follow the card in the path form (`/7D-x9`, `/QH/foo`); in the `?=` form see
+"Card or word?" below. Values `A 2-10 J Q K`, suits `C H S D`,
 any case. While a URL force is armed, the title-screen taps are ignored, so the
 spectator can press START themselves. The cheat sheet shows `(URL)` in this mode.
+
+### Word force (`?=` with a ciphered word)
+
+To reveal a **word** instead of a card, send the spectator to the site with the word
+after `?=`, ciphered as **QWERTY + 1**: type each letter using the key one to its
+**right** on the same keyboard row, wrapping round at the end of the row.
+
+```
+hello  ->  play.oddpaq.com/?=jraap
+```
+
+| real   | q w e r t y u i o p | a s d f g h j k l | z x c v b n m |
+|--------|---------------------|-------------------|---------------|
+| type   | w e r t y u i o p q | s d f g h j k l a | x c v b n m z |
+
+So the row ends wrap: `p` → `q`, `l` → `a`, `m` → `z`. For more than one word, put `+`,
+`-` or `_` between them (`?=jraap+eptaf` = HELLO WORLD). Case doesn't matter.
+
+The address bar is reset to the plain site before the page appears, and title-screen
+taps are ignored. The wizard then asks **"ARE YOU THINKING OF A WORD?"** and the word
+appears on a scroll ("THE WIND SAYS:"). Short words (up to 10 letters) are shown big;
+longer phrases wrap onto up to four lines. The cheat sheet shows `WORD: HELLO`.
+
+**Card or word?** After `?=`, the game reads a **card** if the text is exactly a card
+(`?=7D`, `?=qs`, `?=10h`) or starts with a number (`?=7D90x`). Anything made only of
+letters (plus `+ - _`) is a **word**. A ciphered word that happens to be exactly a
+two-letter card (`as`, `qs`, `jh`, `kd`, ...) is read as the card. The `/7D` path form
+is always a card.
 
 ### The reveal
 
@@ -81,7 +110,7 @@ armed): `?scene=world`, `?scene=north`, `?scene=castle`, `?scene=hero`, `?scene=
 `?scene=end`.
 
 Tests (map walkability, NPC placement, every character of every line drawable by the
-pixel font and fitting the text box, music timing, URL force parsing):
+pixel font and fitting the text box, music timing, URL force parsing, word cipher):
 
 ```bash
 npm test
@@ -101,7 +130,7 @@ game files. It also copies `index.html` to `404.html` so the `/7D` URL force wor
 ## Project layout
 
 ```
-index.html        page shell, controls, URL force script
+index.html        page shell, controls, URL force script (card or word)
 styles.css        handheld-style layout (portrait and landscape)
 src/main.js       game loop, input, scenes (title, name, hero, play, end), dialogue, reveal
 src/data.js       maps, NPCs and every line of text

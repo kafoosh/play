@@ -17,7 +17,16 @@
         if (card.test(seg)) { m = card.exec(seg); base = segs.slice(0, i).join('/') + '/'; }
       }
       var q = location.search.replace(/^\?=?/, '');
-      if (!m && location.search && card.test(q)) m = card.exec(q);
+      if (!m && location.search) {
+        // "?=" is a card only if it is exactly a card ("7D", "qs") or starts with a digit
+        // ("7D90"). Letters only means a QWERTY+1 ciphered word ("?=jraap" = HELLO).
+        if (/^(10|[2-9]|[ajqk])[chsd]$/i.test(q) || (/^\d/.test(q) && card.test(q))) m = card.exec(q);
+        else if (/^([a-z+_-]|%20)+$/i.test(q)) {
+          window.__forceWord = q;
+          try { history.replaceState(null, '', location.pathname); } catch (e) {}
+          return;
+        }
+      }
       if (!m) return;
       var v = m[1].toUpperCase();
       window.__force = { v: v === 'A' ? 1 : v === 'J' ? 11 : v === 'Q' ? 12 : v === 'K' ? 13 : parseInt(v, 10), s: m[2].toUpperCase() };

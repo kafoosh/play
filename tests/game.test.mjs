@@ -1,7 +1,7 @@
 // Run with: node --test tests/
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MAPS, NPCS, LOOKS, SCRIPT, parseForce, cardName, VALUE_GRID } from '../src/data.js';
+import { MAPS, NPCS, LOOKS, SCRIPT, parseForce, cardName, VALUE_GRID, encodeWord, decodeWord } from '../src/data.js';
 import { GLYPH_SET, wrap } from '../src/art.js';
 import { SONGS } from '../src/audio.js';
 
@@ -86,4 +86,15 @@ test('URL force parsing', () => {
 
 test('value grid covers A to Q once (K is the band)', () => {
   assert.deepEqual(VALUE_GRID.flat(), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+});
+
+test('word cipher is QWERTY + 1 with wrap-around', () => {
+  assert.equal(encodeWord('hello'), 'jraap');
+  assert.equal(decodeWord('jraap'), 'HELLO');
+  assert.equal(decodeWord('JRAAP'), 'HELLO');
+  assert.equal(encodeWord('quiz'), 'wiox');       // z -> x, p would wrap to q
+  assert.equal(decodeWord('qsdys+aszq'), 'PASTA LAMP');
+  assert.equal(decodeWord('jraap%20jraap'), 'HELLO HELLO');
+  assert.equal(decodeWord('jraap-jraap'), 'HELLO HELLO');
+  for (const w of ['PALM', 'ZEBRA', 'MAGIC', 'QUILL', 'LAKE']) assert.equal(decodeWord(encodeWord(w)), w);
 });
