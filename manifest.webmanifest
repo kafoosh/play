@@ -1,0 +1,13 @@
+{
+  "name": "ODDPAQ: Winds of Wonder",
+  "short_name": "Winds of Wonder",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#15122a",
+  "theme_color": "#15122a",
+  "icons": [
+    { "src": "icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

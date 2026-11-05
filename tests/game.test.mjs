@@ -1,0 +1,89 @@
+// Run with: node --test tests/
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { MAPS, NPCS, LOOKS, SCRIPT, parseForce, cardName, VALUE_GRID } from '../src/data.js';
+import { GLYPH_SET, wrap } from '../src/art.js';
+import { SONGS } from '../src/audio.js';
+
+const solid = (map, x, y) => {
+  const r = map.rows[y];
+  if (!r || x < 0 || x >= r.length) return true;
+  return !!map.legend[r[x]][1];
+};
+function reach(map, from, blocked = []) {
+  const seen = new Set([from.join()]), q = [from];
+  while (q.length) {
+    const [x, y] = q.shift();
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const k = [x + dx, y + dy].join();
+      if (seen.has(k) || solid(map, x + dx, y + dy) || blocked.includes(k)) continue;
+      seen.add(k); q.push([x + dx, y + dy]);
+    }
+  }
+  return seen;
+}
+
+test('maps are rectangular and every tile is in the legend', () => {
+  for (const [name, m] of Object.entries(MAPS)) {
+    const w = m.rows[0].length;
+    m.rows.forEach((r, y) => {
+      assert.equal(r.length, w, `${name} row ${y} width`);
+      for (const ch of r) assert.ok(m.legend[ch], `${name} unknown tile "${ch}"`);
+    });
+  }
+});
+
+test('warps land on walkable tiles', () => {
+  for (const m of Object.values(MAPS)) for (const w of Object.values(m.warps)) {
+    assert.ok(!solid(MAPS[w.map], w.x, w.y), `warp target ${w.map} ${w.x},${w.y}`);
+  }
+});
+
+test('house exit can reach the castle gate (guard moved aside)', () => {
+  const seen = reach(MAPS.world, [15, 40]);
+  assert.ok(seen.has('16,4'), 'gate reachable');
+  assert.ok(seen.has('17,21'), 'guard has room to step aside');
+});
+
+test('in the castle the player can reach the wizard', () => {
+  assert.ok(reach(MAPS.castle, [4, 8]).has('4,4'));
+});
+
+test('npcs stand on walkable tiles, one per tile', () => {
+  const used = new Set();
+  for (const n of NPCS) {
+    assert.ok(LOOKS[n.look], `${n.id} look`);
+    assert.ok(!solid(MAPS[n.map], n.x, n.y), `${n.id} on solid tile`);
+    const k = `${n.map}:${n.x},${n.y}`;
+    assert.ok(!used.has(k), `${n.id} shares a tile`); used.add(k);
+  }
+});
+
+test('all text can be drawn by the pixel font and fits the box', () => {
+  const all = [];
+  for (const m of Object.values(MAPS)) for (const v of Object.values(m.looks)) all.push(...v);
+  for (const n of NPCS) all.push(...(n.talk || []), ...(n.again || []));
+  for (const v of Object.values(SCRIPT)) all.push(...[].concat(v));
+  for (const s of all) {
+    const t = s.replace(/\{N\}/g, 'ABCDEFGH');
+    for (const ch of t.replace(/\n/g, '')) assert.ok(GLYPH_SET.has(ch), `missing glyph "${ch}" in: ${s}`);
+    for (const line of wrap(t, 23)) assert.ok(line.length <= 23, `too long: ${line}`);
+  }
+});
+
+test('every song channel loops on the same length', () => {
+  for (const [name, s] of Object.entries(SONGS)) for (const c of s.ch) assert.equal(c.len, s.len, name);
+});
+
+test('URL force parsing', () => {
+  assert.deepEqual(parseForce('7D'), { v: 7, s: 'D' });
+  assert.deepEqual(parseForce('10h99x'), { v: 10, s: 'H' });
+  assert.deepEqual(parseForce('qs'), { v: 12, s: 'S' });
+  assert.deepEqual(parseForce('AC'), { v: 1, s: 'C' });
+  assert.equal(parseForce('1D'), null);
+  assert.equal(cardName(13, 'C'), 'KING OF CLUBS');
+});
+
+test('value grid covers A to Q once (K is the band)', () => {
+  assert.deepEqual(VALUE_GRID.flat(), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+});

@@ -1,0 +1,10 @@
+{
+  "name": "winds-of-wonder",
+  "private": true,
+  "type": "module",
+  "description": "ODDPAQ: Winds of Wonder. A pixel RPG where the wizard names your card.",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "test": "node --test tests/game.test.mjs"
+  }
+}
