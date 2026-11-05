@@ -14,9 +14,9 @@ A play-through takes about 2–3 minutes.
 
 Arm the card on the **title screen**, then hand over the phone.
 
-1. **Value**: tap the sky. The sky is painted in colour bands: four purple bands, then
-   an orange band at the horizon. The four purple bands are the rows, split into
-   three equal columns across the screen. Everything else above START counts as 13:
+1. **Value**: tap the sky. The sky is painted in five equal colour bands: four purple
+   bands, then an orange band at the horizon. The four purple bands are the rows, split
+   into three equal columns across the screen:
 
    ```
    +------+------+------+
@@ -28,13 +28,13 @@ Arm the card on the **title screen**, then hand over the phone.
    +------+------+------+
    |  10  |  11  |  12  |   purple band 4
    +------+------+------+
-   |         13         |   orange band, mountains, castle, trees, grass (down to START)
+   |         13         |   orange band: mountains, trees, castle, down to the grass edge
    +--------------------+
    ```
 
-   The orange band is always tall enough to hold the castle, mountains and trees, so
-   the purple bands are clear sky. Taps on or just beside any scenery count as 13.
-   You can see each band's edges, so you know which row you're in.
+   Go by the colour, not the scenery: the tips of the castle spires poke up into the
+   last purple band and count as 10-12. Taps on the grass below the horizon don't change
+   anything (they just sparkle), so a stray tap near START is harmless.
 
    Values are always numbers, here and in the URL: 1 = Ace, 11 = Jack, 12 = Queen,
    13 = King. The revealed card still shows a real J, Q or K.

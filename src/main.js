@@ -312,7 +312,7 @@ function drawDialog(by) {
 // ================================================================ backdrop (title / end)
 const STARS = Array.from({ length: 60 }, (_, i) => ({ x: hash(i, 1), y: hash(i, 2), p: hash(i, 3) * 6 }));
 let deco = null;
-const SKY = { bh: 30, line: [] };
+const SKY = { bh: 30, H: 150 };
 function backdropArt() {
   if (deco) return deco;
   // long thin dusk clouds
@@ -344,32 +344,20 @@ function backdropArt() {
   x.fillStyle = S.o; x.fillRect(33, 46, 10, 14); x.fillStyle = '#e89a3a'; x.fillRect(34, 48, 8, 12); x.fillStyle = '#ffd27a'; x.fillRect(36, 51, 4, 9);
   const wins = [[37, 24], [11, 34], [63, 34], [21, 40], [53, 40], [37, 34]];
   for (const [a, b] of wins) { x.fillStyle = S.o; x.fillRect(a - 1, b - 1, 4, 6); x.fillStyle = C.glass; x.fillRect(a, b, 2, 4); }
-  // first solid row of each column, so taps can tell sky from scenery
-  const tops = c => {
-    const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data, out = [];
-    for (let i = 0; i < c.width; i++) { let t = Infinity; for (let j = 0; j < c.height; j++) if (d[(j * c.width + i) * 4 + 3]) { t = j; break; } out.push(t); }
-    return out;
-  };
   deco = {
     cloud: cloud('#b06a6a', '#5a3a5a'), cloudN: cloud('#4a4a7a', '#2a2a48'), castle: cs, wins,
     firs: [fir(22, '#121a18'), fir(30, '#121a18'), fir(18, '#18221e')],
   };
-  deco.castleTop = tops(cs); deco.firTops = deco.firs.map(tops);
   return deco;
 }
+const grassTop = (x, H) => H + Math.round(Math.sin(x / 31 + 1) * 3);
 function drawBackdrop(t, night = false) {
   const art = backdropArt();
-  // The orange band at the bottom of the sky always holds all the scenery (castle,
-  // mountains, trees), so the four purple bands above it are clear sky for value taps.
-  // On short screens the horizon drops a little to keep those bands a decent height.
-  let H = Math.round(VH * 0.62);
-  if ((H - 58) / 4 < 22) H = Math.max(H, Math.min(startBox().y - 8, 58 + 88));
-  const orangeTop = Math.min(Math.round(H * 0.8), H - 58);
+  const H = Math.round(VH * 0.62);
   const sky = night ? ['#0c0a1c', '#141228', '#1c1834', '#261e40', '#32264a'] : ['#16132e', '#241c46', '#3e2a58', '#6e3e5e', '#b0624e'];
-  const bh = Math.floor(orangeTop / 4), edges = [0, bh, 2 * bh, 3 * bh, 4 * bh, H];
-  // Remember where the sky ends at each column (mountains, castle, trees, ground) for the value taps.
-  const line = new Array(VW).fill(H);
-  SKY.bh = bh; SKY.line = line;
+  // Five equal colour bands. The value taps use them: see skyValue().
+  const bh = Math.ceil(H / sky.length), edges = [0, bh, 2 * bh, 3 * bh, 4 * bh, H];
+  SKY.bh = bh; SKY.H = H;
   for (let i = 0; i < sky.length; i++) {
     ctx.fillStyle = sky[i]; ctx.fillRect(0, edges[i], VW, edges[i + 1] - edges[i] + 1);
     if (i) { ctx.fillStyle = sky[i - 1]; for (let x = 0; x < VW; x += 2) { ctx.fillRect(x + (i % 2), edges[i], 1, 1); ctx.fillRect(x, edges[i] + 2, 1, 1); } }
@@ -393,19 +381,17 @@ function drawBackdrop(t, night = false) {
   for (let x = 0; x < VW; x++) {
     const u = x / VW, h = H - 18 - Math.round(Math.abs(((u * 5.3) % 1) - 0.5) * 22 + Math.sin(u * 23) * 2);
     ctx.fillRect(x, h, 1, VH - h);
-    line[x] = Math.min(line[x], h);
   }
   ctx.fillStyle = night ? '#141228' : '#221a36';
-  for (let x = 0; x < VW; x++) { const u = x / VW, h = H - 8 - Math.round(Math.abs(((u * 3.1 + 0.4) % 1) - 0.5) * 14); ctx.fillRect(x, h, 1, VH - h); line[x] = Math.min(line[x], h); }
+  for (let x = 0; x < VW; x++) { const u = x / VW, h = H - 8 - Math.round(Math.abs(((u * 3.1 + 0.4) % 1) - 0.5) * 14); ctx.fillRect(x, h, 1, VH - h); }
   const cx0 = Math.round(VW / 2 - 38), cy0 = H - 54;
   ctx.drawImage(art.castle, cx0, cy0);
-  art.castleTop.forEach((t, i) => { const x = cx0 + i; if (t < Infinity && x >= 0 && x < VW) line[x] = Math.min(line[x], cy0 + t); });
   ctx.globalCompositeOperation = 'lighter';
   for (const [a, b] of art.wins) ctx.drawImage(glow(7, '#c87a2a'), cx0 + a - 6, cy0 + b - 5);
   ctx.globalCompositeOperation = 'source-over';
   // dark meadow and fir woods
   for (let x = 0; x < VW; x++) {
-    const h = H + Math.round(Math.sin(x / 31 + 1) * 3);
+    const h = grassTop(x, H);
     ctx.fillStyle = night ? '#24301e' : '#3e5030'; ctx.fillRect(x, h, 1, 2);
     ctx.fillStyle = night ? '#1a2416' : '#2e3e24'; ctx.fillRect(x, h + 2, 1, VH - h);
   }
@@ -415,24 +401,20 @@ function drawBackdrop(t, night = false) {
   }
   const firs = [[0.0, 1], [0.06, 0], [0.13, 2], [0.2, 0], [0.8, 2], [0.87, 0], [0.93, 1], [0.99, 2]];
   for (const [fx, k] of firs) {
-    const f = art.firs[k], fx0 = Math.round(fx * VW) - 8, fy0 = H + 2 - f.height + 2;
-    ctx.drawImage(f, fx0, fy0);
-    art.firTops[k].forEach((t, i) => { const x = fx0 + i; if (t < Infinity && x >= 0 && x < VW) line[x] = Math.min(line[x], fy0 + t); });
+    const f = art.firs[k];
+    ctx.drawImage(f, Math.round(fx * VW) - 8, H + 2 - f.height + 2);
   }
 }
 // Draw a fixed 160x144 layout in the middle of the screen; returns the offset.
 function centre() { return [Math.round((UIX0 + UIX1 - 160) / 2), Math.max(0, Math.round((UIB - 144) / 2))]; }
 
 // ================================================================ title
-// Value taps: the four upper sky colour bands are the rows (3 across): 1-3, 4-6, 7-9,
-// 10-12. Anything else above START is 13: the orange band, mountains, castle, trees and
-// grass. A few pixels of slack around the scenery's outline make edge taps land on 13.
+// Value taps follow the five sky colour bands. The four purple bands are the rows, three
+// across: 1-3, 4-6, 7-9, 10-12. The orange band, with the mountains, trees and castle in
+// it, is 13, down to the top edge of the grass. Taps on the grass don't change anything.
 function skyValue(x, y) {
-  const xi = Math.max(0, Math.min(VW - 1, Math.round(x)));
-  let land = 4 * SKY.bh;
-  for (let i = xi - 3; i <= xi + 3; i++) if (SKY.line[i] !== undefined) land = Math.min(land, SKY.line[i] - 3);
-  if (y >= land) return 13;
-  return VALUE_GRID[Math.max(0, Math.min(3, Math.floor(y / SKY.bh)))][Math.max(0, Math.min(2, Math.floor(x / (VW / 3))))];
+  if (y < 4 * SKY.bh) return VALUE_GRID[Math.max(0, Math.floor(y / SKY.bh))][Math.max(0, Math.min(2, Math.floor(x / (VW / 3))))];
+  return y < grassTop(Math.round(x), SKY.H) + 2 ? 13 : null;
 }
 // START sits on the meadow. Everything above it is the secret value grid.
 function startBox() {
@@ -482,7 +464,8 @@ const Title = {
       this.begin();
       return;
     }
-    if (y < S.y - 4 && !G.locked) { G.armed.v = skyValue(x, y); numberBurst(x, y, G.armed.v); }
+    const v = !G.locked && y < S.y - 4 ? skyValue(x, y) : null;
+    if (v) { G.armed.v = v; numberBurst(x, y, v); }
     else spark(x, y, 5, '#ffe9a0');
   },
   onA() { if (!this.cheat) this.begin(); else this.cheat = false; },
@@ -507,7 +490,7 @@ function drawCheat() {
   }));
   ctx.fillStyle = UI.paperD; ctx.fillRect(gx, gy + 4 * ch, cw * 3 - 2, ch - 2);
   textCenter(ctx, '13', gx + cw * 1.5 - 1, gy + 4 * ch + 1, UI.text);
-  textCenter(ctx, 'SKY BANDS 1-12. LAND 13', 80, 79, UI.dim);
+  textCenter(ctx, 'PURPLE 1-12. ORANGE 13', 80, 79, UI.dim);
   ['C', 'H', 'S', 'D'].forEach((s, i) => {
     ctx.fillStyle = '#ecc890'; ctx.fillRect(32 + i * 24, 90, 22, 12);
     textCenter(ctx, s, 43 + i * 24, 93, s === 'H' || s === 'D' ? C.red : UI.text);
