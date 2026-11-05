@@ -990,7 +990,7 @@ const Play = {
     if (n.id === 'wizard') { if (!G.flags.met) this.run(wizardScene); return; }
     if (!n.sleep && n.look.kind !== 'frog') n.dir = OPP[this.p.dir];
     let lines = n.talked && n.again ? n.again : n.talk, after = null;
-    const W = ['morag', 'bridie', 'tansy'];
+    const W = ['circe', 'bess', 'pennatella'];
     if (W.includes(n.id) && !G.flags.potion && !n.chicken) {
       if (!n.told) {
         n.told = true;

@@ -199,11 +199,11 @@ export const NPCS = [
   { id: 'soot', name: 'SOOT', map: 'witches', x: 8, y: 2, look: 'blackcat', wander: 2, slow: true,
     talk: ['MEOW.'], again: ['THE CAT LOOKS AT YOU LIKE IT KNOWS SOMETHING YOU DON\'T.'] },
   // (before the Crimson Cow, each witch says her part of QUEST.witchTalk instead)
-  { id: 'morag', name: 'MORAG', map: 'witches', x: 6, y: 3, look: 'witch1', dir: 'down', hat: 'witch',
+  { id: 'circe', name: 'CIRCE', map: 'witches', x: 6, y: 3, look: 'witch1', dir: 'down', hat: 'witch',
     talk: ['MIND HOW YOU GO. AND IF YOU SEE OUR FROG, TELL IT TO COME HOME.'] },
-  { id: 'bridie', name: 'BRIDIE', map: 'witches', x: 7, y: 5, look: 'witch2', dir: 'left', hat: 'witch',
+  { id: 'bess', name: 'BESS', map: 'witches', x: 7, y: 5, look: 'witch2', dir: 'left', hat: 'witch',
     talk: ['IT\'S NEWT FOR DINNER. IT\'S ALWAYS NEWT.'] },
-  { id: 'tansy', name: 'TANSY', map: 'witches', x: 2, y: 3, look: 'witch3', dir: 'right', hat: 'witch',
+  { id: 'pennatella', name: 'PENNATELLA', map: 'witches', x: 2, y: 3, look: 'witch3', dir: 'right', hat: 'witch',
     talk: ['IF YOU SEE THE WIZARD, TRY NOT TO THINK ABOUT US.'] },
   // quiet: no speech bubble when you face it, so it isn't obvious you can talk to it
   { id: 'frog', name: 'FROG', map: 'world', x: 25, y: 28, look: 'frog', wander: 1, slow: true, quiet: true,
@@ -352,15 +352,15 @@ export const QUEST = {
   unlock: ['LOCKED.', '...WAIT. THE KEY!', 'YOU UNLOCK THE DOOR WITH THE RUSTY KEY.'],
   // Each witch tells her part; talk to all three for the reward.
   witchTalk: {
-    morag: ['OH! YOU GOT IN! WE\'VE BEEN STUCK IN HERE FOR THREE DAYS.', 'OUR FROG SWALLOWED THE DOOR KEY. THEN IT ESCAPED OUT THE WINDOW.'],
-    bridie: ['DON\'T MIND THE SMELL. THAT\'S DINNER.', 'THAT FROG WAS MEANT FOR A POTION. IT HAD OTHER IDEAS.', 'I TRIED A SPELL TO GET THE KEY BACK. IT TURNED ME BLUE FOR A WEEK.'],
-    tansy: ['SO YOU FOUND OUR KEY. THANK YOU.', 'IF YOU\'RE OFF TO SEE THE WIZARD... WE DON\'T TALK TO HIM.', 'HE KNOWS WHAT YOU\'RE THINKING BEFORE YOU SAY IT. IT\'S RUDE.'],
+    circe: ['OH! YOU GOT IN! WE\'VE BEEN STUCK IN HERE FOR THREE DAYS.', 'OUR FROG SWALLOWED THE DOOR KEY. THEN IT ESCAPED OUT THE WINDOW.'],
+    bess: ['DON\'T MIND THE SMELL. THAT\'S DINNER.', 'THAT FROG WAS MEANT FOR A POTION. IT HAD OTHER IDEAS.', 'I TRIED A SPELL TO GET THE KEY BACK. IT TURNED ME BLUE FOR A WEEK.'],
+    pennatella: ['SO YOU FOUND OUR KEY. THANK YOU.', 'IF YOU\'RE OFF TO SEE THE WIZARD... WE DON\'T TALK TO HIM.', 'HE KNOWS WHAT YOU\'RE THINKING BEFORE YOU SAY IT. IT\'S RUDE.'],
   },
   othersToo: ['GO AND SAY HELLO TO THE OTHERS.'],
   witchWait: {
-    morag: ['HAVE YOU MET THE OTHERS?'],
-    bridie: ['THE OTHERS WILL WANT A WORD.'],
-    tansy: ['GO ON, SAY HELLO TO THE OTHERS.'],
+    circe: ['HAVE YOU MET THE OTHERS?'],
+    bess: ['THE OTHERS WILL WANT A WORD.'],
+    pennatella: ['GO ON, SAY HELLO TO THE OTHERS.'],
   },
   give: ['HERE. TAKE THIS FOR YOUR TROUBLE.'],
   gotPotion: ['YOU GOT A CRIMSON COW!'],
