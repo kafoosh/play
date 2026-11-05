@@ -1084,18 +1084,17 @@ const Play = {
   // A few small wet frog prints leading away from under the blue house's window toward
   // the lake. Faint, and they fade out after a few steps.
   drawFrogPrints(cx, cy) {
-    // Damp, darker grass in the shape of little frog feet, each with a glint of the
-    // lake's highlight blue. They dry out (fade, then lose the glint) along the trail.
-    const x0 = Math.round(7 * 16 + 3 - cx), y0 = Math.round(29 * 16 + 1 - cy);
-    const FOOT = ['o.o.o', '.ooo.', '.ooo.'];
-    const steps = [[0, 0, 1], [9, 3, 0], [17, 2, 1], [25, 6, 0], [33, 5, 1]];
-    steps.forEach(([dx, dy, flip], i) => {
-      ctx.globalAlpha = 1 - i * 0.16;
-      for (let r = 0; r < 3; r++) for (let c = 0; c < 5; c++) {
-        if (FOOT[r][c] !== 'o') continue;
-        ctx.fillStyle = '#2e4e52'; ctx.fillRect(x0 + dx + (flip ? 4 - c : c), y0 + dy + r, 1, 1);
-      }
-      if (i < 4) { ctx.fillStyle = i < 2 ? '#a6dcff' : C.waterL; ctx.fillRect(x0 + dx + (flip ? 1 : 3), y0 + dy + 1, 1, 1); }
+    // Damp blue-green frog prints heading east toward the lake: toes point right,
+    // heels back toward the house. Each has a glint of water; they dry out as they go,
+    // and stop before the next house along.
+    const x0 = Math.round(7 * 16 + 2 - cx), y0 = Math.round(29 * 16 + 2 - cy);
+    const FOOT = ['..o', 'oo.', 'ooo', 'oo.', '..o'];   // toes on the right
+    const steps = [[0, 0], [8, 3], [16, 1], [24, 4], [32, 2], [40, 5], [48, 3]];
+    steps.forEach(([dx, dy], i) => {
+      ctx.globalAlpha = 1 - i * 0.12;
+      ctx.fillStyle = '#2e4e52';
+      for (let r = 0; r < 5; r++) for (let c = 0; c < 3; c++) if (FOOT[r][c] === 'o') ctx.fillRect(x0 + dx + c, y0 + dy + r, 1, 1);
+      if (i < 5) { ctx.fillStyle = i < 2 ? '#a6dcff' : C.waterL; ctx.fillRect(x0 + dx + 1, y0 + dy + 2, 1, 1); }
     });
     ctx.globalAlpha = 1;
   },
