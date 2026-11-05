@@ -145,7 +145,8 @@ impressed.
 ### Side quest: the frog, the key and the witches
 
 The blue house in the village is locked; knock and someone inside shouts that the frog
-has their key. Faint wet frog prints lead away from under its window toward the lake.
+has their key. A short trail of wet, water-blue frog prints leads away from under its
+window toward the lake.
 Hit the frog (by the lake) with your weapon, or just talk to it (it
 doesn't show a speech bubble like the others, so it isn't obvious), and it coughs up a
 rusty key.

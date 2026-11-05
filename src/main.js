@@ -1088,7 +1088,7 @@ const Play = {
     const steps = [[0, 0], [7, 4], [14, 3], [21, 7], [28, 6]];
     const foot = (x, y) => { ctx.fillRect(x, y, 1, 1); ctx.fillRect(x + 2, y, 1, 1); ctx.fillRect(x + 1, y + 1, 1, 2); }; // three toes and a heel
     steps.forEach(([dx, dy], i) => {
-      ctx.fillStyle = `rgba(24,40,66,${(0.5 - i * 0.08).toFixed(2)})`;
+      ctx.fillStyle = `rgba(86,174,240,${(0.85 - i * 0.12).toFixed(2)})`; // water blue, drying out
       foot(x0 + dx, y0 + dy); foot(x0 + dx + 4, y0 + dy + 1);   // left and right foot
     });
   },
