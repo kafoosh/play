@@ -1464,12 +1464,13 @@ function* bellyScene(n) {
 // The worm pile: pick one up, or bait your hook if you have the rod.
 function* wormScene() {
   const hero = G.name;
-  if (G.flags.bait) { yield* talk(FISH.baited); return; }
-  if (G.flags.worm) { yield* talk(FISH.haveWorm); return; }
+  // first you see what it is, then you take one
   Audio.sfx('select');
-  if (G.flags.rod) { G.flags.bait = 1; yield* talk(FISH.bait); yield* talk(FISH.canFish, false, null, hero); return; }
+  if (G.flags.bait) { yield* talk([...FISH.pile, ...FISH.baited]); return; }
+  if (G.flags.worm) { yield* talk([...FISH.pile, ...FISH.haveWorm]); return; }
+  if (G.flags.rod) { G.flags.bait = 1; yield* talk([...FISH.pile, ...FISH.bait]); yield* talk(FISH.canFish, false, null, hero); return; }
   G.flags.worm = 1;
-  yield* talk(FISH.pickWorm);
+  yield* talk([...FISH.pile, ...FISH.pickWorm]);
   yield* talk(FISH.wormFriend, false, null, hero);
 }
 
