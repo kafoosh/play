@@ -1,5 +1,5 @@
-import { C, UI, text, textCenter, textWidth, wrap, box, blob, glow, glyphDots, drawCard, makeScroll, charSprite, drawTile, drawOver, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
-import { MAPS, LOOKS, NPCS, SCRIPT, cardName, decodeWord, VALUE_GRID, CHASED, CLASSES, SKINS, HAIRS, OUCH, GRUDGE } from './data.js';
+import { C, UI, text, textCenter, textWidth, tinyText, hatSprite, wrap, box, blob, glow, glyphDots, drawCard, makeScroll, charSprite, drawTile, drawOver, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
+import { MAPS, LOOKS, NPCS, SCRIPT, cardName, decodeWord, VALUE_GRID, CHASED, CLASSES, SKINS, HAIRS, OUCH, GRUDGE, KONAMI, EGG, squawk } from './data.js';
 import * as Audio from './audio.js';
 
 // The game draws at a low resolution that follows the screen's shape: VW x VH game pixels.
@@ -25,7 +25,8 @@ const fill = s => s.replace(/\{N\}/g, G.name || 'HERO');
 let parts = [];
 function setScene(s, ...args) {
   parts = []; G.scene = s;
-  document.body.classList.toggle('playing', s === Play); // controls only while exploring
+  // the on-screen controls are used from the name screen onwards
+  document.body.classList.toggle('playing', s === Play || s === NameEntry || s === ClassScene);
   measureUI();
   if (s.enter) s.enter(...args);
 }
@@ -173,18 +174,17 @@ function drawParts(cx = 0, cy = 0) {
     else if (p.k === 'pix') {
       const age = p.max - p.life - p.d;
       if (age < 0) continue;
-      const k = Math.min(1, age / 0.14), drift = Math.max(0, age - 0.32) * 0.9;
+      const k = Math.min(1, age / 0.08), drift = Math.max(0, age - 0.13) * 1.8;
       const px = p.ox + (p.tx - p.ox) * (k + drift), py = p.oy + (p.ty - p.oy) * (k + drift);
-      const a = Math.min(1, p.life / 0.3) * 0.75;
+      const a = Math.min(1, p.life / 0.25) * 0.55;
       ctx.globalCompositeOperation = 'lighter';
       ctx.fillStyle = `rgba(240,226,180,${a.toFixed(2)})`; ctx.fillRect(Math.round(px), Math.round(py), 1, 1);
       ctx.globalCompositeOperation = 'source-over';
     }
     else if (p.k === 'say') {
-      const w = textWidth(p.text) + 6, x0 = Math.round(x - w / 2), y0 = Math.round(y);
-      ctx.fillStyle = UI.edgeD; ctx.fillRect(x0 - 1, y0 - 1, w + 2, 11); ctx.fillRect(x0 + w / 2 - 1 | 0, y0 + 10, 3, 2);
-      ctx.fillStyle = UI.paper; ctx.fillRect(x0, y0, w, 9);
-      text(ctx, p.text, x0 + 3, y0 + 1, UI.accent);
+      ctx.globalAlpha = Math.min(1, p.life / 0.4);
+      tinyText(ctx, p.text, x, y);
+      ctx.globalAlpha = 1;
     }
     else if (p.k === 'ring') {
       const r = (1 - p.life / 0.45) * 30;
@@ -206,7 +206,7 @@ function numberBurst(x, y, v) {
   const dots = glyphDots(String(v)), w = String(v).length * 6 - 1;
   for (const [i, j] of dots) {
     const tx = x + (i - w / 2) * 2, ty = y + (j - 3.5) * 2;
-    parts.push({ k: 'pix', x, y, tx, ty, ox: x, oy: y, life: 0.85, max: 0.85, d: Math.random() * 0.06 });
+    parts.push({ k: 'pix', x, y, tx, ty, ox: x, oy: y, life: 0.5, max: 0.5, d: Math.random() * 0.04 });
   }
 }
 // Darkened corners, cached per screen size.
@@ -312,6 +312,7 @@ function drawDialog(by) {
 // ================================================================ backdrop (title / end)
 const STARS = Array.from({ length: 60 }, (_, i) => ({ x: hash(i, 1), y: hash(i, 2), p: hash(i, 3) * 6 }));
 let deco = null;
+const SKY = { bh: 30, H: 150 };
 function backdropArt() {
   if (deco) return deco;
   // long thin dusk clouds
@@ -349,14 +350,17 @@ function backdropArt() {
   };
   return deco;
 }
+const grassTop = (x, H) => H + Math.round(Math.sin(x / 31 + 1) * 3);
 function drawBackdrop(t, night = false) {
   const art = backdropArt();
   const H = Math.round(VH * 0.62);
   const sky = night ? ['#0c0a1c', '#141228', '#1c1834', '#261e40', '#32264a'] : ['#16132e', '#241c46', '#3e2a58', '#6e3e5e', '#b0624e'];
-  const bh = Math.ceil(H / sky.length);
+  // Five equal colour bands. The value taps use them: see skyValue().
+  const bh = Math.ceil(H / sky.length), edges = [0, bh, 2 * bh, 3 * bh, 4 * bh, H];
+  SKY.bh = bh; SKY.H = H;
   for (let i = 0; i < sky.length; i++) {
-    ctx.fillStyle = sky[i]; ctx.fillRect(0, i * bh, VW, bh + 1);
-    if (i) { ctx.fillStyle = sky[i - 1]; for (let x = 0; x < VW; x += 2) { ctx.fillRect(x + (i % 2), i * bh, 1, 1); ctx.fillRect(x, i * bh + 2, 1, 1); } }
+    ctx.fillStyle = sky[i]; ctx.fillRect(0, edges[i], VW, edges[i + 1] - edges[i] + 1);
+    if (i) { ctx.fillStyle = sky[i - 1]; for (let x = 0; x < VW; x += 2) { ctx.fillRect(x + (i % 2), edges[i], 1, 1); ctx.fillRect(x, edges[i] + 2, 1, 1); } }
   }
   for (const s of STARS) {
     if (!night && s.y > 0.55) continue;
@@ -387,7 +391,7 @@ function drawBackdrop(t, night = false) {
   ctx.globalCompositeOperation = 'source-over';
   // dark meadow and fir woods
   for (let x = 0; x < VW; x++) {
-    const h = H + Math.round(Math.sin(x / 31 + 1) * 3);
+    const h = grassTop(x, H);
     ctx.fillStyle = night ? '#24301e' : '#3e5030'; ctx.fillRect(x, h, 1, 2);
     ctx.fillStyle = night ? '#1a2416' : '#2e3e24'; ctx.fillRect(x, h + 2, 1, VH - h);
   }
@@ -396,20 +400,31 @@ function drawBackdrop(t, night = false) {
     ctx.fillStyle = '#1e2a18'; ctx.fillRect(a, b + 1, 1, 1); ctx.fillRect(a + 1, b, 1, 2); ctx.fillRect(a + 3, b, 1, 2); ctx.fillRect(a + 4, b + 1, 1, 1);
   }
   const firs = [[0.0, 1], [0.06, 0], [0.13, 2], [0.2, 0], [0.8, 2], [0.87, 0], [0.93, 1], [0.99, 2]];
-  for (const [fx, k] of firs) { const f = art.firs[k]; ctx.drawImage(f, Math.round(fx * VW) - 8, H + 2 - f.height + 2); }
+  for (const [fx, k] of firs) {
+    const f = art.firs[k];
+    ctx.drawImage(f, Math.round(fx * VW) - 8, H + 2 - f.height + 2);
+  }
 }
 // Draw a fixed 160x144 layout in the middle of the screen; returns the offset.
-function centre() { return [Math.round((VW - 160) / 2), Math.round((VH - 144) / 2)]; }
+function centre() { return [Math.round((UIX0 + UIX1 - 160) / 2), Math.max(0, Math.round((UIB - 144) / 2))]; }
 
 // ================================================================ title
+// Value taps follow the five sky colour bands. The four purple bands are the rows, three
+// across: 1-3, 4-6, 7-9, 10-12. The orange band, with the mountains, trees and castle in
+// it, is 13, down to the top edge of the grass. Taps on the grass don't change anything.
+function skyValue(x, y) {
+  if (y < 4 * SKY.bh) return VALUE_GRID[Math.max(0, Math.floor(y / SKY.bh))][Math.max(0, Math.min(2, Math.floor(x / (VW / 3))))];
+  return y < grassTop(Math.round(x), SKY.H) + 2 ? 13 : null;
+}
 // START sits on the meadow. Everything above it is the secret value grid.
 function startBox() {
-  const w = 72, h = 16;
-  return { x: Math.round((VW - w) / 2), y: Math.min(VH - 40, Math.round(VH * 0.74)), w, h };
+  const w = 104, h = 24;
+  return { x: Math.round((VW - w) / 2), y: Math.min(VH - 44, Math.round(VH * 0.74)), w, h };
 }
 const Title = {
   enter() {
-    this.t = 0; this.cheat = false; this.go = false; this.credit = []; this.petals = [];
+    this.t = 0; this.cheat = false; this.go = false; this.credit = [];
+    G.name = ''; // a fresh spectator each time
     Audio.music('title');
   },
   update(dt) {
@@ -428,8 +443,8 @@ const Title = {
     // the 2nd and 4th quarters (Hearts, Diamonds) are a shade darker
     ctx.fillStyle = 'rgba(120,80,30,0.08)';
     for (const q of [1, 3]) { const a = Math.max(S.x + 4, Math.round(S.x + q * S.w / 4)), b = Math.min(S.x + S.w - 4, Math.round(S.x + (q + 1) * S.w / 4)); ctx.fillRect(a, S.y + 4, b - a, S.h - 8); }
-    if (!this.go || Math.floor(this.t * 12) % 2) textCenter(ctx, 'START', cx, S.y + 5, UI.text);
-    if (!this.go && (this.t % 1.1) < 0.7) { text(ctx, '▶', S.x - 9, S.y + 5, C.gold); }
+    if (!this.go || Math.floor(this.t * 12) % 2) textCenter(ctx, 'START', cx, S.y + 9, UI.text);
+    if (!this.go && (this.t % 1.1) < 0.7) { text(ctx, '▶', S.x - 9, S.y + 9, C.gold); }
     drawParts();
     drawVignette();
     if (this.cheat) drawCheat();
@@ -449,19 +464,16 @@ const Title = {
       this.begin();
       return;
     }
-    const top = S.y - 4;
-    if (y < top && !G.locked) {
-      const row = Math.min(4, Math.floor(y / (top / 5)));
-      G.armed.v = row < 4 ? VALUE_GRID[row][Math.max(0, Math.min(2, Math.floor(x / (VW / 3))))] : 13;
-      numberBurst(x, y, G.armed.v);
-    } else spark(x, y, 5, '#ffe9a0');
+    const v = !G.locked && y < S.y - 4 ? skyValue(x, y) : null;
+    if (v) { G.armed.v = v; numberBurst(x, y, v); }
+    else spark(x, y, 5, '#ffe9a0');
   },
   onA() { if (!this.cheat) this.begin(); else this.cheat = false; },
   begin() {
     if (this.go) return;
     this.go = true; Audio.sfx('start');
     const S = startBox();
-    spark(VW / 2, S.y + 8, 12, C.gold);
+    spark(VW / 2, S.y + 12, 12, C.gold);
     setTimeout(() => fadeTo(() => setScene(NameEntry), 0.3), 450);
   },
 };
@@ -478,7 +490,7 @@ function drawCheat() {
   }));
   ctx.fillStyle = UI.paperD; ctx.fillRect(gx, gy + 4 * ch, cw * 3 - 2, ch - 2);
   textCenter(ctx, '13', gx + cw * 1.5 - 1, gy + 4 * ch + 1, UI.text);
-  text(ctx, 'TAP THE SKY FOR VALUE', 18, 79, UI.dim);
+  textCenter(ctx, 'PURPLE 1-12. ORANGE 13', 80, 79, UI.dim);
   ['C', 'H', 'S', 'D'].forEach((s, i) => {
     ctx.fillStyle = '#ecc890'; ctx.fillRect(32 + i * 24, 90, 22, 12);
     textCenter(ctx, s, 43 + i * 24, 93, s === 'H' || s === 'D' ? C.red : UI.text);
@@ -492,16 +504,19 @@ function drawCheat() {
 }
 
 // ================================================================ name entry
-const LETTERS = ['ABCDEFGHI', 'JKLMNOPQR', 'STUVWXYZ-'];
+// A QWERTY keyboard, driven by the D-pad and A (B deletes). Typing works on a computer.
+const QWERTY = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
+const KEYS = [];
+QWERTY.forEach((row, r) => [...row].forEach((ch, c) => KEYS.push({ r, label: ch, x: 6 + [0, 7, 22][r] + c * 15, y: 52 + r * 16, w: 13, h: 13 })));
+KEYS.push({ r: 3, label: 'DEL', x: 22, y: 104, w: 48, h: 13 }, { r: 3, label: 'NEXT', x: 90, y: 104, w: 48, h: 13 });
 const NameEntry = {
-  enter() { this.name = ''; this.r = 0; this.c = 0; this.t = 0; },
+  enter() { this.name = G.name || ''; this.k = 0; this.t = 0; },
   update(dt) { this.t += dt; },
-  cell(r, c) { return r < 3 ? { x: 9 + c * 16, y: 52 + r * 15, w: 14, h: 13 } : (c < 5 ? { x: 9, y: 98, w: 46, h: 13 } : { x: 105, y: 98, w: 46, h: 13 }); },
   draw() {
     drawBackdrop(this.t);
     const [ox, oy] = centre();
     ctx.save(); ctx.translate(ox, oy);
-    box(ctx, 0, 0, 160, 144);
+    box(ctx, 0, 0, 160, 128);
     textCenter(ctx, 'WHAT IS YOUR NAME?', 80, 8, UI.accent);
     box(ctx, 22, 20, 116, 24, '#f4ead0');
     for (let i = 0; i < 8; i++) {
@@ -510,54 +525,44 @@ const NameEntry = {
       else if (i === this.name.length && Math.floor(this.t * 3) % 2) { ctx.fillStyle = UI.accent; ctx.fillRect(32 + i * 12, 38, 10, 2); }
       else { ctx.fillStyle = UI.paperD; ctx.fillRect(32 + i * 12, 38, 10, 1); }
     }
-    for (let r = 0; r < 4; r++) for (let c = 0; c < (r < 3 ? 9 : 2); c++) {
-      const cc = r < 3 ? c : c * 5;
-      const b = this.cell(r, cc), sel = this.r === r && (r < 3 ? this.c === c : (this.c < 5 ? 0 : 1) === c);
-      if (sel) { ctx.fillStyle = '#f4d48a'; ctx.fillRect(b.x, b.y, b.w, b.h); ctx.fillStyle = UI.accent; ctx.fillRect(b.x, b.y + b.h - 1, b.w, 1); }
-      const label = r < 3 ? LETTERS[r][c] : (c ? 'END' : 'DEL');
-      textCenter(ctx, label, b.x + b.w / 2, b.y + 3, sel ? UI.accent : UI.text);
-    }
-    textCenter(ctx, 'PICK LETTERS. THEN END.', 80, 126, UI.dim);
+    KEYS.forEach((b, i) => {
+      const sel = i === this.k;
+      ctx.fillStyle = sel ? '#f4d48a' : '#e2d2aa'; ctx.fillRect(b.x, b.y, b.w, b.h);
+      ctx.fillStyle = sel ? UI.accent : UI.paperD; ctx.fillRect(b.x, b.y + b.h - 1, b.w, 1);
+      textCenter(ctx, b.label, b.x + b.w / 2, b.y + 3, sel ? UI.accent : UI.text);
+    });
     drawParts();
     ctx.restore();
   },
   onDir(d) {
     Audio.sfx('move');
-    if (d === 'up') this.r = (this.r + 3) % 4;
-    if (d === 'down') this.r = (this.r + 1) % 4;
-    if (this.r === 3) { if (d === 'left' || d === 'right') this.c = this.c < 5 ? 8 : 0; }
-    else {
-      if (d === 'left') this.c = (this.c + 8) % 9;
-      if (d === 'right') this.c = (this.c + 1) % 9;
+    const cur = KEYS[this.k], cx = cur.x + cur.w / 2;
+    if (d === 'left' || d === 'right') {
+      const row = KEYS.map((k, i) => i).filter(i => KEYS[i].r === cur.r), j = row.indexOf(this.k);
+      this.k = row[(j + (d === 'left' ? row.length - 1 : 1)) % row.length];
+    } else {
+      const r = (cur.r + (d === 'up' ? 3 : 1)) % 4;
+      let best = 0, bd = 1e9;
+      KEYS.forEach((k, i) => { if (k.r === r) { const dd = Math.abs(k.x + k.w / 2 - cx); if (dd < bd) { bd = dd; best = i; } } });
+      this.k = best;
     }
   },
   pick() {
-    if (this.r < 3) this.add(LETTERS[this.r][this.c]);
-    else if (this.c < 5) this.del();
-    else this.done();
+    const lab = KEYS[this.k].label;
+    if (lab === 'DEL') this.del(); else if (lab === 'NEXT') this.done(); else this.add(lab);
   },
   add(ch) { if (this.name.length < 8) { this.name += ch; Audio.sfx('select'); } else Audio.sfx('bump'); },
   del() { if (this.name.length) { this.name = this.name.slice(0, -1); Audio.sfx('move'); } },
   done() {
-    const n = this.name.replace(/^-+|-+$/g, '');
-    if (!n) { Audio.sfx('bump'); return; }
-    G.name = n; Audio.sfx('start');
+    if (!this.name) { Audio.sfx('bump'); return; }
+    G.name = this.name; Audio.sfx('start');
     fadeTo(() => setScene(ClassScene), 0.3);
   },
   onA() { this.pick(); },
   onB() { this.del(); },
-  onTap(x, y) {
-    const [ox, oy] = centre(); x -= ox; y -= oy;
-    for (let r = 0; r < 4; r++) for (let c = 0; c < 9; c++) {
-      if (r === 3 && c !== 0 && c !== 5) continue;
-      const b = this.cell(r, c);
-      if (x >= b.x - 1 && x < b.x + b.w + 1 && y >= b.y - 1 && y < b.y + b.h + 1) { this.r = r; this.c = c; this.pick(); return; }
-    }
-  },
   onKey(e) {
     const k = e.key;
     if (/^[a-z]$/i.test(k)) { this.add(k.toUpperCase()); return true; }
-    if (k === '-') { this.add('-'); return true; }
     if (k === 'Backspace') { this.del(); return true; }
     if (k === 'Enter') { this.done(); return true; }
     return false;
@@ -591,14 +596,13 @@ const ClassScene = {
       textCenter(ctx, h.cls, x + 19, 60, sel ? C.gold : '#e9dcb8', 1, C.ink);
     });
     const c = this.heroes[this.i].def;
-    box(ctx, 6, 70, 148, 50);
+    box(ctx, 6, 70, 148, 40);
     text(ctx, c.name, 14, 77, UI.accent);
     text(ctx, `WEAPON: ${c.weapon} (${c.range})`, 14, 87, UI.text);
-    text(ctx, c.about, 14, 97, UI.dim);
-    text(ctx, `HP ${c.hp}  MP ${c.mp}`, 14, 107, UI.text);
-    box(ctx, 48, 123, 64, 19);
-    textCenter(ctx, 'CHOOSE', 80, 129, UI.text);
-    if ((this.t % 1.1) < 0.7) text(ctx, '▶', 40, 129, C.gold);
+    text(ctx, `HP ${c.hp}  MP ${c.mp}`, 14, 97, UI.text);
+    box(ctx, 48, 113, 64, 19);
+    textCenter(ctx, 'CHOOSE', 80, 119, UI.text);
+    if ((this.t % 1.1) < 0.7) text(ctx, '▶', 40, 119, C.gold);
     drawParts();
     ctx.restore();
   },
@@ -606,11 +610,7 @@ const ClassScene = {
     if (d === 'left' || d === 'right') { this.i = (this.i + (d === 'left' ? 3 : 1)) % 4; Audio.sfx('move'); }
   },
   onA() { this.choose(); },
-  onTap(x, y) {
-    const [ox, oy] = centre(); x -= ox; y -= oy;
-    if (y >= 12 && y < 68) { const i = Math.max(0, Math.min(3, Math.floor((x - 1) / 40))); if (i !== this.i) { this.i = i; Audio.sfx('move'); } else this.choose(); }
-    else if (y >= 120) this.choose();
-  },
+  onB() { Audio.sfx('move'); fadeTo(() => setScene(NameEntry), 0.2); },
   choose() {
     if (G.fade) return;
     G.hero = this.heroes[this.i];
@@ -668,8 +668,7 @@ const Play = {
     this.load('home', 2, 3, 'right');
     const wake = SCRIPT.wake.slice(), keys = !window.matchMedia('(pointer: coarse)').matches;
     if (keys) wake[2] = 'USE THE ARROW KEYS TO WALK. PRESS Z TO TALK OR LOOK.';
-    wake.push(keys ? G.hero.def.tip.replace('PRESS B', 'PRESS X') : G.hero.def.tip, 'IT WON\'T HURT ANYONE. IT MIGHT ANNOY THEM.');
-    this.shots = []; this.cool = 0; this.swing = null;
+    this.shots = []; this.cool = 0; this.swing = null; this.code = []; this.visitor = null;
     this.run(function* () { yield wait(0.7); yield* talk(wake); });
   },
   load(mapName, x, y, dir) {
@@ -760,8 +759,9 @@ const Play = {
   // ---- weapons: B button. Close weapons hit what is in front (or around) you;
   // far weapons aim themselves at the nearest person roughly in front of you.
   onB() {
+    this.secret('B');
     if (D.active || this.script || G.fade || this.cool > 0 || this.card) return;
-    const p = this.p, id = G.hero.id, pcx = p.px + 8, pcy = p.py + 8;
+    const p = this.p, id = G.flags.chickenStaff ? 'poly' : G.hero.id, pcx = p.px + 8, pcy = p.py + 8;
     this.cool = id === 'bard' ? 0.6 : 0.4;
     this.swing = { t: 0, dir: p.dir, id };
     const at = (n, a, b) => (n.x === a && n.y === b) || (n.moving && n.tx === a && n.ty === b);
@@ -779,11 +779,11 @@ const Play = {
         if (Math.hypot(dx, dy) <= 30) this.hit(n, Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
       }
     } else {
-      Audio.sfx(id === 'mage' ? 'zap' : 'twang');
+      Audio.sfx(id === 'mage' || id === 'poly' ? 'zap' : 'twang');
       const t = this.aim();
       let vx, vy;
       if (t) { const dx = t.px + 8 - pcx, dy = t.py + 8 - pcy, l = Math.hypot(dx, dy); vx = dx / l; vy = dy / l; } else [vx, vy] = DIRV[p.dir];
-      const sp = id === 'mage' ? 150 : 210;
+      const sp = id === 'ranger' ? 210 : 150;
       this.shots.push({ id, x: pcx + vx * 6, y: pcy + vy * 6, vx: vx * sp, vy: vy * sp, dist: 0 });
     }
   },
@@ -802,19 +802,37 @@ const Play = {
       s.x += s.vx * dt; s.y += s.vy * dt; s.dist += Math.hypot(s.vx, s.vy) * dt;
       const tx = Math.floor(s.x / 16), ty = Math.floor(s.y / 16), k = this.map.kind(tx, ty);
       const dir = Math.abs(s.vx) > Math.abs(s.vy) ? (s.vx > 0 ? 'right' : 'left') : (s.vy > 0 ? 'down' : 'up');
-      if (s.id === 'mage' && Math.random() < 0.6) parts.push({ k: 'spark', x: s.x, y: s.y, vx: 0, vy: 0, life: 0.3, col: '#b89aff', world: true });
-      if (s.dist > 7 * 16 || (this.map.solid(tx, ty) && k !== 'water')) { s.dead = true; spark(s.x, s.y, 4, s.id === 'mage' ? '#b89aff' : '#c8b890', true); continue; }
+      if (s.id !== 'ranger' && Math.random() < 0.6) parts.push({ k: 'spark', x: s.x, y: s.y, vx: 0, vy: 0, life: 0.3, col: s.id === 'poly' ? (Math.random() < 0.5 ? '#ffffff' : '#ffd24a') : '#b89aff', world: true });
+      if (s.dist > 7 * 16 || (this.map.solid(tx, ty) && k !== 'water')) { s.dead = true; spark(s.x, s.y, 4, s.id === 'ranger' ? '#c8b890' : '#b89aff', true); continue; }
       const n = this.npcsHere().find(n => s.x >= n.px + 1 && s.x < n.px + 15 && s.y >= n.py - (n.tall ? 10 : 3) && s.y < n.py + 15);
-      if (n) { s.dead = true; this.hit(n, dir); }
+      if (n) { s.dead = true; if (s.id === 'poly') this.chicken(n, dir); else this.hit(n, dir); }
     }
     this.shots = this.shots.filter(s => !s.dead);
   },
   // Nobody gets hurt: they blink, hop back a step and complain.
+  // The chicken staff. Anyone (but the wizard) becomes a chicken; a second bolt turns
+  // them back. A real chicken hit by it gains the power of speech (and loses it again).
+  chicken(n, dir) {
+    if (n.id === 'wizard') { this.hit(n, dir); return; }
+    Audio.sfx('poof');
+    for (let i = 0; i < 14; i++) { const a = Math.random() * Math.PI * 2, v = 10 + Math.random() * 25; parts.push({ k: 'spark', x: n.px + 8, y: n.py + 6, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 8, life: 0.6, col: i % 2 ? '#e8e0d0' : '#c8c0d8', world: true }); }
+    let shout;
+    if (n.chicken) {
+      Object.assign(n, n.orig); n.chicken = false; n.dazed = true; shout = '...HUH?';
+    } else if (n.look.kind === 'chicken') {
+      n.awake = !n.awake; shout = n.awake ? '!?' : 'BAWK.';
+    } else {
+      n.orig = { look: n.look, sleep: n.sleep, spear: n.spear, notes: n.notes };
+      n.chicken = true; n.look = LOOKS.chicken; n.sleep = false; n.spear = false; n.notes = false; shout = 'BAWK!';
+    }
+    n.hitT = 0.3;
+    parts.push({ k: 'say', text: shout, x: n.px + 8, y: n.py - (n.sleep ? 4 : 9), vy: -14, life: 1.3, world: true });
+  },
   hit(n, dir) {
-    const key = n.id === 'wizard' ? 'wizard' : OUCH[n.id] ? n.id : OUCH[n.look.kind] ? n.look.kind : 'person';
+    const key = n.id === 'wizard' ? 'wizard' : n.chicken ? 'chicken' : OUCH[n.id] ? n.id : OUCH[n.look.kind] ? n.look.kind : 'person';
     const lines = OUCH[key];
     n.hurt = (n.hurt || 0) + 1;
-    parts.push({ k: 'say', text: lines[(n.hurt - 1) % lines.length], x: n.px + 8, y: n.py - (n.tall ? 26 : 15), vy: -18, life: 1.5, world: true });
+    parts.push({ k: 'say', text: lines[(n.hurt - 1) % lines.length], x: n.px + 8, y: n.py - (n.tall ? 20 : 9), vy: -14, life: 1.3, world: true });
     if (n.id === 'wizard') { Audio.sfx('fizzle'); spark(n.px + 8, n.py, 10, C.cyan, true); return; }
     Audio.sfx('hit');
     n.hitT = 0.45; n.timer = 2.5; n.grudged = false;
@@ -844,10 +862,21 @@ const Play = {
     }
   },
   onDir(d) {
+    this.secret(d);
     if (D.active) dialogDir(d);
     else if (!this.script && !this.p.moving) this.p.dir = d; // a quick tap still turns you
   },
+  // up up down down left right left right B A, while walking around
+  secret(key) {
+    this.code = [...(this.code || []), key].slice(-KONAMI.length);
+    if (G.flags.egg || D.active || this.script || this.card || G.fade) return false;
+    if (this.code.join() !== KONAMI.join()) return false;
+    G.flags.egg = 1; this.code = [];
+    this.run(evilWizardScene);
+    return true;
+  },
   onA() {
+    if (this.secret('A')) return;
     if (this.card && this.card.waitA) { this.card.waitA = false; return; }
     if (D.active) { dialogA(); return; }
     if (this.script || this.p.moving) return;
@@ -872,7 +901,10 @@ const Play = {
     if (n.id === 'wizard') { if (!G.flags.met) this.run(wizardScene); return; }
     if (!n.sleep && n.look.kind !== 'frog') n.dir = OPP[this.p.dir];
     let lines = n.talked && n.again ? n.again : n.talk;
-    if (n.hurt && !n.grudged && n.look.kind === 'person' && !n.sleep) { lines = [GRUDGE[(n.hurt - 1) % GRUDGE.length], ...lines]; n.grudged = true; }
+    if (n.awake) { const w = EGG.woke[n.id] || EGG.woke.hen1; lines = n.wokeTalked ? w.again : w.talk; n.wokeTalked = true; }
+    else if (n.chicken) lines = lines.map(l => squawk(fill(l)));
+    else if (n.dazed && n.look.kind === 'person' && !n.sleep) { lines = [...EGG.restored, ...lines]; n.dazed = false; }
+    else if (n.hurt && !n.grudged && n.look.kind === 'person' && !n.sleep) { lines = [GRUDGE[(n.hurt - 1) % GRUDGE.length], ...lines]; n.grudged = true; }
     n.talked++;
     say(lines, {
       name: n.name,
@@ -914,6 +946,7 @@ const Play = {
       if (!e.n) {
         const frame = p.moving ? [0, 1, 0, 2][Math.floor(p.anim * 8) % 4] : 0;
         ctx.drawImage(charSprite(G.hero.look, p.dir, frame), p.px - cx, p.py - cy - 2);
+        if (G.flags.hat) ctx.drawImage(hatSprite(), p.px - cx + 2, p.py - cy - 6);
         if (this.swing) this.drawSwing(cx, cy);
         continue;
       }
@@ -959,6 +992,7 @@ const Play = {
       ctx.fillStyle = `rgba(8,4,24,${this.fx.dark})`; ctx.fillRect(0, 0, VW, VH);
       if (wiz) this.drawWizard(wiz, cx, cy);
     }
+    if (this.visitor) this.drawVisitor(cx, cy);
     drawParts(cx, cy);
     if (this.card) this.drawReveal();
     if (this.fx.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${Math.min(1, this.fx.flash)})`; ctx.fillRect(0, 0, VW, VH); }
@@ -969,34 +1003,54 @@ const Play = {
     const s = this.swing, p = this.p, x = p.px - cx + 8, y = p.py - cy + 7, k = s.t / 0.25;
     const base = { right: 0, down: Math.PI / 2, left: Math.PI, up: -Math.PI / 2 }[s.dir];
     if (s.id === 'knight') {
-      // a quick white arc in front of the hero
+      // the blade sweeps across the front, leaving a fading trail behind it
+      const e = 1 - Math.pow(1 - Math.min(1, k * 1.5), 3), ang = base - 1.3 + 2.6 * e;
       ctx.globalCompositeOperation = 'lighter';
-      for (let a = -1.2; a <= -1.2 + 2.4 * Math.min(1, k * 1.6); a += 0.08) {
-        const fade = 1 - Math.max(0, k - 0.5) * 2;
-        ctx.fillStyle = `rgba(220,230,255,${0.9 * fade})`;
-        for (const r of [11, 12, 13]) ctx.fillRect(Math.round(x + Math.cos(base + a) * r), Math.round(y + Math.sin(base + a) * r), 1, 1);
+      for (let a = -1.3; a <= ang - base; a += 0.07) {
+        const age = (ang - base - a) / 2.6, al = Math.max(0, 0.75 - age * 1.6) * (1 - Math.max(0, k - 0.6) * 2.5);
+        if (al <= 0) continue;
+        ctx.fillStyle = `rgba(210,225,255,${al.toFixed(2)})`;
+        for (const r of [10, 12, 14]) ctx.fillRect(Math.round(x + Math.cos(base + a) * r), Math.round(y + Math.sin(base + a) * r), 1, 1);
       }
       ctx.globalCompositeOperation = 'source-over';
+      if (k < 0.85) {
+        const ux = Math.cos(ang), uy = Math.sin(ang), px = -uy, py = ux, pt = (r, o = 0) => [Math.round(x + ux * r + px * o), Math.round(y + uy * r + py * o)];
+        for (let r = 2; r <= 15; r++) {          // outline first
+          for (const o of [-1, 0, 1]) { const [a, b] = pt(r, o); ctx.fillStyle = C.ink; ctx.fillRect(a, b, 1, 1); }
+        }
+        for (let r = 2; r <= 4; r++) { const [a, b] = pt(r); ctx.fillStyle = C.woodD; ctx.fillRect(a, b, 1, 1); }   // grip
+        for (const o of [-2, -1, 0, 1, 2]) { const [a, b] = pt(5, o); ctx.fillStyle = C.gold; ctx.fillRect(a, b, 1, 1); } // crossguard
+        for (let r = 6; r <= 14; r++) { const [a, b] = pt(r); ctx.fillStyle = r === 14 ? '#ffffff' : '#d8dce8'; ctx.fillRect(a, b, 1, 1); } // blade
+        for (let r = 6; r <= 13; r += 2) { const [a, b] = pt(r, -1); ctx.fillStyle = '#9aa0b4'; ctx.fillRect(a, b, 1, 1); }
+      }
     } else if (s.id === 'ranger') {
       const bx = Math.round(x + Math.cos(base) * 8), by = Math.round(y + Math.sin(base) * 8);
       ctx.fillStyle = C.woodO;
       for (let a = -1.2; a <= 1.2; a += 0.2) ctx.fillRect(Math.round(bx + Math.cos(base + a) * 5 - Math.cos(base) * 3), Math.round(by + Math.sin(base + a) * 5 - Math.sin(base) * 3), 1, 1);
-    } else if (s.id === 'mage') {
+    } else if (s.id === 'mage' || s.id === 'poly') {
       const bx = Math.round(x + Math.cos(base) * 9), by = Math.round(y + Math.sin(base) * 9);
-      ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(glow(8, '#9a6aff'), bx - 8, by - 8); ctx.globalCompositeOperation = 'source-over';
+      ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(glow(8, s.id === 'poly' ? '#6ae84a' : '#9a6aff'), bx - 8, by - 8); ctx.globalCompositeOperation = 'source-over';
       ctx.fillStyle = '#ffffff'; ctx.fillRect(bx, by, 1, 1);
     }
   },
   drawShots(cx, cy) {
     for (const s of this.shots) {
       const x = s.x - cx, y = s.y - cy, l = Math.hypot(s.vx, s.vy), ux = s.vx / l, uy = s.vy / l;
-      if (s.id === 'mage') {
-        ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(glow(7, '#9a6aff'), Math.round(x) - 7, Math.round(y) - 7); ctx.globalCompositeOperation = 'source-over';
+      if (s.id !== 'ranger') {
+        ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(glow(7, s.id === 'poly' ? '#6ae84a' : '#9a6aff'), Math.round(x) - 7, Math.round(y) - 7); ctx.globalCompositeOperation = 'source-over';
         ctx.fillStyle = '#ffffff'; ctx.fillRect(Math.round(x) - 1, Math.round(y) - 1, 2, 2);
       } else {
         for (let i = 0; i < 7; i++) { ctx.fillStyle = i === 0 ? '#d0d0d8' : i > 5 ? '#e8e0cc' : C.woodL; ctx.fillRect(Math.round(x - ux * i), Math.round(y - uy * i), 1, 1); }
       }
     }
+  },
+  drawVisitor(cx, cy) {
+    const v = this.visitor, x = Math.round(v.x - cx), y = Math.round(v.y - cy + Math.sin(this.time * 3) * 1.5);
+    const gy = Math.round(v.ground - cy), lift = Math.max(0, v.ground - v.y - 10);
+    ctx.fillStyle = `rgba(10,4,20,${Math.max(0.1, 0.4 - lift / 300)})`; ctx.fillRect(x + 3, gy + 12, 12, 2); ctx.fillRect(x + 5, gy + 11, 8, 4);
+    ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(glow(18, '#8a2a6a'), x + 8 - 18, y - 2 - 18); ctx.globalCompositeOperation = 'source-over';
+    ctx.drawImage(charSprite(EVIL, 'down', v.raise ? 1 : 0), x - 1, y - 11);
+    if (Math.random() < 0.5) parts.push({ k: 'spark', x: v.x + 4 + Math.random() * 10, y: v.y + 12, vx: 0, vy: 8, life: 0.5, col: '#8a4ab0', world: true });
   },
   drawWizard(n, cx, cy) {
     const bob = n.frame ? 0 : Math.round(Math.sin(this.time * 2) * 0.6);
@@ -1032,6 +1086,39 @@ const armedReveal = () => (G.armed.word ? { word: G.armed.word } : armedCard());
 function revealCanvas(r) {
   if (r.word) return makeScroll(r.word);
   const [c, x] = makeCanvas(48, 64); drawCard(x, 0, 0, r.v, r.s); return c;
+}
+
+// Easter egg: an evil wizard drops out of the sky with gifts.
+const EVIL = { kind: 'wizard', evil: true, key: 'evilwizard' };
+function* evilWizardScene() {
+  const p = this.p, music = this.map.def.music;
+  Audio.stopMusic(); Audio.sfx('evil');
+  const right = p.px + 40 < this.map.w * 16, v = { x: p.px + (right ? 22 : -22), ground: p.py - 2, y: (this.cam ? this.cam[1] : p.py) - 50, raise: 0 };
+  const startY = v.y, t0 = this.time;
+  this.visitor = v; p.dir = right ? 'right' : 'left';
+  while (this.time - t0 < 1.6) {
+    const k = Math.min(1, (this.time - t0) / 1.4);
+    v.y = startY + (v.ground - 4 - startY) * (1 - Math.pow(1 - k, 3));
+    this.fx.dark = 0.35 * k;
+    yield null;
+  }
+  yield* talk(EGG.hello, true, null, 'EVIL WIZARD');
+  v.raise = 1; Audio.sfx('sparkle');
+  for (let i = 0; i < 24; i++) { const a = Math.random() * Math.PI * 2, r = 4 + Math.random() * 10; parts.push({ k: 'spark', x: p.px + 8 + Math.cos(a) * r, y: p.py + 4 + Math.sin(a) * r, vx: Math.cos(a) * 20, vy: Math.sin(a) * 20 - 10, life: 0.8, col: i % 2 ? '#6ae84a' : C.gold, world: true }); }
+  yield wait(0.5);
+  G.flags.chickenStaff = 1; G.flags.hat = 1;
+  Audio.sfx('item');
+  yield* talk(EGG.got);
+  v.raise = 0; Audio.sfx('evil');
+  const t1 = this.time, y1 = v.y;
+  while (this.time - t1 < 1.2) {
+    const k = (this.time - t1) / 1.2;
+    v.y = y1 - (y1 - (this.cam[1] - 60)) * k * k;
+    this.fx.dark = 0.35 * (1 - k);
+    yield null;
+  }
+  this.visitor = null; this.fx.dark = 0;
+  Audio.music(music);
 }
 
 function* wizardScene() {
@@ -1143,5 +1230,5 @@ if (dbg) {
   }
 } else setScene(Title);
 requestAnimationFrame(frame);
-window.__G = G; window.__D = D;
+window.__G = G; window.__D = D; window.__SKY = SKY;
 window.__sceneName = () => (G.scene === Title ? 'title' : G.scene === NameEntry ? 'name' : G.scene === ClassScene ? 'class' : G.scene === Play ? 'play' : 'end');

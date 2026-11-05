@@ -14,34 +14,39 @@ A play-through takes about 2–3 minutes.
 
 Arm the card on the **title screen**, then hand over the phone.
 
-1. **Value**: tap the sky. The area above the START button is an invisible grid:
+1. **Value**: tap the sky. The sky is painted in five equal colour bands: four purple
+   bands, then an orange band at the horizon. The four purple bands are the rows, split
+   into three equal columns across the screen:
 
    ```
    +------+------+------+
-   |  1   |  2   |  3   |      1 = Ace
+   |  1   |  2   |  3   |   purple band 1 (top)
    +------+------+------+
-   |  4   |  5   |  6   |
+   |  4   |  5   |  6   |   purple band 2
    +------+------+------+
-   |  7   |  8   |  9   |
+   |  7   |  8   |  9   |   purple band 3
    +------+------+------+
-   |  10  |  11  |  12  |      11 = Jack, 12 = Queen
+   |  10  |  11  |  12  |   purple band 4
    +------+------+------+
-   |         13         |   <- the band just above START (King)
+   |         13         |   orange band: mountains, trees, castle, down to the grass edge
    +--------------------+
    ```
+
+   Go by the colour, not the scenery: the tips of the castle spires poke up into the
+   last purple band and count as 10-12. Taps on the grass below the horizon don't change
+   anything (they just sparkle), so a stray tap near START is harmless.
 
    Values are always numbers, here and in the URL: 1 = Ace, 11 = Jack, 12 = Queen,
    13 = King. The revealed card still shows a real J, Q or K.
 
-   The grid covers the full width, three columns across, from the top of the screen
-   down to just above START, in five equal rows. Every tap makes a little sparkle wherever you touch, so
-   the value tap looks like playing with the screen. The last tap counts.
+   Every tap makes a little sparkle wherever you touch, so the value tap looks like
+   playing with the screen. The last tap counts.
 
-   **Confirmation:** a sky tap makes a quick, pale burst of sparkle-dots that gathers
-   into the shape of the number you hit (for example a dotted "7"), then scatters and
-   fades in under a second. To anyone else it looks like a twinkle.
+   **Confirmation:** a sky tap makes a pale burst of sparkle-dots that flicks into the
+   shape of the number you hit (for example a dotted "7") for a split second, then
+   scatters. The whole thing is over in half a second, so to anyone else it is a twinkle.
 
-2. **Suit**: tap **START** in one of its four quarters, left to right in CHaSeD order:
+2. **Suit**: tap the (wide) **START** button in one of its four quarters, left to right in CHaSeD order:
    **Clubs, Hearts, Spades, Diamonds**. This also starts the game. The 2nd and 4th
    quarters (Hearts, Diamonds) are a very slightly darker parchment, so you can see
    the four sections if you look for them.
@@ -106,9 +111,11 @@ windows and torches glow, and motes of magic drift in the air. It works in portr
 landscape, on phones and on desktop. The pixel size is chosen so the art always stays
 crisp, and at least 10 tiles are visible across the short side.
 
-- **Phone:** while walking around, a see-through D-pad (bottom left) and **A** (talk)
-  and **B** (weapon) buttons (bottom right) float over the game. They are hidden on
-  the title, name, path and ending screens, which are tap-only. In portrait the camera and text box stay above
+- **Phone:** from the name screen onwards, a see-through D-pad (bottom left) and
+  **A** (talk / pick) and **B** (weapon / delete / back) buttons (bottom right, same
+  size) float over the game. The name is spelled on a QWERTY keyboard with the D-pad
+  and A, then **NEXT**; the path is chosen with left/right and A. Only the title and
+  ending screens are tap-only. In portrait the camera and text box stay above
   the controls; in landscape the text box sits between them. Tapping the text box also
   advances it, and YES/NO can be tapped directly. The ♫ button (top right) mutes.
 - **Keyboard:** arrows or WASD to walk; Z, Space or Enter for A; X or C for B. On the name screen
@@ -123,15 +130,29 @@ name; the outfit and weapon come from the path.
 
 | Path   | Weapon | Range | How it works (B button) |
 |--------|--------|-------|-------------------------|
-| KNIGHT | Sword  | Close | Swings in a short arc in front of you. |
+| KNIGHT | Sword  | Close | Sweeps the blade in a short arc in front of you. |
 | RANGER | Bow    | Far   | Fires an arrow that aims itself at the nearest person roughly in front of you. |
 | MAGE   | Staff  | Far   | Casts a glowing spark, aimed the same way. |
 | BARD   | Lute   | Close | A loud chord that hits everyone right around you. |
 
 No aiming is needed: face roughly the right way and press B. Nobody gets hurt. People
-and animals blink, hop back a step and shout something ("OW!", "MY BACK!", "BAWK!!").
+and animals blink, hop back a step and a small word floats up ("OW!", "MY BACK!", "BAWK!!").
 The next time you talk to someone you hit, they mention it first. The wizard is not
 impressed.
+
+### Secret: the evil wizard
+
+While walking around, enter **up, up, down, down, left, right, left, right, B, A** (on a
+keyboard: arrows, then X, Z). An evil wizard flies down out of the sky and gives the
+hero a **chicken staff** and a **wizard hat** (worn from then on). The staff replaces
+the hero's weapon: press B and it fires a spark (aimed like the bow) that turns whoever
+it hits into a chicken for the rest of the game. Chickens still talk, but everything
+they say comes out as squawks ("BAWK BUK-BUK BAGAWK."), keeping the punctuation. A
+second bolt turns them back; they're a bit shaken ("...WHAT JUST HAPPENED? I HAD
+FEATHERS."). The village's real chickens, hit by the staff, gain the power of speech
+and have an existential crisis ("I THINK, THEREFORE I BAWK."); another bolt takes the
+words away again. The wizard in the castle is immune, so the reveal always works. The
+egg only happens once per game.
 
 ### Music
 

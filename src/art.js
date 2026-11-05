@@ -122,6 +122,30 @@ const F = {
 };
 const GLYPHS = Object.keys(F);
 export const GLYPH_SET = new Set([...GLYPHS, ' ']);
+// A tiny 3x5 font for little floating words (what NPCs shout when hit).
+const F5 = {
+  A: '010101111101101', B: '110101110101110', C: '011100100100011', D: '110101101101110', E: '111100110100111',
+  F: '111100110100100', G: '011100101101011', H: '101101111101101', I: '111010010010111', J: '001001001101010',
+  K: '101101110101101', L: '100100100100111', M: '101111111101101', N: '110101101101101', O: '010101101101010',
+  P: '110101110100100', Q: '010101101110011', R: '110101110101101', S: '011100010001110', T: '111010010010010',
+  U: '101101101101111', V: '101101101101010', W: '101101111111101', X: '101101010101101', Y: '101101010010010',
+  Z: '111001010100111', '!': '010010010000010', '?': '110001010000010', '.': '000000000000010', '-': '000000111000000',
+  "'": '010010000000000', ',': '000000000010100',
+};
+export const GLYPH5_SET = new Set([...Object.keys(F5), ' ']);
+export function textWidth5(str) { return str.length ? str.length * 4 - 1 : 0; }
+// Small floating word: light letters with a dark outline, centred on cx.
+export function tinyText(x, str, cx, oy, color = '#fff2d0', outline = C.ink) {
+  str = String(str).toUpperCase();
+  const ox = Math.round(cx - textWidth5(str) / 2); oy = Math.round(oy);
+  const dots = [];
+  [...str].forEach((ch, k) => { const g = F5[ch]; if (g) for (let i = 0; i < 15; i++) if (g[i] === '1') dots.push([ox + k * 4 + (i % 3), oy + ((i / 3) | 0)]); });
+  x.fillStyle = outline;
+  for (const [a, b] of dots) x.fillRect(a - 1, b - 1, 3, 3);
+  x.fillStyle = color;
+  for (const [a, b] of dots) x.fillRect(a, b, 1, 1);
+}
+
 // Pixel positions [x, y] of a string in the 5x7 font (6px per character).
 export function glyphDots(str) {
   const out = [];
@@ -395,12 +419,14 @@ export function charSprite(look, dir = 'down', frame = 0) {
   let x;
   if (look.kind === 'wizard') {
     [c, x] = makeCanvas(20, 26);
-    grid(x, WIZARD, 0, 2, { o: C.ink, h: '#4e2e8a', H: '#2e1c5a', y: C.gold, s: '#e8c09a', e: C.eye, w: '#e8e0cc', b: '#e0dccc', B: '#a8a294', r: '#2e3e7a', R: '#1e2858' });
+    grid(x, WIZARD, 0, 2, look.evil
+      ? { o: C.ink, h: '#2a1a2a', H: '#14101a', y: '#d8302a', s: '#b8a890', e: '#ff4040', w: '#ff9090', b: '#8a8a90', B: '#5e5e66', r: '#5a1420', R: '#3a0c14' }
+      : { o: C.ink, h: '#4e2e8a', H: '#2e1c5a', y: C.gold, s: '#e8c09a', e: C.eye, w: '#e8e0cc', b: '#e0dccc', B: '#a8a294', r: '#2e3e7a', R: '#1e2858' });
     const up = frame ? 3 : 0;
     x.fillStyle = C.ink; x.fillRect(14, 9 - up, 3, 17 + up - (frame ? 2 : 0));
     x.fillStyle = C.wood; x.fillRect(15, 10 - up, 1, 15 + up - (frame ? 2 : 0));
     x.fillStyle = C.ink; x.fillRect(13, 4 - up, 5, 6); x.fillRect(14, 3 - up, 3, 8);
-    x.fillStyle = frame ? '#ffffff' : C.cyan; x.fillRect(14, 5 - up, 3, 4); x.fillRect(15, 4 - up, 1, 6);
+    x.fillStyle = look.evil ? (frame ? '#d0ffb0' : '#6ae84a') : frame ? '#ffffff' : C.cyan; x.fillRect(14, 5 - up, 3, 4); x.fillRect(15, 4 - up, 1, 6);
   } else if (look.kind === 'cat' || look.kind === 'chicken' || look.kind === 'frog') {
     [c, x] = makeCanvas(16, 16);
     if (look.kind === 'cat') {
@@ -425,6 +451,15 @@ export function charSprite(look, dir = 'down', frame = 0) {
   }
   sprCache.set(key, c);
   return c;
+}
+
+// The hat from the evil wizard: worn over the hero's head.
+const HAT = ['......oo....', '.....ohho...', '.....ohho...', '....ohhhho..', '....ohyhho..', '...ohhhhhho.',
+  '...obbbbbbo.', 'oohhhhhhhhoo', '.oooooooooo.'];
+let hatCanvas = null;
+export function hatSprite() {
+  if (!hatCanvas) { let x; [hatCanvas, x] = makeCanvas(12, 9); grid(x, HAT, 0, 0, { o: C.ink, h: '#3a1a3e', y: '#e8c84a', b: '#a8302a' }); }
+  return hatCanvas;
 }
 
 // ---------------------------------------------------------------- object sprites
