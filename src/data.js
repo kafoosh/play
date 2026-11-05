@@ -279,7 +279,7 @@ export const OUCH = {
 // The secret: up up down down left right left right B A.
 export const KONAMI = ['up', 'up', 'down', 'down', 'left', 'right', 'left', 'right', 'B', 'A'];
 export const EGG = {
-  hello: ['HEH HEH HEH. YOU KNOW THE OLD WORDS.', 'NOBODY HAS SAID THEM IN A HUNDRED YEARS.', 'TAKE THIS STAFF. AND THIS HAT. THEY SUIT YOU.', 'POINT IT AT SOMEONE AND PRESS B. YOU WILL SEE.', 'AND DON\'T TELL THE OTHER WIZARD.'],
+  hello: ['HEH HEH HEH. YOU KNOW THE OLD WORDS.', 'NOBODY HAS SAID THEM IN A HUNDRED YEARS.', 'TAKE THIS STAFF. AND THIS HAT. THEY SUIT YOU.', 'USE IT ON SOMEONE.', 'AND DON\'T TELL THE OTHER WIZARD.'],
   got: ['YOU GOT THE CHICKEN STAFF!', 'YOU GOT A WIZARD HAT!'],
   // a villager turned back from a chicken, the first time you talk to them
   restored: ['...WHAT JUST HAPPENED?', 'I HAD FEATHERS. SUCH LOVELY FEATHERS.'],
