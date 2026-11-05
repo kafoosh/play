@@ -1237,6 +1237,14 @@ function* hermitScene() {
   p.dir = OPP[h.dir];
   const word = !!G.armed.word;
   yield* talk([...Q.hello, { ask: word ? Q.askWord : Q.askCard, yes: Q.yes, no: Q.no }], false, null, 'HERMIT');
+  // then she goes back to her spot, off the path
+  for (let i = 0; i < 12 && !(h.x === h.home.x && h.y === h.home.y); i++) {
+    const d = this.bfsDir(h, (x, y) => x === h.home.x && y === h.home.y);
+    if (!d) break;
+    this.move(h, d, NPC_SPEED * 1.3); h.t = 0;
+    yield () => !h.moving;
+  }
+  h.dir = 'right';
 }
 
 // The bridge guard gets off the bridge, shoving whoever is in his way.
