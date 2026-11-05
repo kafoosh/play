@@ -419,12 +419,14 @@ export function charSprite(look, dir = 'down', frame = 0) {
   let x;
   if (look.kind === 'wizard') {
     [c, x] = makeCanvas(20, 26);
-    grid(x, WIZARD, 0, 2, { o: C.ink, h: '#4e2e8a', H: '#2e1c5a', y: C.gold, s: '#e8c09a', e: C.eye, w: '#e8e0cc', b: '#e0dccc', B: '#a8a294', r: '#2e3e7a', R: '#1e2858' });
+    grid(x, WIZARD, 0, 2, look.evil
+      ? { o: C.ink, h: '#2a1a2a', H: '#14101a', y: '#d8302a', s: '#b8a890', e: '#ff4040', w: '#ff9090', b: '#8a8a90', B: '#5e5e66', r: '#5a1420', R: '#3a0c14' }
+      : { o: C.ink, h: '#4e2e8a', H: '#2e1c5a', y: C.gold, s: '#e8c09a', e: C.eye, w: '#e8e0cc', b: '#e0dccc', B: '#a8a294', r: '#2e3e7a', R: '#1e2858' });
     const up = frame ? 3 : 0;
     x.fillStyle = C.ink; x.fillRect(14, 9 - up, 3, 17 + up - (frame ? 2 : 0));
     x.fillStyle = C.wood; x.fillRect(15, 10 - up, 1, 15 + up - (frame ? 2 : 0));
     x.fillStyle = C.ink; x.fillRect(13, 4 - up, 5, 6); x.fillRect(14, 3 - up, 3, 8);
-    x.fillStyle = frame ? '#ffffff' : C.cyan; x.fillRect(14, 5 - up, 3, 4); x.fillRect(15, 4 - up, 1, 6);
+    x.fillStyle = look.evil ? (frame ? '#d0ffb0' : '#6ae84a') : frame ? '#ffffff' : C.cyan; x.fillRect(14, 5 - up, 3, 4); x.fillRect(15, 4 - up, 1, 6);
   } else if (look.kind === 'cat' || look.kind === 'chicken' || look.kind === 'frog') {
     [c, x] = makeCanvas(16, 16);
     if (look.kind === 'cat') {
@@ -449,6 +451,15 @@ export function charSprite(look, dir = 'down', frame = 0) {
   }
   sprCache.set(key, c);
   return c;
+}
+
+// The hat from the evil wizard: worn over the hero's head.
+const HAT = ['......oo....', '.....ohho...', '.....ohho...', '....ohhhho..', '....ohyhho..', '...ohhhhhho.',
+  '...obbbbbbo.', 'oohhhhhhhhoo', '.oooooooooo.'];
+let hatCanvas = null;
+export function hatSprite() {
+  if (!hatCanvas) { let x; [hatCanvas, x] = makeCanvas(12, 9); grid(x, HAT, 0, 0, { o: C.ink, h: '#3a1a3e', y: '#e8c84a', b: '#a8302a' }); }
+  return hatCanvas;
 }
 
 // ---------------------------------------------------------------- object sprites

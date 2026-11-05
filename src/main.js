@@ -1,5 +1,5 @@
-import { C, UI, text, textCenter, textWidth, tinyText, wrap, box, blob, glow, glyphDots, drawCard, makeScroll, charSprite, drawTile, drawOver, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
-import { MAPS, LOOKS, NPCS, SCRIPT, cardName, decodeWord, VALUE_GRID, CHASED, CLASSES, SKINS, HAIRS, OUCH, GRUDGE } from './data.js';
+import { C, UI, text, textCenter, textWidth, tinyText, hatSprite, wrap, box, blob, glow, glyphDots, drawCard, makeScroll, charSprite, drawTile, drawOver, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
+import { MAPS, LOOKS, NPCS, SCRIPT, cardName, decodeWord, VALUE_GRID, CHASED, CLASSES, SKINS, HAIRS, OUCH, GRUDGE, KONAMI, EGG, squawk } from './data.js';
 import * as Audio from './audio.js';
 
 // The game draws at a low resolution that follows the screen's shape: VW x VH game pixels.
@@ -685,8 +685,7 @@ const Play = {
     this.load('home', 2, 3, 'right');
     const wake = SCRIPT.wake.slice(), keys = !window.matchMedia('(pointer: coarse)').matches;
     if (keys) wake[2] = 'USE THE ARROW KEYS TO WALK. PRESS Z TO TALK OR LOOK.';
-    wake.push(keys ? G.hero.def.tip.replace('PRESS B', 'PRESS X') : G.hero.def.tip, 'IT WON\'T HURT ANYONE. IT MIGHT ANNOY THEM.');
-    this.shots = []; this.cool = 0; this.swing = null;
+    this.shots = []; this.cool = 0; this.swing = null; this.code = []; this.visitor = null;
     this.run(function* () { yield wait(0.7); yield* talk(wake); });
   },
   load(mapName, x, y, dir) {
@@ -777,8 +776,9 @@ const Play = {
   // ---- weapons: B button. Close weapons hit what is in front (or around) you;
   // far weapons aim themselves at the nearest person roughly in front of you.
   onB() {
+    this.secret('B');
     if (D.active || this.script || G.fade || this.cool > 0 || this.card) return;
-    const p = this.p, id = G.hero.id, pcx = p.px + 8, pcy = p.py + 8;
+    const p = this.p, id = G.flags.chickenStaff ? 'poly' : G.hero.id, pcx = p.px + 8, pcy = p.py + 8;
     this.cool = id === 'bard' ? 0.6 : 0.4;
     this.swing = { t: 0, dir: p.dir, id };
     const at = (n, a, b) => (n.x === a && n.y === b) || (n.moving && n.tx === a && n.ty === b);
@@ -796,11 +796,11 @@ const Play = {
         if (Math.hypot(dx, dy) <= 30) this.hit(n, Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
       }
     } else {
-      Audio.sfx(id === 'mage' ? 'zap' : 'twang');
+      Audio.sfx(id === 'mage' || id === 'poly' ? 'zap' : 'twang');
       const t = this.aim();
       let vx, vy;
       if (t) { const dx = t.px + 8 - pcx, dy = t.py + 8 - pcy, l = Math.hypot(dx, dy); vx = dx / l; vy = dy / l; } else [vx, vy] = DIRV[p.dir];
-      const sp = id === 'mage' ? 150 : 210;
+      const sp = id === 'ranger' ? 210 : 150;
       this.shots.push({ id, x: pcx + vx * 6, y: pcy + vy * 6, vx: vx * sp, vy: vy * sp, dist: 0 });
     }
   },
@@ -819,16 +819,24 @@ const Play = {
       s.x += s.vx * dt; s.y += s.vy * dt; s.dist += Math.hypot(s.vx, s.vy) * dt;
       const tx = Math.floor(s.x / 16), ty = Math.floor(s.y / 16), k = this.map.kind(tx, ty);
       const dir = Math.abs(s.vx) > Math.abs(s.vy) ? (s.vx > 0 ? 'right' : 'left') : (s.vy > 0 ? 'down' : 'up');
-      if (s.id === 'mage' && Math.random() < 0.6) parts.push({ k: 'spark', x: s.x, y: s.y, vx: 0, vy: 0, life: 0.3, col: '#b89aff', world: true });
-      if (s.dist > 7 * 16 || (this.map.solid(tx, ty) && k !== 'water')) { s.dead = true; spark(s.x, s.y, 4, s.id === 'mage' ? '#b89aff' : '#c8b890', true); continue; }
+      if (s.id !== 'ranger' && Math.random() < 0.6) parts.push({ k: 'spark', x: s.x, y: s.y, vx: 0, vy: 0, life: 0.3, col: s.id === 'poly' ? (Math.random() < 0.5 ? '#ffffff' : '#ffd24a') : '#b89aff', world: true });
+      if (s.dist > 7 * 16 || (this.map.solid(tx, ty) && k !== 'water')) { s.dead = true; spark(s.x, s.y, 4, s.id === 'ranger' ? '#c8b890' : '#b89aff', true); continue; }
       const n = this.npcsHere().find(n => s.x >= n.px + 1 && s.x < n.px + 15 && s.y >= n.py - (n.tall ? 10 : 3) && s.y < n.py + 15);
-      if (n) { s.dead = true; this.hit(n, dir); }
+      if (n) { s.dead = true; if (s.id === 'poly') this.chicken(n, dir); else this.hit(n, dir); }
     }
     this.shots = this.shots.filter(s => !s.dead);
   },
   // Nobody gets hurt: they blink, hop back a step and complain.
+  // The chicken staff: anyone (but the wizard) becomes a chicken, and stays one.
+  chicken(n, dir) {
+    if (n.id === 'wizard' || n.chicken || n.look.kind === 'chicken') { this.hit(n, dir); return; }
+    Audio.sfx('poof');
+    for (let i = 0; i < 14; i++) { const a = Math.random() * Math.PI * 2, v = 10 + Math.random() * 25; parts.push({ k: 'spark', x: n.px + 8, y: n.py + 6, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 8, life: 0.6, col: i % 2 ? '#e8e0d0' : '#c8c0d8', world: true }); }
+    n.chicken = true; n.look = LOOKS.chicken; n.sleep = false; n.spear = false; n.notes = false; n.hitT = 0.3;
+    parts.push({ k: 'say', text: 'BAWK!', x: n.px + 8, y: n.py - 9, vy: -14, life: 1.3, world: true });
+  },
   hit(n, dir) {
-    const key = n.id === 'wizard' ? 'wizard' : OUCH[n.id] ? n.id : OUCH[n.look.kind] ? n.look.kind : 'person';
+    const key = n.id === 'wizard' ? 'wizard' : n.chicken ? 'chicken' : OUCH[n.id] ? n.id : OUCH[n.look.kind] ? n.look.kind : 'person';
     const lines = OUCH[key];
     n.hurt = (n.hurt || 0) + 1;
     parts.push({ k: 'say', text: lines[(n.hurt - 1) % lines.length], x: n.px + 8, y: n.py - (n.tall ? 20 : 9), vy: -14, life: 1.3, world: true });
@@ -861,10 +869,21 @@ const Play = {
     }
   },
   onDir(d) {
+    this.secret(d);
     if (D.active) dialogDir(d);
     else if (!this.script && !this.p.moving) this.p.dir = d; // a quick tap still turns you
   },
+  // up up down down left right left right B A, while walking around
+  secret(key) {
+    this.code = [...(this.code || []), key].slice(-KONAMI.length);
+    if (G.flags.egg || D.active || this.script || this.card || G.fade) return false;
+    if (this.code.join() !== KONAMI.join()) return false;
+    G.flags.egg = 1; this.code = [];
+    this.run(evilWizardScene);
+    return true;
+  },
   onA() {
+    if (this.secret('A')) return;
     if (this.card && this.card.waitA) { this.card.waitA = false; return; }
     if (D.active) { dialogA(); return; }
     if (this.script || this.p.moving) return;
@@ -889,7 +908,8 @@ const Play = {
     if (n.id === 'wizard') { if (!G.flags.met) this.run(wizardScene); return; }
     if (!n.sleep && n.look.kind !== 'frog') n.dir = OPP[this.p.dir];
     let lines = n.talked && n.again ? n.again : n.talk;
-    if (n.hurt && !n.grudged && n.look.kind === 'person' && !n.sleep) { lines = [GRUDGE[(n.hurt - 1) % GRUDGE.length], ...lines]; n.grudged = true; }
+    if (n.chicken) lines = lines.map(l => squawk(fill(l)));
+    else if (n.hurt && !n.grudged && n.look.kind === 'person' && !n.sleep) { lines = [GRUDGE[(n.hurt - 1) % GRUDGE.length], ...lines]; n.grudged = true; }
     n.talked++;
     say(lines, {
       name: n.name,
@@ -931,6 +951,7 @@ const Play = {
       if (!e.n) {
         const frame = p.moving ? [0, 1, 0, 2][Math.floor(p.anim * 8) % 4] : 0;
         ctx.drawImage(charSprite(G.hero.look, p.dir, frame), p.px - cx, p.py - cy - 2);
+        if (G.flags.hat) ctx.drawImage(hatSprite(), p.px - cx + 2, p.py - cy - 6);
         if (this.swing) this.drawSwing(cx, cy);
         continue;
       }
@@ -976,6 +997,7 @@ const Play = {
       ctx.fillStyle = `rgba(8,4,24,${this.fx.dark})`; ctx.fillRect(0, 0, VW, VH);
       if (wiz) this.drawWizard(wiz, cx, cy);
     }
+    if (this.visitor) this.drawVisitor(cx, cy);
     drawParts(cx, cy);
     if (this.card) this.drawReveal();
     if (this.fx.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${Math.min(1, this.fx.flash)})`; ctx.fillRect(0, 0, VW, VH); }
@@ -986,34 +1008,54 @@ const Play = {
     const s = this.swing, p = this.p, x = p.px - cx + 8, y = p.py - cy + 7, k = s.t / 0.25;
     const base = { right: 0, down: Math.PI / 2, left: Math.PI, up: -Math.PI / 2 }[s.dir];
     if (s.id === 'knight') {
-      // a quick white arc in front of the hero
+      // the blade sweeps across the front, leaving a fading trail behind it
+      const e = 1 - Math.pow(1 - Math.min(1, k * 1.5), 3), ang = base - 1.3 + 2.6 * e;
       ctx.globalCompositeOperation = 'lighter';
-      for (let a = -1.2; a <= -1.2 + 2.4 * Math.min(1, k * 1.6); a += 0.08) {
-        const fade = 1 - Math.max(0, k - 0.5) * 2;
-        ctx.fillStyle = `rgba(220,230,255,${0.9 * fade})`;
-        for (const r of [11, 12, 13]) ctx.fillRect(Math.round(x + Math.cos(base + a) * r), Math.round(y + Math.sin(base + a) * r), 1, 1);
+      for (let a = -1.3; a <= ang - base; a += 0.07) {
+        const age = (ang - base - a) / 2.6, al = Math.max(0, 0.75 - age * 1.6) * (1 - Math.max(0, k - 0.6) * 2.5);
+        if (al <= 0) continue;
+        ctx.fillStyle = `rgba(210,225,255,${al.toFixed(2)})`;
+        for (const r of [10, 12, 14]) ctx.fillRect(Math.round(x + Math.cos(base + a) * r), Math.round(y + Math.sin(base + a) * r), 1, 1);
       }
       ctx.globalCompositeOperation = 'source-over';
+      if (k < 0.85) {
+        const ux = Math.cos(ang), uy = Math.sin(ang), px = -uy, py = ux, pt = (r, o = 0) => [Math.round(x + ux * r + px * o), Math.round(y + uy * r + py * o)];
+        for (let r = 2; r <= 15; r++) {          // outline first
+          for (const o of [-1, 0, 1]) { const [a, b] = pt(r, o); ctx.fillStyle = C.ink; ctx.fillRect(a, b, 1, 1); }
+        }
+        for (let r = 2; r <= 4; r++) { const [a, b] = pt(r); ctx.fillStyle = C.woodD; ctx.fillRect(a, b, 1, 1); }   // grip
+        for (const o of [-2, -1, 0, 1, 2]) { const [a, b] = pt(5, o); ctx.fillStyle = C.gold; ctx.fillRect(a, b, 1, 1); } // crossguard
+        for (let r = 6; r <= 14; r++) { const [a, b] = pt(r); ctx.fillStyle = r === 14 ? '#ffffff' : '#d8dce8'; ctx.fillRect(a, b, 1, 1); } // blade
+        for (let r = 6; r <= 13; r += 2) { const [a, b] = pt(r, -1); ctx.fillStyle = '#9aa0b4'; ctx.fillRect(a, b, 1, 1); }
+      }
     } else if (s.id === 'ranger') {
       const bx = Math.round(x + Math.cos(base) * 8), by = Math.round(y + Math.sin(base) * 8);
       ctx.fillStyle = C.woodO;
       for (let a = -1.2; a <= 1.2; a += 0.2) ctx.fillRect(Math.round(bx + Math.cos(base + a) * 5 - Math.cos(base) * 3), Math.round(by + Math.sin(base + a) * 5 - Math.sin(base) * 3), 1, 1);
-    } else if (s.id === 'mage') {
+    } else if (s.id === 'mage' || s.id === 'poly') {
       const bx = Math.round(x + Math.cos(base) * 9), by = Math.round(y + Math.sin(base) * 9);
-      ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(glow(8, '#9a6aff'), bx - 8, by - 8); ctx.globalCompositeOperation = 'source-over';
+      ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(glow(8, s.id === 'poly' ? '#6ae84a' : '#9a6aff'), bx - 8, by - 8); ctx.globalCompositeOperation = 'source-over';
       ctx.fillStyle = '#ffffff'; ctx.fillRect(bx, by, 1, 1);
     }
   },
   drawShots(cx, cy) {
     for (const s of this.shots) {
       const x = s.x - cx, y = s.y - cy, l = Math.hypot(s.vx, s.vy), ux = s.vx / l, uy = s.vy / l;
-      if (s.id === 'mage') {
-        ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(glow(7, '#9a6aff'), Math.round(x) - 7, Math.round(y) - 7); ctx.globalCompositeOperation = 'source-over';
+      if (s.id !== 'ranger') {
+        ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(glow(7, s.id === 'poly' ? '#6ae84a' : '#9a6aff'), Math.round(x) - 7, Math.round(y) - 7); ctx.globalCompositeOperation = 'source-over';
         ctx.fillStyle = '#ffffff'; ctx.fillRect(Math.round(x) - 1, Math.round(y) - 1, 2, 2);
       } else {
         for (let i = 0; i < 7; i++) { ctx.fillStyle = i === 0 ? '#d0d0d8' : i > 5 ? '#e8e0cc' : C.woodL; ctx.fillRect(Math.round(x - ux * i), Math.round(y - uy * i), 1, 1); }
       }
     }
+  },
+  drawVisitor(cx, cy) {
+    const v = this.visitor, x = Math.round(v.x - cx), y = Math.round(v.y - cy + Math.sin(this.time * 3) * 1.5);
+    const gy = Math.round(v.ground - cy), lift = Math.max(0, v.ground - v.y - 10);
+    ctx.fillStyle = `rgba(10,4,20,${Math.max(0.1, 0.4 - lift / 300)})`; ctx.fillRect(x + 3, gy + 12, 12, 2); ctx.fillRect(x + 5, gy + 11, 8, 4);
+    ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(glow(18, '#8a2a6a'), x + 8 - 18, y - 2 - 18); ctx.globalCompositeOperation = 'source-over';
+    ctx.drawImage(charSprite(EVIL, 'down', v.raise ? 1 : 0), x - 1, y - 11);
+    if (Math.random() < 0.5) parts.push({ k: 'spark', x: v.x + 4 + Math.random() * 10, y: v.y + 12, vx: 0, vy: 8, life: 0.5, col: '#8a4ab0', world: true });
   },
   drawWizard(n, cx, cy) {
     const bob = n.frame ? 0 : Math.round(Math.sin(this.time * 2) * 0.6);
@@ -1049,6 +1091,39 @@ const armedReveal = () => (G.armed.word ? { word: G.armed.word } : armedCard());
 function revealCanvas(r) {
   if (r.word) return makeScroll(r.word);
   const [c, x] = makeCanvas(48, 64); drawCard(x, 0, 0, r.v, r.s); return c;
+}
+
+// Easter egg: an evil wizard drops out of the sky with gifts.
+const EVIL = { kind: 'wizard', evil: true, key: 'evilwizard' };
+function* evilWizardScene() {
+  const p = this.p, music = this.map.def.music;
+  Audio.stopMusic(); Audio.sfx('evil');
+  const right = p.px + 40 < this.map.w * 16, v = { x: p.px + (right ? 22 : -22), ground: p.py - 2, y: (this.cam ? this.cam[1] : p.py) - 50, raise: 0 };
+  const startY = v.y, t0 = this.time;
+  this.visitor = v; p.dir = right ? 'right' : 'left';
+  while (this.time - t0 < 1.6) {
+    const k = Math.min(1, (this.time - t0) / 1.4);
+    v.y = startY + (v.ground - 4 - startY) * (1 - Math.pow(1 - k, 3));
+    this.fx.dark = 0.35 * k;
+    yield null;
+  }
+  yield* talk(EGG.hello, true, null, 'EVIL WIZARD');
+  v.raise = 1; Audio.sfx('sparkle');
+  for (let i = 0; i < 24; i++) { const a = Math.random() * Math.PI * 2, r = 4 + Math.random() * 10; parts.push({ k: 'spark', x: p.px + 8 + Math.cos(a) * r, y: p.py + 4 + Math.sin(a) * r, vx: Math.cos(a) * 20, vy: Math.sin(a) * 20 - 10, life: 0.8, col: i % 2 ? '#6ae84a' : C.gold, world: true }); }
+  yield wait(0.5);
+  G.flags.chickenStaff = 1; G.flags.hat = 1;
+  Audio.sfx('item');
+  yield* talk(EGG.got);
+  v.raise = 0; Audio.sfx('evil');
+  const t1 = this.time, y1 = v.y;
+  while (this.time - t1 < 1.2) {
+    const k = (this.time - t1) / 1.2;
+    v.y = y1 - (y1 - (this.cam[1] - 60)) * k * k;
+    this.fx.dark = 0.35 * (1 - k);
+    yield null;
+  }
+  this.visitor = null; this.fx.dark = 0;
+  Audio.music(music);
 }
 
 function* wizardScene() {

@@ -248,6 +248,16 @@ export function sfx(name) {
       break;
     }
     case 'fizzle': seq(['G5', 'D5', 'G4'], 0.05, 'pulse12', 0.06); break;
+    case 'poof': {
+      const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(); s.buffer = noise;
+      f.type = 'lowpass'; f.frequency.setValueAtTime(2400, t); f.frequency.exponentialRampToValueAtTime(300, t + 0.3);
+      g.gain.setValueAtTime(0.45, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+      s.connect(f); f.connect(g); g.connect(sfxBus); s.start(t); s.stop(t + 0.4);
+      seq(['C6', 'G5'], 0.06, 'pulse12', 0.05);
+      break;
+    }
+    case 'evil': seq(['A4', 'G#4', 'D#4', 'D4', 'A3'], 0.14, 'pulse25', 0.12); break;
+    case 'item': seq(['G4', 'C5', 'E5', 'G5', 'C6', 'E6'], 0.07, 'pulse25', 0.12); break;
     case 'flash': {
       seq(['C4', 'G4', 'C5', 'E5', 'G5', 'C6'], 0.025, 'pulse25', 0.12);
       const s = ac.createBufferSource(), g = ac.createGain(); s.buffer = noise;

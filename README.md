@@ -130,7 +130,7 @@ name; the outfit and weapon come from the path.
 
 | Path   | Weapon | Range | How it works (B button) |
 |--------|--------|-------|-------------------------|
-| KNIGHT | Sword  | Close | Swings in a short arc in front of you. |
+| KNIGHT | Sword  | Close | Sweeps the blade in a short arc in front of you. |
 | RANGER | Bow    | Far   | Fires an arrow that aims itself at the nearest person roughly in front of you. |
 | MAGE   | Staff  | Far   | Casts a glowing spark, aimed the same way. |
 | BARD   | Lute   | Close | A loud chord that hits everyone right around you. |
@@ -139,6 +139,16 @@ No aiming is needed: face roughly the right way and press B. Nobody gets hurt. P
 and animals blink, hop back a step and a small word floats up ("OW!", "MY BACK!", "BAWK!!").
 The next time you talk to someone you hit, they mention it first. The wizard is not
 impressed.
+
+### Secret: the evil wizard
+
+While walking around, enter **up, up, down, down, left, right, left, right, B, A** (on a
+keyboard: arrows, then X, Z). An evil wizard flies down out of the sky and gives the
+hero a **chicken staff** and a **wizard hat** (worn from then on). The staff replaces
+the hero's weapon: press B and it fires a spark (aimed like the bow) that turns whoever
+it hits into a chicken for the rest of the game. Chickens still talk, but everything
+they say comes out as squawks ("BAWK BUK-BUK BAGAWK."), keeping the punctuation. The
+wizard in the castle is immune, so the reveal always works. It only happens once per game.
 
 ### Music
 

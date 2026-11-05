@@ -253,13 +253,13 @@ export function decodeWord(code) {
 // Looks (hair, skin) come from the player's name; the outfit comes from the class.
 export const CLASSES = [
   { id: 'knight', name: 'KNIGHT', weapon: 'SWORD', range: 'CLOSE', hp: 18, mp: 2,
-    look: { acc: 'helmet', tunic: '#2e3e6a', cloak: '#6a1e24' }, tip: 'PRESS B TO SWING YOUR SWORD.' },
+    look: { acc: 'helmet', tunic: '#2e3e6a', cloak: '#6a1e24' } },
   { id: 'ranger', name: 'RANGER', weapon: 'BOW', range: 'FAR', hp: 14, mp: 4,
-    look: { acc: 'hood', tunic: '#3e5a2e', hood: '#2e4a2a' }, tip: 'PRESS B TO SHOOT YOUR BOW.' },
+    look: { acc: 'hood', tunic: '#3e5a2e', hood: '#2e4a2a' } },
   { id: 'mage', name: 'MAGE', weapon: 'STAFF', range: 'FAR', hp: 10, mp: 16,
-    look: { acc: 'hood', tunic: '#3e2a6a', hood: '#4e2e8a' }, tip: 'PRESS B TO CAST A SPARK FROM YOUR STAFF.' },
+    look: { acc: 'hood', tunic: '#3e2a6a', hood: '#4e2e8a' } },
   { id: 'bard', name: 'BARD', weapon: 'LUTE', range: 'CLOSE', hp: 12, mp: 8,
-    look: { acc: 'cap', tunic: '#7a2e2e', cap: '#2e5a3a', cloak: '#4a3a2a' }, tip: 'PRESS B TO PLAY A LOUD CHORD ON YOUR LUTE.' },
+    look: { acc: 'cap', tunic: '#7a2e2e', cap: '#2e5a3a', cloak: '#4a3a2a' } },
 ];
 
 // What people (and animals) shout when your weapon hits them. Nobody gets hurt.
@@ -276,6 +276,19 @@ export const OUCH = {
   frog: ['RIBBIT?!', 'CROAK!'],
   wizard: ['HM.', 'CUTE.', 'NO.'],
 };
+// The secret: up up down down left right left right B A.
+export const KONAMI = ['up', 'up', 'down', 'down', 'left', 'right', 'left', 'right', 'B', 'A'];
+export const EGG = {
+  hello: ['HEH HEH HEH. YOU KNOW THE OLD WORDS.', 'NOBODY HAS SAID THEM IN A HUNDRED YEARS.', 'TAKE THIS STAFF. AND THIS HAT. THEY SUIT YOU.', 'POINT IT AT SOMEONE AND PRESS B. YOU WILL SEE.', 'AND DON\'T TELL THE OTHER WIZARD.'],
+  got: ['YOU GOT THE CHICKEN STAFF!', 'YOU GOT A WIZARD HAT!'],
+};
+// Turn speech into chicken. Keeps the punctuation so it still "reads" like the original.
+const BAWKS = ['BAWK', 'BUK', 'BUK-BUK', 'BAGAWK', 'CLUCK', 'BAWK', 'BUK', 'BRAAWK'];
+export function squawk(str) {
+  let k = 0;
+  return String(str).replace(/[A-Z0-9'{}-]+/gi, w => BAWKS[(w.length * 7 + k++ * 3) % BAWKS.length]);
+}
+
 // Said once, the next time you talk to someone you hit.
 export const GRUDGE = ['THAT HURT, YOU KNOW.', 'STILL SORE FROM THAT.', 'I HAVE NOT FORGOTTEN.'];
 export const SKINS = ['#e8c09a', '#d8a882', '#b07a52', '#7e5234'];

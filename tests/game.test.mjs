@@ -1,7 +1,7 @@
 // Run with: node --test tests/
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MAPS, NPCS, LOOKS, SCRIPT, parseForce, cardName, VALUE_GRID, encodeWord, decodeWord, CLASSES, OUCH, GRUDGE } from '../src/data.js';
+import { MAPS, NPCS, LOOKS, SCRIPT, parseForce, cardName, VALUE_GRID, encodeWord, decodeWord, CLASSES, OUCH, GRUDGE, EGG, squawk, KONAMI } from '../src/data.js';
 import { GLYPH_SET, GLYPH5_SET, wrap } from '../src/art.js';
 import { SONGS } from '../src/audio.js';
 
@@ -64,8 +64,9 @@ test('all text can be drawn by the pixel font and fits the box', () => {
   for (const m of Object.values(MAPS)) for (const v of Object.values(m.looks)) all.push(...v);
   for (const n of NPCS) all.push(...(n.talk || []), ...(n.again || []));
   for (const v of Object.values(SCRIPT)) all.push(...[].concat(v));
-  for (const c of CLASSES) all.push(c.name, c.weapon, c.tip, c.tip.replace('B', 'X'));
-  all.push(...GRUDGE);
+  for (const c of CLASSES) all.push(c.name, c.weapon);
+  all.push(...GRUDGE, ...EGG.hello, ...EGG.got);
+  for (const n of NPCS) for (const l of n.talk || []) all.push(squawk(l));
   for (const s of all) {
     const t = s.replace(/\{N\}/g, 'ABCDEFGH');
     for (const ch of t.replace(/\n/g, '')) assert.ok(GLYPH_SET.has(ch), `missing glyph "${ch}" in: ${s}`);
@@ -116,4 +117,11 @@ test('shouts fit the tiny font and stay short', () => {
     for (const ch of line) assert.ok(GLYPH5_SET.has(ch), `tiny font missing "${ch}" in ${line}`);
     assert.ok(line.length <= 18, `too long: ${line}`);
   }
+});
+
+test('chicken speech keeps punctuation and only squawks', () => {
+  const out = squawk("HALT! WHO GOES THERE? IT'S {N}.");
+  assert.match(out, /^[A-Z-]+! [A-Z-]+ [A-Z-]+ [A-Z-]+\? [A-Z-]+ [A-Z-]+\.$/);
+  for (const w of out.split(/[ !?.]+/).filter(Boolean)) assert.ok(['BAWK', 'BUK', 'BUK-BUK', 'BAGAWK', 'CLUCK', 'BRAAWK'].includes(w), w);
+  assert.deepEqual(KONAMI, ['up', 'up', 'down', 'down', 'left', 'right', 'left', 'right', 'B', 'A']);
 });
