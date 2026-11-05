@@ -1133,7 +1133,8 @@ const Play = {
     const w = wingSprite(), f = Math.floor(this.time * 3) % 2;
     const left = (x, y) => ctx.drawImage(w, x, y);
     const right = (x, y) => { ctx.save(); ctx.translate(x + 6, y); ctx.scale(-1, 1); ctx.drawImage(w, 0, 0); ctx.restore(); };
-    if (dir === 'down' || dir === 'up') { left(hx - 3, hy + 5 - f); right(hx + 13, hy + 5 - f); }
+    if (dir === 'down') { left(hx - 3, hy + 5 - f); right(hx + 13, hy + 5 - f); }
+    else if (dir === 'up') { left(hx + 2, hy + 6 - f); right(hx + 8, hy + 6 - f); } // folded on the back
     else if (dir === 'right') left(hx + 1, hy + 4 - f);
     else right(hx + 9, hy + 4 - f);
   },

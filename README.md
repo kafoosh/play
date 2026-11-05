@@ -152,7 +152,7 @@ rusty key.
 It always lands on open ground you can reach (never in the water), and nobody wanders onto
 it. Pick it up, then press A at the blue door: "LOCKED." / "...WAIT. THE KEY!" and it opens. Inside are three witches, stuck in for three days since their own frog swallowed the
 door key and escaped out the window. Each tells her part of the story when you talk to
-her; talk to all three (any order). The last one tosses you a **Crimson Cow** potion: you
+her; talk to all three (any order). The third one tosses you a can of **Crimson Cow** (silver and blue): you
 hold it up, drink it (it does nothing, but you feel energised), and when you step back
 outside you've grown a pair of wings: "HUH. I GUESS CRIMSON COW GIVES YOU FEATHERS."
 
