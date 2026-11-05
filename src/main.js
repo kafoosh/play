@@ -47,6 +47,8 @@ const heldDir = () => dirStack[dirStack.length - 1] || null;
 function pressA() { Audio.unlock(); if (!G.fade && G.scene.onA) G.scene.onA(); }
 function pressB() { Audio.unlock(); if (!G.fade && G.scene.onB) G.scene.onB(); }
 
+// Keyboard: WASD or arrows to walk; P is A, O is B (Enter and Space also work as A).
+const KEY_A = 'p', KEY_B = 'o';
 const KEYDIR = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', w: 'up', s: 'down', a: 'left', d: 'right' };
 addEventListener('keydown', e => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -54,8 +56,8 @@ addEventListener('keydown', e => {
   if (G.scene.onKey && !G.fade && G.scene.onKey(e)) { e.preventDefault(); return; }
   const d = KEYDIR[e.key.length === 1 ? e.key.toLowerCase() : e.key];
   if (d) { e.preventDefault(); if (!e.repeat) dirDown(d); return; }
-  if (['z', ' ', 'enter'].includes(e.key.toLowerCase())) { e.preventDefault(); if (!e.repeat) pressA(); }
-  if (['x', 'c'].includes(e.key.toLowerCase())) { e.preventDefault(); if (!e.repeat) pressB(); }
+  if ([KEY_A, ' ', 'enter'].includes(e.key.toLowerCase())) { e.preventDefault(); if (!e.repeat) pressA(); }
+  if (e.key.toLowerCase() === KEY_B) { e.preventDefault(); if (!e.repeat) pressB(); }
 });
 addEventListener('keyup', e => {
   const d = KEYDIR[e.key.length === 1 ? e.key.toLowerCase() : e.key];
@@ -86,6 +88,8 @@ const btnA = document.getElementById('btnA');
 btnA.addEventListener('pointerdown', e => { e.preventDefault(); btnA.classList.add('down'); pressA(); });
 for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) btnA.addEventListener(ev, () => btnA.classList.remove('down'));
 const btnB = document.getElementById('btnB');
+btnA.querySelector('.key').textContent = KEY_A.toUpperCase(); btnB.querySelector('.key').textContent = KEY_B.toUpperCase();
+btnA.setAttribute('aria-label', `A button (${KEY_A.toUpperCase()} key)`); btnB.setAttribute('aria-label', `B button (${KEY_B.toUpperCase()} key)`);
 btnB.addEventListener('pointerdown', e => { e.preventDefault(); btnB.classList.add('down'); pressB(); });
 for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) btnB.addEventListener(ev, () => btnB.classList.remove('down'));
 
@@ -659,7 +663,7 @@ const Play = {
     }));
     this.load('home', 2, 3, 'right');
     const wake = SCRIPT.wake.slice(), keys = !window.matchMedia('(pointer: coarse)').matches;
-    if (keys) wake[2] = 'USE THE ARROW KEYS TO WALK. PRESS Z TO TALK OR LOOK.';
+    if (keys) wake[2] = `USE WASD OR THE ARROW KEYS TO WALK. PRESS ${KEY_A.toUpperCase()} TO TALK OR LOOK.`;
     this.shots = []; this.cool = 0; this.swing = null; this.code = []; this.visitor = null; this.items = [];
     this.run(function* () { yield wait(0.7); yield* talk(wake); });
   },
@@ -1001,6 +1005,7 @@ const Play = {
       ctx.fillStyle = f.col; const o = Math.floor(this.time * 8 + f.p) % 2;
       ctx.fillRect(fxp | 0, fyp | 0, 1, 1); ctx.fillRect((fxp | 0) - 1 - o, (fyp | 0) - 1 + o, 1, 1); ctx.fillRect((fxp | 0) + 1 + o, (fyp | 0) - 1 + o, 1, 1);
     }
+    if (m.name === 'world') this.drawFrogPrints(cx, cy);
     // things lying on the ground
     for (const it of this.items) if (it.map === m.name) {
       ctx.drawImage(keySprite(), it.x * 16 - cx + 3, it.y * 16 - cy + 6 + Math.round(Math.sin(this.time * 3)));
@@ -1075,6 +1080,17 @@ const Play = {
     if (this.fx.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${Math.min(1, this.fx.flash)})`; ctx.fillRect(0, 0, VW, VH); }
     this.dialogY = dialogBoxY(p.py - cy);
     drawDialog(this.dialogY);
+  },
+  // A few small wet frog prints leading away from under the blue house's window toward
+  // the lake. Faint, and they fade out after a few steps.
+  drawFrogPrints(cx, cy) {
+    const x0 = Math.round(7 * 16 + 6 - cx), y0 = Math.round(29 * 16 + 2 - cy);
+    const steps = [[0, 0], [7, 4], [14, 3], [21, 7], [28, 6]];
+    const foot = (x, y) => { ctx.fillRect(x, y, 1, 1); ctx.fillRect(x + 2, y, 1, 1); ctx.fillRect(x + 1, y + 1, 1, 2); }; // three toes and a heel
+    steps.forEach(([dx, dy], i) => {
+      ctx.fillStyle = `rgba(24,40,66,${(0.5 - i * 0.08).toFixed(2)})`;
+      foot(x0 + dx, y0 + dy); foot(x0 + dx + 4, y0 + dy + 1);   // left and right foot
+    });
   },
   // Crimson Cow wings: one each side (from the front/back), one behind (from the side).
   drawWings(hx, hy, dir) {
