@@ -76,8 +76,8 @@ html, body {
   position: absolute;
   right: max(22px, env(safe-area-inset-right));
   bottom: max(40px, calc(env(safe-area-inset-bottom) + 18px));
-  width: 82px;
-  height: 82px;
+  width: 72px;
+  height: 72px;
   border: 2px solid var(--glass-edge);
   border-radius: 50%;
   background: rgba(240, 96, 90, 0.32);
@@ -85,7 +85,7 @@ html, body {
   backdrop-filter: blur(2px);
   box-shadow: 0 2px 6px var(--shadow);
   color: rgba(255, 250, 235, 0.9);
-  font: 900 28px/1 ui-monospace, Menlo, Consolas, monospace;
+  font: 900 26px/1 ui-monospace, Menlo, Consolas, monospace;
   text-shadow: 0 1px 2px var(--shadow);
   cursor: pointer;
   touch-action: none;
@@ -93,13 +93,13 @@ html, body {
 }
 #btnA.down { background: rgba(240, 96, 90, 0.6); transform: scale(0.94); }
 
-/* ---------- B button (weapon): smaller, down and to the left of A */
+/* ---------- B button (weapon): same size as A, down and to the left of it */
 #btnB {
   position: absolute;
-  right: calc(max(22px, env(safe-area-inset-right)) + 92px);
+  right: calc(max(22px, env(safe-area-inset-right)) + 84px);
   bottom: max(18px, env(safe-area-inset-bottom));
-  width: 66px;
-  height: 66px;
+  width: 72px;
+  height: 72px;
   border: 2px solid var(--glass-edge);
   border-radius: 50%;
   background: rgba(120, 140, 220, 0.3);
@@ -107,7 +107,7 @@ html, body {
   backdrop-filter: blur(2px);
   box-shadow: 0 2px 6px var(--shadow);
   color: rgba(255, 250, 235, 0.9);
-  font: 900 24px/1 ui-monospace, Menlo, Consolas, monospace;
+  font: 900 26px/1 ui-monospace, Menlo, Consolas, monospace;
   text-shadow: 0 1px 2px var(--shadow);
   cursor: pointer;
   touch-action: none;

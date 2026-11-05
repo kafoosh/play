@@ -106,7 +106,7 @@ export const MAPS = {
       '12,28': ['YOU KNOCK. NO ANSWER.', 'A NOTE ON THE DOOR SAYS "GONE TO SEE THE WIZARD."'],
       runestone: ['OLD WORDS ARE CUT INTO THE STONE:', '"THE WIND DID NOT DIE. IT WENT TO LIVE WITH THE ONE WHO LISTENS."'],
       pillar: ['A BROKEN PILLAR. ALL THAT IS LEFT OF THE TOWER OF WINDS.'],
-      well: ['A DEEP WELL. YOU SHOUT DOWN IT.', 'NOTHING SHOUTS BACK.'],
+      well: ['A DEEP WELL. YOU STARE DOWN IT.', 'IT STARES BACK.'],
       stump: ['A STUMP. SOMEONE TRIED TO COUNT THE RINGS AND GAVE UP.'],
       log: ['A MOSSY LOG. GOOD FOR SITTING.'],
       hwin: ['YOU PEEK IN THE WINDOW. A CANDLE BURNS. NOBODY IS HOME.'],
@@ -252,13 +252,13 @@ export function decodeWord(code) {
 // The four paths the player can choose. Two fight up close, two from afar.
 // Looks (hair, skin) come from the player's name; the outfit comes from the class.
 export const CLASSES = [
-  { id: 'knight', name: 'KNIGHT', weapon: 'SWORD', range: 'CLOSE', hp: 18, mp: 2, about: 'STRONG AND STEADY.',
+  { id: 'knight', name: 'KNIGHT', weapon: 'SWORD', range: 'CLOSE', hp: 18, mp: 2,
     look: { acc: 'helmet', tunic: '#2e3e6a', cloak: '#6a1e24' }, tip: 'PRESS B TO SWING YOUR SWORD.' },
-  { id: 'ranger', name: 'RANGER', weapon: 'BOW', range: 'FAR', hp: 14, mp: 4, about: 'NEVER MISSES. ALMOST.',
+  { id: 'ranger', name: 'RANGER', weapon: 'BOW', range: 'FAR', hp: 14, mp: 4,
     look: { acc: 'hood', tunic: '#3e5a2e', hood: '#2e4a2a' }, tip: 'PRESS B TO SHOOT YOUR BOW.' },
-  { id: 'mage', name: 'MAGE', weapon: 'STAFF', range: 'FAR', hp: 10, mp: 16, about: 'KNOWS A TRICK OR TWO.',
+  { id: 'mage', name: 'MAGE', weapon: 'STAFF', range: 'FAR', hp: 10, mp: 16,
     look: { acc: 'hood', tunic: '#3e2a6a', hood: '#4e2e8a' }, tip: 'PRESS B TO CAST A SPARK FROM YOUR STAFF.' },
-  { id: 'bard', name: 'BARD', weapon: 'LUTE', range: 'CLOSE', hp: 12, mp: 8, about: 'VERY, VERY LOUD.',
+  { id: 'bard', name: 'BARD', weapon: 'LUTE', range: 'CLOSE', hp: 12, mp: 8,
     look: { acc: 'cap', tunic: '#7a2e2e', cap: '#2e5a3a', cloak: '#4a3a2a' }, tip: 'PRESS B TO PLAY A LOUD CHORD ON YOUR LUTE.' },
 ];
 

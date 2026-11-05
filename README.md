@@ -37,11 +37,11 @@ Arm the card on the **title screen**, then hand over the phone.
    down to just above START, in five equal rows. Every tap makes a little sparkle wherever you touch, so
    the value tap looks like playing with the screen. The last tap counts.
 
-   **Confirmation:** a sky tap makes a quick, pale burst of sparkle-dots that gathers
-   into the shape of the number you hit (for example a dotted "7"), then scatters and
-   fades in under a second. To anyone else it looks like a twinkle.
+   **Confirmation:** a sky tap makes a pale burst of sparkle-dots that flicks into the
+   shape of the number you hit (for example a dotted "7") for a split second, then
+   scatters. The whole thing is over in half a second, so to anyone else it is a twinkle.
 
-2. **Suit**: tap **START** in one of its four quarters, left to right in CHaSeD order:
+2. **Suit**: tap the (wide) **START** button in one of its four quarters, left to right in CHaSeD order:
    **Clubs, Hearts, Spades, Diamonds**. This also starts the game. The 2nd and 4th
    quarters (Hearts, Diamonds) are a very slightly darker parchment, so you can see
    the four sections if you look for them.
@@ -106,9 +106,11 @@ windows and torches glow, and motes of magic drift in the air. It works in portr
 landscape, on phones and on desktop. The pixel size is chosen so the art always stays
 crisp, and at least 10 tiles are visible across the short side.
 
-- **Phone:** while walking around, a see-through D-pad (bottom left) and **A** (talk)
-  and **B** (weapon) buttons (bottom right) float over the game. They are hidden on
-  the title, name, path and ending screens, which are tap-only. In portrait the camera and text box stay above
+- **Phone:** from the name screen onwards, a see-through D-pad (bottom left) and
+  **A** (talk / pick) and **B** (weapon / delete / back) buttons (bottom right, same
+  size) float over the game. The name is spelled on a QWERTY keyboard with the D-pad
+  and A, then **NEXT**; the path is chosen with left/right and A. Only the title and
+  ending screens are tap-only. In portrait the camera and text box stay above
   the controls; in landscape the text box sits between them. Tapping the text box also
   advances it, and YES/NO can be tapped directly. The ♫ button (top right) mutes.
 - **Keyboard:** arrows or WASD to walk; Z, Space or Enter for A; X or C for B. On the name screen
@@ -129,7 +131,7 @@ name; the outfit and weapon come from the path.
 | BARD   | Lute   | Close | A loud chord that hits everyone right around you. |
 
 No aiming is needed: face roughly the right way and press B. Nobody gets hurt. People
-and animals blink, hop back a step and shout something ("OW!", "MY BACK!", "BAWK!!").
+and animals blink, hop back a step and a small word floats up ("OW!", "MY BACK!", "BAWK!!").
 The next time you talk to someone you hit, they mention it first. The wizard is not
 impressed.
 
