@@ -1,7 +1,7 @@
 // Run with: node --test tests/
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MAPS, NPCS, LOOKS, SCRIPT, parseForce, cardName, VALUE_GRID, encodeWord, decodeWord } from '../src/data.js';
+import { MAPS, NPCS, LOOKS, SCRIPT, parseForce, cardName, VALUE_GRID, encodeWord, decodeWord, CLASSES, OUCH, GRUDGE } from '../src/data.js';
 import { GLYPH_SET, wrap } from '../src/art.js';
 import { SONGS } from '../src/audio.js';
 
@@ -64,6 +64,9 @@ test('all text can be drawn by the pixel font and fits the box', () => {
   for (const m of Object.values(MAPS)) for (const v of Object.values(m.looks)) all.push(...v);
   for (const n of NPCS) all.push(...(n.talk || []), ...(n.again || []));
   for (const v of Object.values(SCRIPT)) all.push(...[].concat(v));
+  for (const c of CLASSES) all.push(c.name, c.weapon, c.about, c.tip, c.tip.replace('B', 'X'));
+  for (const v of Object.values(OUCH)) all.push(...v);
+  all.push(...GRUDGE);
   for (const s of all) {
     const t = s.replace(/\{N\}/g, 'ABCDEFGH');
     for (const ch of t.replace(/\n/g, '')) assert.ok(GLYPH_SET.has(ch), `missing glyph "${ch}" in: ${s}`);
@@ -101,4 +104,10 @@ test('word cipher is QWERTY + 1 with wrap-around', () => {
   assert.equal(decodeWord('jraap%20jraap'), 'HELLO HELLO');
   assert.equal(decodeWord('jraap-jraap'), 'HELLO HELLO');
   for (const w of ['PALM', 'ZEBRA', 'MAGIC', 'QUILL', 'LAKE']) assert.equal(decodeWord(encodeWord(w)), w);
+});
+
+test('classes mix close and far weapons', () => {
+  const r = CLASSES.map(c => c.range);
+  assert.ok(r.includes('CLOSE') && r.includes('FAR'));
+  for (const c of CLASSES) assert.ok(['knight', 'ranger', 'mage', 'bard'].includes(c.id));
 });

@@ -93,7 +93,29 @@ html, body {
 }
 #btnA.down { background: rgba(240, 96, 90, 0.6); transform: scale(0.94); }
 
-body.playing #dpad, body.playing #btnA { display: block; }
+/* ---------- B button (weapon): smaller, down and to the left of A */
+#btnB {
+  position: absolute;
+  right: calc(max(22px, env(safe-area-inset-right)) + 92px);
+  bottom: max(18px, env(safe-area-inset-bottom));
+  width: 66px;
+  height: 66px;
+  border: 2px solid var(--glass-edge);
+  border-radius: 50%;
+  background: rgba(120, 140, 220, 0.3);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  box-shadow: 0 2px 6px var(--shadow);
+  color: rgba(255, 250, 235, 0.9);
+  font: 900 24px/1 ui-monospace, Menlo, Consolas, monospace;
+  text-shadow: 0 1px 2px var(--shadow);
+  cursor: pointer;
+  touch-action: none;
+  display: none;
+}
+#btnB.down { background: rgba(120, 140, 220, 0.6); transform: scale(0.94); }
+
+body.playing #dpad, body.playing #btnA, body.playing #btnB { display: block; }
 
 /* ---------- mute */
 #mute {

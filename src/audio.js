@@ -39,6 +39,7 @@ const T = {
   Am: ['A2', 'E3', 'A3', 'C4'], F: ['F2', 'C3', 'F3', 'A3'], G: ['G2', 'D3', 'G3', 'B3'], E: ['E2', 'B2', 'E3', 'G#3'],
   D: ['D2', 'A2', 'D3', 'F#3'], A: ['A2', 'E3', 'A3', 'C#4'], Bm: ['B2', 'F#3', 'B3', 'D4'], Em: ['E2', 'B2', 'E3', 'G3'],
   C: ['C3', 'G3', 'C4', 'E4'], Cl: ['C2', 'G2', 'C3', 'E3'], B: ['B1', 'F#2', 'B2', 'D#3'],
+  Dm: ['D2', 'A2', 'D3', 'F3'], Fl: ['F2', 'C3', 'F3', 'A3'], Gl: ['G2', 'D3', 'G3', 'B3'], E7: ['E2', 'B2', 'D3', 'G#3'],
 };
 const bars = (names, steps = 16) => names.map(n => [T[n], steps]);
 
@@ -50,17 +51,17 @@ export const SONGS = {
       { type: 'tri', vol: 0.32, ...arp(bars(['Am', 'F', 'G', 'E', 'Am', 'F', 'E', 'Am']), [0, 1, 2, 3, 2, 1, 2, 1]) },
     ],
   },
+  // The road: D dorian, unhurried, a little lonely.
   field: {
-    bpm: 132, loop: true,
+    bpm: 96, loop: true,
     ch: [
-      { type: 'pulse25', vol: 0.14, ...parseSeq(
-        'F#5:2 A5:2 D6:4 A5:2 F#5:2 G5:2 A5:2 | B5:4 A5:2 G5:2 D5:4 -:2 G5:2 | F#5:2 E5:2 D5:2 E5:2 F#5:4 A5:4 | E5:8 C#5:4 -:4 |' +
-        'F#5:2 A5:2 D6:4 C#6:2 B5:2 A5:4 | B5:2 C#6:2 D6:4 B5:4 G5:4 | A5:4 G5:2 F#5:2 E5:4 C#5:4 | D5:8 -:8 |' +
-        'D5:4 F#5:4 B5:6 A5:2 | G5:4 F#5:2 E5:2 D5:4 B4:4 | E5:4 G5:4 B5:4 A5:2 G5:2 | F#5:4 E5:4 A4:8 |' +
-        'D5:4 F#5:4 B5:4 D6:4 | D6:4 B5:4 G5:4 B5:4 | A5:4 C#6:4 E6:4 C#6:4 | A5:12 -:4') },
-      { type: 'pulse50', vol: 0.05, ...arp(bars(['D', 'G', 'D', 'A', 'D', 'G', 'A', 'D', 'Bm', 'G', 'Em', 'A', 'Bm', 'G', 'A', 'A']).map(([t, s]) => [t.map(n => n.replace(/\d/, d => +d + 2)), s]), [3, 2, 1, 2], 4) },
-      { type: 'tri', vol: 0.34, ...arp(bars(['D', 'G', 'D', 'A', 'D', 'G', 'A', 'D', 'Bm', 'G', 'Em', 'A', 'Bm', 'G', 'A', 'A']), [0, 2, 1, 2, 0, 2, 1, 3]) },
-      { type: 'drum', vol: 0.5, ...drums('k.h.s.h.k.h.s.hh', 16) },
+      { type: 'pulse12', vol: 0.15, ...parseSeq(
+        'D5:6 E5:2 F5:4 E5:4 | C5:8 E5:4 G5:4 | A5:6 G5:2 F5:4 E5:4 | E5:12 -:4 |' +
+        'D5:6 E5:2 F5:4 A5:4 | G5:8 E5:4 C5:4 | B4:6 C5:2 D5:4 G4:4 | A4:12 -:4 |' +
+        'F5:4 A5:4 C6:6 A5:2 | G5:8 E5:8 | F5:4 E5:4 D5:4 F5:4 | E5:12 -:4 |' +
+        'F5:4 A5:4 C6:4 D6:4 | B5:6 A5:2 G5:4 B5:4 | A5:6 G5:2 E5:4 C5:4 | D5:12 -:4') },
+      { type: 'tri', vol: 0.3, ...arp(bars(['Dm', 'Cl', 'Dm', 'Am', 'Dm', 'Cl', 'Gl', 'Am', 'Fl', 'Cl', 'Dm', 'Am', 'Fl', 'Gl', 'Am', 'Dm']), [0, 1, 2, 3, 2, 1, 2, 1]) },
+      { type: 'drum', vol: 0.28, ...drums('k.......h.....h.', 16) },
     ],
   },
   castle: {
@@ -71,20 +72,22 @@ export const SONGS = {
       { type: 'drum', vol: 0.35, ...drums('k.......k...h...', 8) },
     ],
   },
+  // After the reveal: bittersweet, with a lift at the end.
   end: {
-    bpm: 100, loop: true,
+    bpm: 84, loop: true,
     ch: [
-      { type: 'pulse25', vol: 0.15, ...parseSeq('E5:4 G5:4 C6:6 B5:2 | A5:4 E5:4 C5:8 | F5:4 A5:4 C6:4 A5:4 | G5:8 D5:8 | E5:4 G5:4 C6:4 E6:4 | D6:4 C6:4 A5:8 | F5:4 A5:4 B5:4 D6:4 | C6:12 -:4') },
-      { type: 'tri', vol: 0.32, ...arp([[T.C, 16], [T.Am, 16], [T.F, 16], [T.G, 16], [T.C, 16], [T.Am, 16], [T.F, 8], [T.G, 8], [T.C, 16]], [0, 1, 2, 3, 2, 1, 2, 1]) },
-      { type: 'drum', vol: 0.3, ...drums('k...h...s...h...', 8) },
+      { type: 'pulse25', vol: 0.14, ...parseSeq('E5:8 A5:4 B5:4 | C6:8 B5:4 A5:4 | G5:8 E5:4 G5:4 | A5:12 -:4 | E5:8 A5:4 B5:4 | C6:6 D6:2 E6:4 C6:4 | B5:4 A5:4 G#5:4 B5:4 | A5:16') },
+      { type: 'tri', vol: 0.3, ...arp(bars(['Am', 'Fl', 'Cl', 'Am', 'Am', 'Fl', 'E7', 'Am']), [0, 1, 2, 3, 2, 1, 2, 1]) },
+      { type: 'drum', vol: 0.2, ...drums('k...............', 8) },
     ],
   },
+  // The reveal: a minor arpeggio that opens into major.
   fanfare: {
-    bpm: 140, loop: false,
+    bpm: 120, loop: false,
     ch: [
-      { type: 'pulse25', vol: 0.18, ...parseSeq('C5:2 E5:2 G5:2 C6:4 B5:2 C6:2 D6:2 E6:12') },
-      { type: 'pulse50', vol: 0.08, ...parseSeq('G4:2 C5:2 E5:2 G5:4 G5:2 A5:2 B5:2 C6:12') },
-      { type: 'tri', vol: 0.34, ...parseSeq('C3:8 G2:4 C3:4 C3:12') },
+      { type: 'pulse25', vol: 0.17, ...parseSeq('A4:2 C5:2 E5:2 A5:2 C6:2 E6:2 C#6:4 E6:12') },
+      { type: 'pulse12', vol: 0.08, ...parseSeq('E4:4 A4:4 C5:4 E5:4 E5:12') },
+      { type: 'tri', vol: 0.32, ...parseSeq('A2:8 F2:4 E2:4 A2:12') },
     ],
   },
 };
@@ -215,6 +218,36 @@ export function sfx(name) {
     case 'start': seq(['C5', 'E5', 'G5', 'C6', 'E6', 'G6'], 0.045); break;
     case 'twinkle': seq(['E7', 'B6'], 0.03, 'pulse12', 0.05); break;
     case 'sparkle': seq(['C6', 'E6', 'G6', 'B6', 'D7', 'G7'], 0.04, 'pulse12', 0.08); break;
+    case 'swish': {
+      const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain(); s.buffer = noise;
+      f.type = 'bandpass'; f.Q.value = 2; f.frequency.setValueAtTime(900, t); f.frequency.exponentialRampToValueAtTime(3500, t + 0.12);
+      g.gain.setValueAtTime(0.35, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+      s.connect(f); f.connect(g); g.connect(sfxBus); s.start(t); s.stop(t + 0.2);
+      break;
+    }
+    case 'twang': {
+      const o = ac.createOscillator(), g = ac.createGain(); o.setPeriodicWave(waves.pulse25);
+      o.frequency.setValueAtTime(520, t); o.frequency.exponentialRampToValueAtTime(180, t + 0.12);
+      g.gain.setValueAtTime(0.12, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+      o.connect(g); g.connect(sfxBus); o.start(t); o.stop(t + 0.16);
+      break;
+    }
+    case 'zap': {
+      const o = ac.createOscillator(), g = ac.createGain(); o.setPeriodicWave(waves.pulse12);
+      o.frequency.setValueAtTime(300, t); o.frequency.exponentialRampToValueAtTime(1400, t + 0.15);
+      g.gain.setValueAtTime(0.1, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+      o.connect(g); g.connect(sfxBus); o.start(t); o.stop(t + 0.22);
+      break;
+    }
+    case 'strum': seq(['D4', 'F4', 'A4', 'D5', 'F5'], 0.025, 'tri', 0.22); break;
+    case 'hit': {
+      tone('pulse50', 45, t, 0.06, 0.12, sfxBus);
+      const s = ac.createBufferSource(), g = ac.createGain(); s.buffer = noise;
+      g.gain.setValueAtTime(0.25, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+      s.connect(g); g.connect(sfxBus); s.start(t); s.stop(t + 0.1);
+      break;
+    }
+    case 'fizzle': seq(['G5', 'D5', 'G4'], 0.05, 'pulse12', 0.06); break;
     case 'flash': {
       seq(['C4', 'G4', 'C5', 'E5', 'G5', 'C6'], 0.025, 'pulse25', 0.12);
       const s = ac.createBufferSource(), g = ac.createGain(); s.buffer = noise;

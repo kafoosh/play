@@ -249,14 +249,34 @@ export function decodeWord(code) {
   return [...s.toLowerCase().replace(/[-_]/g, ' ')].map(c => shiftKey(c, -1)).join('').replace(/\s+/g, ' ').trim().toUpperCase();
 }
 
-// Hero classes for the character generator.
+// The four paths the player can choose. Two fight up close, two from afar.
+// Looks (hair, skin) come from the player's name; the outfit comes from the class.
 export const CLASSES = [
-  { name: 'KNIGHT', acc: 'helmet', tunics: ['#2e3e6a', '#5e5e66', '#6a1e24'] },
-  { name: 'RANGER', acc: 'hood', tunics: ['#3e5a2e', '#4e4a2a', '#2e4a3a'] },
-  { name: 'BARD', acc: 'cap', tunics: ['#7a2e2e', '#8a5a2a', '#4e2e6a'] },
-  { name: 'MAGE', acc: 'hood', tunics: ['#3e2a6a', '#2a3a6a', '#4a2a4a'] },
-  { name: 'ROGUE', acc: 'hood', tunics: ['#2e2e34', '#43301f', '#2a3036'] },
-  { name: 'CLERIC', acc: 'none', tunics: ['#c8c0a8', '#a8823e', '#6a7a8a'] },
+  { id: 'knight', name: 'KNIGHT', weapon: 'SWORD', range: 'CLOSE', hp: 18, mp: 2, about: 'STRONG AND STEADY.',
+    look: { acc: 'helmet', tunic: '#2e3e6a', cloak: '#6a1e24' }, tip: 'PRESS B TO SWING YOUR SWORD.' },
+  { id: 'ranger', name: 'RANGER', weapon: 'BOW', range: 'FAR', hp: 14, mp: 4, about: 'NEVER MISSES. ALMOST.',
+    look: { acc: 'hood', tunic: '#3e5a2e', hood: '#2e4a2a' }, tip: 'PRESS B TO SHOOT YOUR BOW.' },
+  { id: 'mage', name: 'MAGE', weapon: 'STAFF', range: 'FAR', hp: 10, mp: 16, about: 'KNOWS A TRICK OR TWO.',
+    look: { acc: 'hood', tunic: '#3e2a6a', hood: '#4e2e8a' }, tip: 'PRESS B TO CAST A SPARK FROM YOUR STAFF.' },
+  { id: 'bard', name: 'BARD', weapon: 'LUTE', range: 'CLOSE', hp: 12, mp: 8, about: 'VERY, VERY LOUD.',
+    look: { acc: 'cap', tunic: '#7a2e2e', cap: '#2e5a3a', cloak: '#4a3a2a' }, tip: 'PRESS B TO PLAY A LOUD CHORD ON YOUR LUTE.' },
 ];
+
+// What people (and animals) shout when your weapon hits them. Nobody gets hurt.
+export const OUCH = {
+  person: ['OW!', 'HEY!', 'RUDE!', 'STOP THAT!', 'WHAT WAS THAT FOR?', 'I SAW THAT!'],
+  guard: ['OI! WATCH IT!', 'THAT IS A CRIME.', 'DO NOT TEST ME.'],
+  gate: ['OI! WATCH IT!', 'THAT IS A CRIME.', 'DO NOT TEST ME.'],
+  oldman: ['MY BACK!', 'IN MY DAY...', 'YOUNG FOOL!'],
+  kid: ['MUM!', 'DO IT AGAIN!', 'NOT FAIR!'],
+  bard: ['MY LUTE!', 'OFF KEY!', 'A CRITIC!'],
+  sleeper: ['WHA-? ...ZZZ', 'MMF. ZZZ...'],
+  cat: ['HSSS!', 'MRRAW!'],
+  chicken: ['BAWK!!', 'BA-GAWK!'],
+  frog: ['RIBBIT?!', 'CROAK!'],
+  wizard: ['HM.', 'CUTE.', 'NO.'],
+};
+// Said once, the next time you talk to someone you hit.
+export const GRUDGE = ['THAT HURT, YOU KNOW.', 'STILL SORE FROM THAT.', 'I HAVE NOT FORGOTTEN.'];
 export const SKINS = ['#e8c09a', '#d8a882', '#b07a52', '#7e5234'];
 export const HAIRS = ['#2e2018', '#6a4422', '#b8903a', '#8a3a22', '#c8c4ba', '#1e2028', '#4a3022'];
