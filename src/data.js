@@ -179,7 +179,7 @@ export const LOOKS = {
   witch1: P({ hair: '#2a2a32', tunic: '#3a2a4a', cloak: '#1e1a26', long: true, skin: '#c8d0a8' }),
   witch2: P({ hair: '#c85a2a', tunic: '#2e3a2e', cloak: '#1e261e', long: true }),
   witch3: P({ hair: '#d8d4ca', tunic: '#4a2a3a', cloak: '#2a1a24', beard: false, skin: '#d8a882' }),
-  dog: { kind: 'dog' }, cat: { kind: 'cat' }, chicken: { kind: 'chicken' }, frog: { kind: 'frog' }, wizard: { kind: 'wizard' },
+  dog: { kind: 'dog' }, cat: { kind: 'cat' }, blackcat: { kind: 'cat', black: true }, chicken: { kind: 'chicken' }, frog: { kind: 'frog' }, wizard: { kind: 'wizard' },
 };
 for (const k in LOOKS) LOOKS[k].key = k;
 
@@ -196,13 +196,17 @@ export const NPCS = [
     again: ['STILL NOTHING.'] },
   { id: 'hermit', name: 'HERMIT', map: 'world', x: 13, y: 14, look: 'hermit', dir: 'right',
     talk: ['THE CASTLE IS JUST AHEAD. KEEP THAT THOUGHT.'] },
+  { id: 'soot', name: 'SOOT', map: 'witches', x: 8, y: 2, look: 'blackcat', wander: 2, slow: true,
+    talk: ['MEOW.'], again: ['THE CAT LOOKS AT YOU LIKE IT KNOWS SOMETHING YOU DON\'T.'] },
   { id: 'morag', name: 'MORAG', map: 'witches', x: 6, y: 3, look: 'witch1', dir: 'down', hat: 'witch',
     talk: ['MIND HOW YOU GO. AND MIND THAT FROG.'] },
   { id: 'bridie', name: 'BRIDIE', map: 'witches', x: 7, y: 5, look: 'witch2', dir: 'left', hat: 'witch',
     talk: ['DON\'T MIND THE SMELL. THAT\'S DINNER.'], again: ['IT\'S NEWT. IT\'S ALWAYS NEWT.'] },
   { id: 'tansy', name: 'TANSY', map: 'witches', x: 2, y: 3, look: 'witch3', dir: 'right', hat: 'witch',
     talk: ['THE WIZARD? WE DON\'T TALK TO HIM.', 'HE KNOWS WHAT YOU\'RE THINKING BEFORE YOU SAY IT. IT\'S RUDE.'] },
-  { id: 'frog', name: 'FROG', map: 'world', x: 25, y: 28, look: 'frog', wander: 1, slow: true, talk: ['RIBBIT.'] },
+  // quiet: no speech bubble when you face it, so it isn't obvious you can talk to it
+  { id: 'frog', name: 'FROG', map: 'world', x: 25, y: 28, look: 'frog', wander: 1, slow: true, quiet: true,
+    talk: ['RIBBIT.', '...HIC!'], again: ['RIBBIT.'] },
   { id: 'oldman', name: 'OLD TOM', map: 'world', x: 10, y: 32, look: 'oldman', dir: 'left',
     talk: ['WHEN I WAS A BOY THE WIND NEVER STOPPED. IT SANG IN THE TREES ALL DAY.', 'THEN CAME THE STILL NIGHT. IT STOPPED. JUST LIKE THAT.', 'TEN YEARS NOW. I STILL MISS THE NOISE.'],
     again: ['SOME SAY THE WIZARD KNOWS WHERE THE WIND WENT.'] },

@@ -976,6 +976,7 @@ const Play = {
       name: n.name,
       onEnd: () => {
         if (n.id === 'guard' && (!G.flags.guard || this.guardBlocking(n))) this.run(guardStepAside);
+        if (n.id === 'frog' && !n.chicken) this.dropKey(n, this.p.dir);
       },
     });
   },
@@ -1056,7 +1057,7 @@ const Play = {
       const [dx, dy] = DIRV[p.dir];
       let n = this.npcAt(p.x + dx, p.y + dy);
       if (!n && m.kind(p.x + dx, p.y + dy) === 'stall') n = this.npcAt(p.x + dx * 2, p.y + dy * 2);
-      if (n && !n.moving) {
+      if (n && !n.moving && !n.quiet) {
         const bx = n.px - cx + 4, by = n.py - cy - (n.tall ? 22 : 12) + Math.round(Math.sin(this.time * 4));
         ctx.fillStyle = C.ink; ctx.fillRect(bx - 1, by - 1, 11, 8); ctx.fillRect(bx + 3, by + 7, 3, 2);
         ctx.fillStyle = C.white; ctx.fillRect(bx, by, 9, 6); ctx.fillRect(bx + 4, by + 6, 1, 1);

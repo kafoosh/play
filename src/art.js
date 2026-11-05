@@ -437,7 +437,7 @@ export function charSprite(look, dir = 'down', frame = 0) {
   } else if (look.kind === 'cat' || look.kind === 'chicken' || look.kind === 'frog') {
     [c, x] = makeCanvas(16, 16);
     if (look.kind === 'cat') {
-      grid(x, CAT, 0, 0, { o: C.ink, G: '#6a6470', e: '#c8d84a', p: C.pink, W: '#c8c2b8' });
+      grid(x, CAT, 0, 0, look.black ? { o: C.ink, G: '#2a2630', e: '#d8e84a', p: '#c87a8a', W: '#3a3640' } : { o: C.ink, G: '#6a6470', e: '#c8d84a', p: C.pink, W: '#c8c2b8' });
       x.fillStyle = C.ink;
       if (frame % 2) { x.fillRect(12, 11, 1, 4); x.fillRect(13, 10, 1, 2); } else { x.fillRect(12, 13, 3, 1); x.fillRect(14, 12, 1, 1); }
     } else if (look.kind === 'chicken') {

@@ -118,7 +118,8 @@ crisp, and at least 10 tiles are visible across the short side.
   ending screens are tap-only. In portrait the camera and text box stay above
   the controls; in landscape the text box sits between them. Tapping the text box also
   advances it, and YES/NO can be tapped directly. The ♫ button (top right) mutes.
-- **Keyboard:** arrows or WASD to walk; Z, Space or Enter for A; X or C for B. On the name screen
+- **Keyboard:** arrows or WASD to walk; Z, Space or Enter for A; X or C for B. On a
+  computer the on-screen A and B buttons are labelled with their keys (Z and X). On the name screen
   you can just type, with Backspace and Enter.
 
 People's names show on a tab above their text box (GUARD, WIZARD and so on).
@@ -143,7 +144,9 @@ impressed.
 ### Side quest: the frog, the key and the witches
 
 The blue house in the village is locked; knock and someone inside shouts that the frog
-has their key. Hit the frog (by the lake) with your weapon and it coughs up a rusty key.
+has their key. Hit the frog (by the lake) with your weapon, or just talk to it (it
+doesn't show a speech bubble like the others, so it isn't obvious), and it coughs up a
+rusty key.
 Pick it up, then press A at the blue door. Three witches have been stuck inside since the
 frog swallowed their key and jumped out the window. They give you a **Crimson Cow**
 potion, you drink it (it does nothing, but you feel energised), and when you step back
@@ -157,7 +160,7 @@ outside you've grown a pair of wings: "HUH. I GUESS CRIMSON COW GIVES YOU FEATHE
   you pass. It's a handy check before the reveal.
 - If the bridge **guard** ends up on the bridge (say, after you hit him), he walks off it
   by himself, shoving you or anyone else out of the way, so the bridge can't get blocked.
-- The pet in your house is a cream long-haired dachshund.
+- The pet in your house is a cream long-haired dachshund. The witches have a black cat, Soot.
 
 ### Secret: the evil wizard
 
