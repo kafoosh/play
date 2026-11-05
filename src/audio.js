@@ -107,12 +107,42 @@ function pulseWave(d) {
   return ac.createPeriodicWave(re, im);
 }
 
+// iOS mutes Web Audio on the silent switch unless the page's audio session is
+// 'playback'. Claim it only while sound is running; hand it back ('auto') when
+// suspended so other apps can play. Browsers without the API (Android) skip this.
+function setSession(t) { try { const s = navigator.audioSession; if (s && s.type !== t) s.type = t; } catch (e) { /* not supported */ } }
+
+// Run the context only while the page is on screen and sound is on. Android keeps
+// Web Audio going in a backgrounded tab (where it stutters), and iOS marks it
+// 'interrupted' when you leave Safari, so: suspend when hidden, resume when back.
+// Every suspend/resume is allowed to fail quietly; the next tap tries again.
+let away = false;
+function sync() {
+  if (!ac || ac.state === 'closed') return;
+  if (muted || away || document.visibilityState === 'hidden') {
+    if (ac.state === 'running') ac.suspend().catch(() => {});
+    setSession('auto');
+  } else {
+    setSession('playback');
+    if (ac.state !== 'running') ac.resume().catch(() => {});
+  }
+}
+if (typeof document !== 'undefined') { // (the tests load this file without a page)
+  document.addEventListener('visibilitychange', sync);
+  window.addEventListener('pagehide', () => { away = true; sync(); });
+  window.addEventListener('pageshow', () => { away = false; sync(); });
+  document.addEventListener('freeze', () => { away = true; sync(); });
+  document.addEventListener('resume', () => { away = false; sync(); });
+}
+
+// Called on every tap and key press: builds the context the first time, and
+// wakes it up again after the phone has paused it.
 export function unlock() {
   if (!ac) {
-    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { /* not supported */ }
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
-    ac = new AC();
+    if (!muted) setSession('playback');
+    try { ac = new AC(); } catch (e) { ac = null; return; }
     master = ac.createGain(); master.gain.value = muted ? 0 : 0.6; master.connect(ac.destination);
     musicBus = ac.createGain(); musicBus.gain.value = 0.7; musicBus.connect(master);
     sfxBus = ac.createGain(); sfxBus.gain.value = 0.8; sfxBus.connect(master);
@@ -123,17 +153,19 @@ export function unlock() {
     // A silent blip inside the gesture fully wakes iOS audio.
     const s = ac.createBufferSource(); s.buffer = ac.createBuffer(1, 1, 22050); s.connect(ac.destination); s.start(0);
     setInterval(tick, 30);
+    ac.onstatechange = () => { if (ac.state !== 'running') retry = 0; };
   }
-  if (ac.state === 'suspended') ac.resume();
+  away = false;
+  sync();
   if (want && !cur) { const w = want; want = null; music(w); }
 }
-
-export function setPaused(p) { if (ac) p ? ac.suspend() : ac.resume(); }
+let retry = 0;
 export function isMuted() { return muted; }
 export function toggleMute() {
   muted = !muted;
   try { localStorage.setItem('oddpaq-mute', muted ? '1' : '0'); } catch (e) { /* storage blocked */ }
   if (master) master.gain.setTargetAtTime(muted ? 0 : 0.6, ac.currentTime, 0.02);
+  sync();
   return muted;
 }
 
@@ -168,7 +200,13 @@ function drum(kind, t, vol, dest) {
 }
 
 function tick() {
-  if (!cur || ac.state !== 'running') return;
+  // If the phone paused us while we're on screen, keep trying to come back (about
+  // once a second). Where a tap is needed, unlock() on the next tap does it.
+  if (ac.state !== 'running') {
+    if (!muted && !away && document.visibilityState === 'visible' && (retry++ % 33) === 0) ac.resume().catch(() => {});
+    return;
+  }
+  if (!cur) return;
   const song = cur.song;
   if (cur.next < ac.currentTime - 0.1) cur.next = ac.currentTime + 0.05; // resumed after a pause
   while (cur && cur.next < ac.currentTime + 0.15) {
@@ -279,3 +317,7 @@ export function wind(dur = 3) {
   s.connect(f); f.connect(g); g.connect(sfxBus);
   s.start(t); s.stop(t + dur + 0.5);
 }
+
+// for tests: the current state of the sound engine
+export const audioState = () => (ac ? ac.state : 'none');
+export const audioCtx = () => ac;
