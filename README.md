@@ -14,28 +14,33 @@ A play-through takes about 2–3 minutes.
 
 Arm the card on the **title screen**, then hand over the phone.
 
-1. **Value**: tap the sky. The area above the START button is an invisible grid:
+1. **Value**: tap the sky. The sky is painted in colour bands: four purple bands, then
+   an orange band at the horizon. The four purple bands are the rows, split into
+   three equal columns across the screen. Everything else above START counts as 13:
 
    ```
    +------+------+------+
-   |  1   |  2   |  3   |      1 = Ace
+   |  1   |  2   |  3   |   purple band 1 (top)
    +------+------+------+
-   |  4   |  5   |  6   |
+   |  4   |  5   |  6   |   purple band 2
    +------+------+------+
-   |  7   |  8   |  9   |
+   |  7   |  8   |  9   |   purple band 3
    +------+------+------+
-   |  10  |  11  |  12  |      11 = Jack, 12 = Queen
+   |  10  |  11  |  12  |   purple band 4
    +------+------+------+
-   |         13         |   <- the band just above START (King)
+   |         13         |   orange band, mountains, castle, trees, grass (down to START)
    +--------------------+
    ```
+
+   The orange band is always tall enough to hold the castle, mountains and trees, so
+   the purple bands are clear sky. Taps on or just beside any scenery count as 13.
+   You can see each band's edges, so you know which row you're in.
 
    Values are always numbers, here and in the URL: 1 = Ace, 11 = Jack, 12 = Queen,
    13 = King. The revealed card still shows a real J, Q or K.
 
-   The grid covers the full width, three columns across, from the top of the screen
-   down to just above START, in five equal rows. Every tap makes a little sparkle wherever you touch, so
-   the value tap looks like playing with the screen. The last tap counts.
+   Every tap makes a little sparkle wherever you touch, so the value tap looks like
+   playing with the screen. The last tap counts.
 
    **Confirmation:** a sky tap makes a pale burst of sparkle-dots that flicks into the
    shape of the number you hit (for example a dotted "7") for a split second, then
