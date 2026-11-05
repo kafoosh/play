@@ -170,14 +170,19 @@ function fontSheet(color) {
   return c;
 }
 export function textWidth(str, scale = 1) { return str.length ? (str.length * 6 - 1) * scale : 0; }
-export function text(x, str, ox, oy, color = C.white, scale = 1) {
+// bold(i): optional, true for characters to draw slightly bold (each glyph stamped again
+// one pixel to the right, kept inside its own 5px cell so letters don't run together).
+export function text(x, str, ox, oy, color = C.white, scale = 1, bold = null) {
   const sheet = fontSheet(color);
   str = String(str).toUpperCase();
-  let cx = Math.round(ox); oy = Math.round(oy);
+  let cx = Math.round(ox), i = 0; oy = Math.round(oy);
   for (const ch of str) {
     const gi = GI[ch];
-    if (gi !== undefined) x.drawImage(sheet, gi * 6, 0, 5, 7, cx, oy, 5 * scale, 7 * scale);
-    cx += 6 * scale;
+    if (gi !== undefined) {
+      x.drawImage(sheet, gi * 6, 0, 5, 7, cx, oy, 5 * scale, 7 * scale);
+      if (bold && bold(i)) x.drawImage(sheet, gi * 6, 0, 4, 7, cx + scale, oy, 4 * scale, 7 * scale);
+    }
+    cx += 6 * scale; i++;
   }
 }
 // Text with an outline (scaled), for titles drawn over pictures.

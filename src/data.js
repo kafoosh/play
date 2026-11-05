@@ -110,7 +110,6 @@ export const MAPS = {
       stump: ['A STUMP. SOMEONE TRIED TO COUNT THE RINGS AND GAVE UP.'],
       log: ['A MOSSY LOG. GOOD FOR SITTING.'],
       hwin: ['YOU PEEK IN THE WINDOW. A CANDLE BURNS. NOBODY IS HOME.'],
-      worms: ['A PILE OF WORMS. THEY WRIGGLE.'],
       lamp: ['AN OLD LANTERN. NOBODY EVER FILLS IT, BUT IT NEVER GOES OUT.'],
       water: [],
     },
@@ -372,11 +371,21 @@ export const QUEST = {
     bess: ['DON\'T MIND THE SMELL. THAT\'S DINNER.', 'THAT FROG WAS MEANT FOR A POTION. IT HAD OTHER IDEAS.', 'I TRIED A SPELL TO GET THE KEY BACK. IT TURNED ME BLUE FOR A WEEK.'],
     pennatella: ['SO YOU FOUND OUR KEY. THANK YOU.', 'IF YOU\'RE OFF TO SEE THE WIZARD... WE DON\'T TALK TO HIM.', 'HE KNOWS WHAT YOU\'RE THINKING BEFORE YOU SAY IT. IT\'S RUDE.'],
   },
-  othersToo: ['GO AND SAY HELLO TO THE OTHERS.'],
-  witchWait: {
-    circe: ['HAVE YOU MET THE OTHERS?'],
-    bess: ['THE OTHERS WILL WANT A WORD.'],
-    pennatella: ['GO ON, SAY HELLO TO THE OTHERS.'],
+  // Instead of "talk to the others": each witch lets slip something about a sister you
+  // haven't spoken to yet. Speaker -> sister -> hints (they take turns if you ask again).
+  witchHint: {
+    circe: {
+      bess: ['BESS IS STILL A BIT BLUE. DON\'T STARE.', 'BESS HAS TALKED TO THAT POT ALL DAY. SHE\'D LIKE A CHANGE.'],
+      pennatella: ['PENNATELLA HASN\'T TAKEN HER EYES OFF YOU.', 'PENNATELLA NEVER SAYS THANK YOU. BUT SHE DOES THANK YOU.'],
+    },
+    bess: {
+      circe: ['CIRCE LOST THE FROG, YOU KNOW. SHE TELLS IT DIFFERENT.', 'CIRCE\'S BEEN PACING BY THE WINDOW FOR THREE DAYS.'],
+      pennatella: ['PENNATELLA KEEPS SOMETHING COLD IN THE CUPBOARD. FOR GUESTS.', 'PENNATELLA PAYS HER DEBTS. EVENTUALLY.'],
+    },
+    pennatella: {
+      circe: ['CIRCE OWES YOU MORE THAN I DO. IT WAS HER FROG.', 'CIRCE HAS A LOT TO SAY. SHE ALWAYS DOES.'],
+      bess: ['BESS COULD USE SOMEONE NEW TO TALK AT.', 'MIND THE POT IF YOU GO NEAR BESS. IT BITES.'],
+    },
   },
   give: ['HERE. TAKE THIS FOR YOUR TROUBLE.'],
   gotPotion: ['YOU GOT A CRIMSON COW!'],
@@ -395,6 +404,7 @@ export const FISH = {
   gotRod: ['YOU GOT A FISHING ROD!'],
   bardAgain: ['THE FISH NEVER BIT FOR ME. TRY BY THE OLD FISHER, EAST OF THE VILLAGE.'],
   bardDone: ['A BIG RED HERRING? HA! THE LAKE NEVER GAVE ME ONE OF THOSE.'],
+  pile: ['A PILE OF WORMS. THEY WRIGGLE.'],
   pickWorm: ['YOU PICK UP A WORM.'],
   wormFriend: ['I\'D LOVE FISHING WITH YOU, EVEN IF YOU ARE A WORM.'],
   haveWorm: ['YOU ALREADY HAVE A WORM. ONE IS PLENTY.'],
@@ -410,7 +420,7 @@ export const FISH = {
   cooked: ['THERE. A BIG RED HERRING.', 'COOKED JUST RIGHT.'],
   gotHerring: ['YOU GOT A BIG RED HERRING!'],
   eat: ['YOU EAT THE BIG RED HERRING.'],
-  better: ['WOW. I WONDER IF I COULD HAVE SPENT MY TIME BETTER.'],
+  better: ['WOW! A BIG RED HERRING. WHAT A GREAT USE OF MY TIME!'],
   fisherAfter: ['TEN YEARS I SAT HERE. YOU GOT ONE IN A MINUTE.', 'I\'M NOT ANGRY. I\'M JUST... THINKING.'],
 };
 

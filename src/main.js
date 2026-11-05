@@ -284,15 +284,30 @@ function dialogTap(x, y, by) {
   }
   dialogA();
 }
+// "RED HERRING" is always drawn a little bold, even when it wraps onto the next line.
+const BOLD = /RED HERRING/g;
+function boldMask(page) {
+  if (page.bold) return page.bold;
+  const lines = page.lines, flat = lines.join(' '), mask = lines.map(() => null);
+  for (const m of flat.matchAll(BOLD)) {
+    for (let p = m.index; p < m.index + m[0].length; p++) {
+      let i = 0, off = p;
+      while (i < lines.length && off > lines[i].length) { off -= lines[i].length + 1; i++; }
+      if (i < lines.length && off < lines[i].length) (mask[i] = mask[i] || [])[off] = true;
+    }
+  }
+  return (page.bold = mask);
+}
 function drawDialog(by) {
   if (!D.active || !D.page) return;
   const w = dialogW(), bx = dialogX();
   if (D.name) { box(ctx, bx + 6, by - 13, textWidth(D.name) + 14, 16, '#9a643e'); text(ctx, D.name, bx + 13, by - 9, '#fff6dc'); }
   box(ctx, bx, by, w, 44);
   let left = D.shown;
+  const bold = boldMask(D.page);
   D.page.lines.forEach((ln, i) => {
     const part = ln.slice(0, Math.max(0, left)); left -= ln.length;
-    text(ctx, part, bx + 8, by + 8 + i * 11, UI.text);
+    text(ctx, part, bx + 8, by + 8 + i * 11, UI.text, 1, bold[i] && (k => bold[i][k]));
   });
   if (D.shown >= D.total) {
     if (D.page.ask) {
@@ -1003,9 +1018,14 @@ const Play = {
       if (!n.told) {
         n.told = true;
         const all = W.every(id => this.npc(id).told);
-        lines = [...QUEST.witchTalk[n.id], ...(all ? [] : QUEST.othersToo)];
+        const left = W.filter(id => !this.npc(id).told);
+        lines = [...QUEST.witchTalk[n.id], ...(all ? [] : [QUEST.witchHint[n.id][left[0]][0]])];
         if (all) after = () => this.run(function* () { yield* potionScene.call(this, n); });
-      } else lines = QUEST.witchWait[n.id];
+      } else { // a hint about a sister you still haven't spoken to, a different one each time
+        const left = W.filter(id => !this.npc(id).told), hs = left.flatMap(id => QUEST.witchHint[n.id][id]);
+        n.hints = (n.hints || 0) + 1;
+        lines = [hs[n.hints % hs.length]];
+      }
     }
     else if (n.id === 'dog' && n.talked % 3 === 2 && !n.moving) { n.talked++; this.run(function* () { yield* bellyScene.call(this, n); }); return; }
     else if (n.id === 'bard' && !n.chicken && !n.awake) {
@@ -1459,12 +1479,13 @@ function* bellyScene(n) {
 // The worm pile: pick one up, or bait your hook if you have the rod.
 function* wormScene() {
   const hero = G.name;
-  if (G.flags.bait) { yield* talk(FISH.baited); return; }
-  if (G.flags.worm) { yield* talk(FISH.haveWorm); return; }
+  // first you see what it is, then you take one
   Audio.sfx('select');
-  if (G.flags.rod) { G.flags.bait = 1; yield* talk(FISH.bait); yield* talk(FISH.canFish, false, null, hero); return; }
+  if (G.flags.bait) { yield* talk([...FISH.pile, ...FISH.baited]); return; }
+  if (G.flags.worm) { yield* talk([...FISH.pile, ...FISH.haveWorm]); return; }
+  if (G.flags.rod) { G.flags.bait = 1; yield* talk([...FISH.pile, ...FISH.bait]); yield* talk(FISH.canFish, false, null, hero); return; }
   G.flags.worm = 1;
-  yield* talk(FISH.pickWorm);
+  yield* talk([...FISH.pile, ...FISH.pickWorm]);
   yield* talk(FISH.wormFriend, false, null, hero);
 }
 

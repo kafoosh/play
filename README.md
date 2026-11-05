@@ -154,7 +154,7 @@ rusty key.
 It always lands on open ground you can reach (never in the water), and nobody wanders onto
 it. Pick it up, then press A at the blue door: "LOCKED." / "...WAIT. THE KEY!" and it opens. Inside are three witches, stuck in for three days since their own frog swallowed the
 door key and escaped out the window. Each tells her part of the story when you talk to
-her; talk to all three (any order). The third one tosses you a can of **Crimson Cow** (silver and blue): you
+her, and lets slip a hint about a sister you haven't spoken to yet; talk to all three (any order). The third one tosses you a can of **Crimson Cow** (silver and blue): you
 hold it up, drink it (it does nothing, but you feel energised), and when you step back
 outside you've grown a pair of wings: "HUH. I GUESS CRIMSON COW GIVES YOU FEATHERS."
 
@@ -171,8 +171,7 @@ outside you've grown a pair of wings: "HUH. I GUESS CRIMSON COW GIVES YOU FEATHE
   the lake beside the old fisher and "THIS DOESN'T LOOK LIKE A GOOD PLACE TO FISH."
 - By the fisher: you cast, get a bite and reel in a red fish ("MAYBE A SNAPPER OR
   SOMETHING"). The fisher can't believe it, cooks it on a little fire, tells you it's a
-  BIG RED HERRING and hands it back. You eat it: "WOW. I WONDER IF I COULD HAVE SPENT MY
-  TIME BETTER." It only bites once.
+  BIG RED HERRING and hands it back. You eat it: "WOW! A BIG RED HERRING. WHAT A GREAT USE OF MY TIME!" "RED HERRING" is always drawn slightly bold. It only bites once.
 
 ### Along the way
 
