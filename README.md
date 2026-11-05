@@ -42,9 +42,9 @@ Arm the card on the **title screen**, then hand over the phone.
    Every tap makes a little sparkle wherever you touch, so the value tap looks like
    playing with the screen. The last tap counts.
 
-   **Confirmation:** a sky tap makes a pale burst of sparkle-dots that flicks into the
-   shape of the number you hit (for example a dotted "7") for a split second, then
-   scatters. The whole thing is over in half a second, so to anyone else it is a twinkle.
+   **Confirmation:** a sky tap shows the number you hit in sparkle-dots for a split
+   second (under a tenth of a second), then it falls apart into ordinary tap sparkles,
+   just like a tap on the grass.
 
 2. **Suit**: tap the (wide) **START** button in one of its four quarters, left to right in CHaSeD order:
    **Clubs, Hearts, Spades, Diamonds**. This also starts the game. The 2nd and 4th
