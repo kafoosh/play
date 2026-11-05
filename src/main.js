@@ -1,4 +1,4 @@
-import { C, UI, text, textCenter, textWidth, tinyText, hatSprite, wingSprite, keySprite, potionSprite, fishSprite, dogBellySprite, wrap, box, blob, glow, glyphDots, drawCard, makeScroll, charSprite, drawTile, drawOver, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
+import { C, UI, text, textCenter, textWidth, tinyText, hatSprite, wingSprite, keySprite, potionSprite, fishSprite, dogBellySprite, luteSprite, wrap, box, blob, glow, glyphDots, drawCard, makeScroll, charSprite, drawTile, drawOver, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
 import { MAPS, LOOKS, NPCS, SCRIPT, cardName, decodeWord, VALUE_GRID, CHASED, CLASSES, SKINS, HAIRS, OUCH, GRUDGE, KONAMI, EGG, squawk, QUEST, FISH } from './data.js';
 import * as Audio from './audio.js';
 
@@ -1094,6 +1094,7 @@ const Play = {
       }
       ctx.drawImage(charSprite(look, n.dir, n.frame), n.px - cx, n.py - cy - (look.kind === 'person' && !n.sleep ? 2 : 0));
       if (n.hat && !n.chicken) ctx.drawImage(hatSprite(n.hat), n.px - cx + 2, n.py - cy - 6);
+      if (n.lute && !n.chicken && n.dir !== 'up') ctx.drawImage(luteSprite(n.dir === 'left'), n.px - cx + (n.dir === 'left' ? 1 : n.dir === 'right' ? 5 : 3), n.py - cy + 4 + (n.notes && Math.sin(this.time * 8) > 0.6 ? 1 : 0));
     }
     if (this.fishing) this.drawFishing(cx, cy);
     if (this.fire) this.drawFire(cx, cy, false);
