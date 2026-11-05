@@ -810,13 +810,23 @@ const Play = {
     this.shots = this.shots.filter(s => !s.dead);
   },
   // Nobody gets hurt: they blink, hop back a step and complain.
-  // The chicken staff: anyone (but the wizard) becomes a chicken, and stays one.
+  // The chicken staff. Anyone (but the wizard) becomes a chicken; a second bolt turns
+  // them back. A real chicken hit by it gains the power of speech (and loses it again).
   chicken(n, dir) {
-    if (n.id === 'wizard' || n.chicken || n.look.kind === 'chicken') { this.hit(n, dir); return; }
+    if (n.id === 'wizard') { this.hit(n, dir); return; }
     Audio.sfx('poof');
     for (let i = 0; i < 14; i++) { const a = Math.random() * Math.PI * 2, v = 10 + Math.random() * 25; parts.push({ k: 'spark', x: n.px + 8, y: n.py + 6, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 8, life: 0.6, col: i % 2 ? '#e8e0d0' : '#c8c0d8', world: true }); }
-    n.chicken = true; n.look = LOOKS.chicken; n.sleep = false; n.spear = false; n.notes = false; n.hitT = 0.3;
-    parts.push({ k: 'say', text: 'BAWK!', x: n.px + 8, y: n.py - 9, vy: -14, life: 1.3, world: true });
+    let shout;
+    if (n.chicken) {
+      Object.assign(n, n.orig); n.chicken = false; n.dazed = true; shout = '...HUH?';
+    } else if (n.look.kind === 'chicken') {
+      n.awake = !n.awake; shout = n.awake ? '!?' : 'BAWK.';
+    } else {
+      n.orig = { look: n.look, sleep: n.sleep, spear: n.spear, notes: n.notes };
+      n.chicken = true; n.look = LOOKS.chicken; n.sleep = false; n.spear = false; n.notes = false; shout = 'BAWK!';
+    }
+    n.hitT = 0.3;
+    parts.push({ k: 'say', text: shout, x: n.px + 8, y: n.py - (n.sleep ? 4 : 9), vy: -14, life: 1.3, world: true });
   },
   hit(n, dir) {
     const key = n.id === 'wizard' ? 'wizard' : n.chicken ? 'chicken' : OUCH[n.id] ? n.id : OUCH[n.look.kind] ? n.look.kind : 'person';
@@ -891,7 +901,9 @@ const Play = {
     if (n.id === 'wizard') { if (!G.flags.met) this.run(wizardScene); return; }
     if (!n.sleep && n.look.kind !== 'frog') n.dir = OPP[this.p.dir];
     let lines = n.talked && n.again ? n.again : n.talk;
-    if (n.chicken) lines = lines.map(l => squawk(fill(l)));
+    if (n.awake) { const w = EGG.woke[n.id] || EGG.woke.hen1; lines = n.wokeTalked ? w.again : w.talk; n.wokeTalked = true; }
+    else if (n.chicken) lines = lines.map(l => squawk(fill(l)));
+    else if (n.dazed && n.look.kind === 'person' && !n.sleep) { lines = [...EGG.restored, ...lines]; n.dazed = false; }
     else if (n.hurt && !n.grudged && n.look.kind === 'person' && !n.sleep) { lines = [GRUDGE[(n.hurt - 1) % GRUDGE.length], ...lines]; n.grudged = true; }
     n.talked++;
     say(lines, {

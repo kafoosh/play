@@ -147,8 +147,12 @@ keyboard: arrows, then X, Z). An evil wizard flies down out of the sky and gives
 hero a **chicken staff** and a **wizard hat** (worn from then on). The staff replaces
 the hero's weapon: press B and it fires a spark (aimed like the bow) that turns whoever
 it hits into a chicken for the rest of the game. Chickens still talk, but everything
-they say comes out as squawks ("BAWK BUK-BUK BAGAWK."), keeping the punctuation. The
-wizard in the castle is immune, so the reveal always works. It only happens once per game.
+they say comes out as squawks ("BAWK BUK-BUK BAGAWK."), keeping the punctuation. A
+second bolt turns them back; they're a bit shaken ("...WHAT JUST HAPPENED? I HAD
+FEATHERS."). The village's real chickens, hit by the staff, gain the power of speech
+and have an existential crisis ("I THINK, THEREFORE I BAWK."); another bolt takes the
+words away again. The wizard in the castle is immune, so the reveal always works. The
+egg only happens once per game.
 
 ### Music
 

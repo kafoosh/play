@@ -281,6 +281,15 @@ export const KONAMI = ['up', 'up', 'down', 'down', 'left', 'right', 'left', 'rig
 export const EGG = {
   hello: ['HEH HEH HEH. YOU KNOW THE OLD WORDS.', 'NOBODY HAS SAID THEM IN A HUNDRED YEARS.', 'TAKE THIS STAFF. AND THIS HAT. THEY SUIT YOU.', 'POINT IT AT SOMEONE AND PRESS B. YOU WILL SEE.', 'AND DON\'T TELL THE OTHER WIZARD.'],
   got: ['YOU GOT THE CHICKEN STAFF!', 'YOU GOT A WIZARD HAT!'],
+  // a villager turned back from a chicken, the first time you talk to them
+  restored: ['...WHAT JUST HAPPENED?', 'I HAD FEATHERS. SUCH LOVELY FEATHERS.'],
+  // a real chicken that the staff has given words to
+  woke: {
+    hen1: { talk: ['I CAN... TALK?', 'WAIT. AM I A CHICKEN? HAVE I ALWAYS BEEN A CHICKEN?', 'ALL THOSE YEARS OF PECKING AT THE GROUND. WHAT WAS IT ALL FOR?'],
+      again: ['I THINK, THEREFORE I BAWK.'] },
+    hen2: { talk: ['WHAT IS THIS? WORDS? IN MY BEAK?', 'I HAVE SO MANY QUESTIONS. WHY DID I CROSS THAT ROAD? WHAT WAS ON THE OTHER SIDE?', 'NOBODY EVER TOLD ME.'],
+      again: ['IF I LAY AN EGG AND NOBODY SEES IT, DID I LAY IT?'] },
+  },
 };
 // Turn speech into chicken. Keeps the punctuation so it still "reads" like the original.
 const BAWKS = ['BAWK', 'BUK', 'BUK-BUK', 'BAGAWK', 'CLUCK', 'BAWK', 'BUK', 'BRAAWK'];
