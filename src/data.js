@@ -175,6 +175,7 @@ export const LOOKS = {
   gate: P({ hair: '#3a2a1e', tunic: '#6a1e24', cloak: '#6a6c74', acc: 'helmet', skin: '#8a5534' }),
   woodcutter: P({ hair: '#8a3a22', tunic: '#7a2e24', cloak: '#4a3a24', beard: true, beardColor: '#8a3a22' }),
   storyteller: P({ hair: '#9a9aa2', tunic: '#2e4a6a', cloak: '#7a2e24', beard: true, beardColor: '#b8b8c0', acc: 'cap', cap: '#7a2e24', skin: '#d8a882' }),
+  fanseller: P({ hair: '#6a2e3a', tunic: '#d8507a', cloak: '#5a2a4a', long: true }),
   friar: P({ hair: '#5a3e26', tunic: '#6a4a2e', cloak: '#4a3220', acc: 'hood', hood: '#5a3e26' }),
   bard: P({ hair: '#b8903a', tunic: '#5a3a7a', cloak: '#2e4a3a', acc: 'cap', cap: '#2e5a3a' }),
   sleeper: P({ hair: '#5a3a22', tunic: '#7a5232', sleep: true, skin: '#d8a882' }),
@@ -232,13 +233,17 @@ export const NPCS = [
     talk: ['I WROTE A SONG ABOUT THE WIZARD.', 'HE HUMMED IT BACK TO ME. BEFORE I EVER PLAYED IT.'],
     again: ['LA LA LAAA... NO. THAT\'S NOT IT.'] },
   // the storyteller by the log in the village
-  { id: 'teller', name: 'ANDREWS', map: 'world', x: 21, y: 33, look: 'storyteller', dir: 'left',
-    talk: ['I TELL THE BEST STORIES IN THE VILLAGE.', 'THE PIPER WHO PLAYED A WOLF TO SLEEP.', 'THE SINGER AT THE BOTTOM OF THE WELL.', 'THE FRIAR WHO PLAYED UP A TIGER.', 'BUT THOSE ARE FOR ANOTHER TIME.', 'I\'M QUITE THE EXPERT AT THE BARD FABLE, YOU KNOW.'],
+  { id: 'teller', name: 'STORY TELLER', map: 'world', x: 21, y: 33, look: 'storyteller', dir: 'left',
+    talk: ['I TELL THE BEST STORIES IN THE VILLAGE.', 'THE PIPER WHO PLAYED A WOLF TO SLEEP.', 'THE FRIAR WHO PLAYED UP A TIGER.', 'BUT THOSE ARE FOR ANOTHER TIME.', 'I\'M QUITE THE EXPERT AT THE BARD FABLE, YOU KNOW.'],
     again: ['ANOTHER TIME, I SAID. A GOOD TALE NEEDS A FIRE AND A FULL CUP.'] },
   // a travelling friar with a lute, playing to the ruins of the Tower of Winds
   { id: 'friar', name: 'BARD CHRISTIAN', map: 'world', x: 7, y: 13, look: 'friar', dir: 'down', notes: true, lute: true,
-    talk: ['PEACE, FRIEND. I AM BARD CHRISTIAN.', 'I PLAY FOR THE OLD TOWER. IT LOVED MUSIC, BEFORE THE WIND LEFT.', 'PLAY THE LOW STRINGS AND A BLACK TIGER COMES OUT OF THE TREES.', 'PLAY THE HIGH ONES AND A WHITE GHOST SITS DOWN TO LISTEN.', 'BOTH AT ONCE? THE ABBOT SAYS NEVER.'],
+    talk: ['PEACE, FRIEND. I AM BARD CHRISTIAN.', 'I PLAYED FOR THE OLD TOWER, BEFORE THE WIND LEFT.', 'LOW STRINGS CALL A BLACK TIGER. HIGH ONES, A WHITE GHOST.', 'BOTH AT ONCE? THE ABBOT SAYS NEVER.'],
     again: ['I KEEP TO THE MIDDLE STRINGS. SAFER THAT WAY.'] },
+  // no wind since the Still Night, so everyone's building fans
+  { id: 'fans', name: 'FAN SELLER', map: 'world', x: 8, y: 33, look: 'fanseller', dir: 'down', fan: true,
+    talk: ['TALLY HO! TALLY HO!', 'FAN PARTS! NO WIND, SO BUILD YOUR OWN BREEZE.', 'RIBS, RIVETS, HANDLES. THE FRONTS SOLD FIRST, OF COURSE.', 'ALL I\'VE GOT LEFT ARE FAN BACKS.', 'TALLY HO!'],
+    again: ['FAN BACKS! HALF A FAN STILL MAKES HALF A BREEZE.'] },
   { id: 'sleeper', name: '???', map: 'world', x: 15, y: 17, look: 'sleeper', sleep: true,
     talk: ['ZZZ...'], again: ['ZZZ... FIVE MORE MINUTES... ZZZ...'] },
   { id: 'gate', name: 'GATE GUARD', map: 'world', x: 17, y: 5, look: 'gate', dir: 'down', spear: true,

@@ -526,6 +526,14 @@ export function luteSprite(flip = false) {
   return luteC[k];
 }
 
+// A paper fan, open, held up.
+const FAN = ['ooooooo', 'oPWPWPo', '.oPWPo.', '..oPo..', '...k...'];
+let fanC = null;
+export function fanSprite() {
+  if (!fanC) { let x; [fanC, x] = makeCanvas(7, 5); grid(x, FAN, 0, 0, { o: C.ink, P: '#e87a9a', W: '#f4ecd8', k: '#5a3a22' }); }
+  return fanC;
+}
+
 // A small rusty key lying on the ground.
 const KEY = ['.oo.......', 'oyyo......', 'oy.yoooooo', 'oyyoyyyyyo', '.oo.o.oo.o', '....o..o..'];
 let keyCanvas = null;
