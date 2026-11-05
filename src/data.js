@@ -223,8 +223,8 @@ export const SUIT_NAMES = { C: 'CLUBS', H: 'HEARTS', S: 'SPADES', D: 'DIAMONDS' 
 export const CHASED = ['C', 'H', 'S', 'D'];
 export function cardName(v, s) { return `${VALUE_NAMES[v]} OF ${SUIT_NAMES[s]}`; }
 
-// Title-screen value grid (reading order), King is the band underneath.
-export const VALUE_GRID = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]];
+// Title-screen value grid: three per row in reading order, 13 is the band underneath.
+export const VALUE_GRID = [[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]];
 
 // Parse a URL force like "7D", "12h", "1S" (numbers only: 1 = Ace, 11-13 = J Q K).
 export function parseForce(str) {

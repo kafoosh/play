@@ -17,28 +17,29 @@ Arm the card on the **title screen**, then hand over the phone.
 1. **Value**: tap the sky. The area above the START button is an invisible grid:
 
    ```
-   +----+----+----+----+
-   | 1  | 2  | 3  | 4  |      1 = Ace
-   +----+----+----+----+
-   | 5  | 6  | 7  | 8  |
-   +----+----+----+----+
-   | 9  | 10 | 11 | 12 |      11 = Jack, 12 = Queen
-   +----+----+----+----+
-   |         13        |   <- the band just above START (King)
-   +-------------------+
+   +------+------+------+
+   |  1   |  2   |  3   |      1 = Ace
+   +------+------+------+
+   |  4   |  5   |  6   |
+   +------+------+------+
+   |  7   |  8   |  9   |
+   +------+------+------+
+   |  10  |  11  |  12  |      11 = Jack, 12 = Queen
+   +------+------+------+
+   |         13         |   <- the band just above START (King)
+   +--------------------+
    ```
 
    Values are always numbers, here and in the URL: 1 = Ace, 11 = Jack, 12 = Queen,
    13 = King. The revealed card still shows a real J, Q or K.
 
-   The grid covers the full width, from the top of the screen down to just above
-   START, in four equal rows. Every tap makes a little sparkle wherever you touch, so
+   The grid covers the full width, three columns across, from the top of the screen
+   down to just above START, in five equal rows. Every tap makes a little sparkle wherever you touch, so
    the value tap looks like playing with the screen. The last tap counts.
 
-   **Hidden guides:** the sky's colour bands change exactly on the three row lines,
-   and on each row line a steady, faint star sits where the column lines cross (at
-   1/4, 1/2 and 3/4 of the width). Stars low enough to fall behind the mountains are
-   left out. It just looks like dusk unless you know.
+   **Confirmation:** a sky tap makes a quick, pale burst of sparkle-dots that gathers
+   into the shape of the number you hit (for example a dotted "7"), then scatters and
+   fades in under a second. To anyone else it looks like a twinkle.
 
 2. **Suit**: tap **START** in one of its four quarters, left to right in CHaSeD order:
    **Clubs, Hearts, Spades, Diamonds**. This also starts the game. The 2nd and 4th

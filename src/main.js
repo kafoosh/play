@@ -1,4 +1,4 @@
-import { C, UI, text, textCenter, textWidth, wrap, box, blob, glow, drawCard, makeScroll, charSprite, drawTile, drawOver, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
+import { C, UI, text, textCenter, textWidth, wrap, box, blob, glow, glyphDots, drawCard, makeScroll, charSprite, drawTile, drawOver, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
 import { MAPS, LOOKS, NPCS, SCRIPT, cardName, decodeWord, VALUE_GRID, CHASED, CLASSES, SKINS, HAIRS, OUCH, GRUDGE } from './data.js';
 import * as Audio from './audio.js';
 
@@ -170,6 +170,16 @@ function drawParts(cx = 0, cy = 0) {
         ctx.globalCompositeOperation = 'source-over';
       }
     }
+    else if (p.k === 'pix') {
+      const age = p.max - p.life - p.d;
+      if (age < 0) continue;
+      const k = Math.min(1, age / 0.14), drift = Math.max(0, age - 0.32) * 0.9;
+      const px = p.ox + (p.tx - p.ox) * (k + drift), py = p.oy + (p.ty - p.oy) * (k + drift);
+      const a = Math.min(1, p.life / 0.3) * 0.75;
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.fillStyle = `rgba(240,226,180,${a.toFixed(2)})`; ctx.fillRect(Math.round(px), Math.round(py), 1, 1);
+      ctx.globalCompositeOperation = 'source-over';
+    }
     else if (p.k === 'say') {
       const w = textWidth(p.text) + 6, x0 = Math.round(x - w / 2), y0 = Math.round(y);
       ctx.fillStyle = UI.edgeD; ctx.fillRect(x0 - 1, y0 - 1, w + 2, 11); ctx.fillRect(x0 + w / 2 - 1 | 0, y0 + 10, 3, 2);
@@ -189,6 +199,15 @@ function drawParts(cx = 0, cy = 0) {
 
 function mote(x, y, world = false) {
   parts.push({ k: 'mote', x, y, vx: (Math.random() - 0.5) * 4, vy: -3 - Math.random() * 5, life: 3 + Math.random() * 3, p: Math.random() * 6, col: Math.random() < 0.55 ? '#7ae0ff' : '#ffd27a', world });
+}
+// A sky tap: a little burst of sparkles that gathers into the number's shape for a
+// moment, then scatters and fades. Pale and quick, so it reads as a twinkle.
+function numberBurst(x, y, v) {
+  const dots = glyphDots(String(v)), w = String(v).length * 6 - 1;
+  for (const [i, j] of dots) {
+    const tx = x + (i - w / 2) * 2, ty = y + (j - 3.5) * 2;
+    parts.push({ k: 'pix', x, y, tx, ty, ox: x, oy: y, life: 0.85, max: 0.85, d: Math.random() * 0.06 });
+  }
 }
 // Darkened corners, cached per screen size.
 let vig = null;
@@ -333,24 +352,15 @@ function backdropArt() {
 function drawBackdrop(t, night = false) {
   const art = backdropArt();
   const H = Math.round(VH * 0.62);
-  const sky = night ? ['#0c0a1c', '#141228', '#1c1834', '#261e40', '#32264a'] : ['#16132e', '#241c46', '#3e2a58', '#5e3660', '#8a4a5a'];
-  // The colour bands change exactly on the secret grid's row lines, and four steady
-  // stars sit on each line where the columns meet. Only the performer will see a grid.
-  const top = startBox().y - 4, rows = [0, top / 4, top / 2, top * 3 / 4, H].map(Math.round);
-  for (let i = 0; i < 4; i++) {
-    ctx.fillStyle = sky[i]; ctx.fillRect(0, rows[i], VW, rows[i + 1] - rows[i] + 1);
-    if (i) { ctx.fillStyle = sky[i - 1]; for (let x = 0; x < VW; x += 2) { ctx.fillRect(x + (i % 2), rows[i], 1, 1); ctx.fillRect(x, rows[i] + 2, 1, 1); } }
-  }
-  ctx.fillStyle = sky[4]; for (let y = H - 10; y < H; y += 2) for (let x = (y / 2) % 2; x < VW; x += 2) ctx.fillRect(x, y, 1, 1);
-  ctx.fillStyle = night ? '#7a74a0' : '#9a90b8';
-  for (let r = 1; r <= 3; r++) for (let c = 1; c <= 3; c++) {
-    const gy = rows[r], gx = Math.round(VW * c / 4);
-    if (gy < H - 32) ctx.fillRect(gx, gy, 1, 1);
+  const sky = night ? ['#0c0a1c', '#141228', '#1c1834', '#261e40', '#32264a'] : ['#16132e', '#241c46', '#3e2a58', '#6e3e5e', '#b0624e'];
+  const bh = Math.ceil(H / sky.length);
+  for (let i = 0; i < sky.length; i++) {
+    ctx.fillStyle = sky[i]; ctx.fillRect(0, i * bh, VW, bh + 1);
+    if (i) { ctx.fillStyle = sky[i - 1]; for (let x = 0; x < VW; x += 2) { ctx.fillRect(x + (i % 2), i * bh, 1, 1); ctx.fillRect(x, i * bh + 2, 1, 1); } }
   }
   for (const s of STARS) {
     if (!night && s.y > 0.55) continue;
     const b = Math.sin(t * 2 + s.p), sx = (s.x * VW) | 0, sy = (s.y * H * 0.85) | 0;
-    if (rows.some(r => Math.abs(r - sy) < 3)) continue; // keep the grid lines clean
     if (b > -0.3) { ctx.fillStyle = b > 0.7 ? '#f4ecd8' : '#9a90b8'; ctx.fillRect(sx, sy, 1, 1); if (b > 0.95) { ctx.fillRect(sx - 1, sy, 3, 1); ctx.fillRect(sx, sy - 1, 1, 3); } }
   }
   // crescent moon
@@ -427,7 +437,6 @@ const Title = {
   onTap(x, y) {
     if (this.go) return;
     if (this.cheat) { this.cheat = false; return; }
-    spark(x, y, 5, '#ffe9a0');
     // performer cheat sheet: triple-tap the empty grass at the bottom middle
     if (y >= VH - 20 && Math.abs(x - VW / 2) < 28) {
       const now = this.t; this.credit = this.credit.filter(c => now - c < 0.9); this.credit.push(now);
@@ -442,9 +451,10 @@ const Title = {
     }
     const top = S.y - 4;
     if (y < top && !G.locked) {
-      const row = Math.min(3, Math.floor(y / (top / 4)));
-      G.armed.v = row < 3 ? VALUE_GRID[row][Math.max(0, Math.min(3, Math.floor(x / (VW / 4))))] : 13;
-    }
+      const row = Math.min(4, Math.floor(y / (top / 5)));
+      G.armed.v = row < 4 ? VALUE_GRID[row][Math.max(0, Math.min(2, Math.floor(x / (VW / 3))))] : 13;
+      numberBurst(x, y, G.armed.v);
+    } else spark(x, y, 5, '#ffe9a0');
   },
   onA() { if (!this.cheat) this.begin(); else this.cheat = false; },
   begin() {
@@ -461,13 +471,13 @@ function drawCheat() {
   ctx.save(); ctx.translate(ox, oy);
   box(ctx, 6, 6, 148, 132);
   textCenter(ctx, 'CHEAT SHEET', 80, 13, UI.accent);
-  const gx = 20, gy = 24, cw = 30, ch = 13;
+  const gx = 22, gy = 22, cw = 39, ch = 11;
   VALUE_GRID.forEach((row, j) => row.forEach((v, i) => {
     ctx.fillStyle = UI.paperD; ctx.fillRect(gx + i * cw, gy + j * ch, cw - 2, ch - 2);
-    textCenter(ctx, String(v), gx + i * cw + cw / 2 - 1, gy + j * ch + 2, UI.text);
+    textCenter(ctx, String(v), gx + i * cw + cw / 2 - 1, gy + j * ch + 1, UI.text);
   }));
-  ctx.fillStyle = UI.paperD; ctx.fillRect(gx, gy + 3 * ch, cw * 4 - 2, ch - 2);
-  textCenter(ctx, '13', gx + cw * 2 - 1, gy + 3 * ch + 2, UI.text);
+  ctx.fillStyle = UI.paperD; ctx.fillRect(gx, gy + 4 * ch, cw * 3 - 2, ch - 2);
+  textCenter(ctx, '13', gx + cw * 1.5 - 1, gy + 4 * ch + 1, UI.text);
   text(ctx, 'TAP THE SKY FOR VALUE', 18, 79, UI.dim);
   ['C', 'H', 'S', 'D'].forEach((s, i) => {
     ctx.fillStyle = '#ecc890'; ctx.fillRect(32 + i * 24, 90, 22, 12);
