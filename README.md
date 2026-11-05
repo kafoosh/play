@@ -171,8 +171,7 @@ outside you've grown a pair of wings: "HUH. I GUESS CRIMSON COW GIVES YOU FEATHE
   the lake beside the old fisher and "THIS DOESN'T LOOK LIKE A GOOD PLACE TO FISH."
 - By the fisher: you cast, get a bite and reel in a red fish ("MAYBE A SNAPPER OR
   SOMETHING"). The fisher can't believe it, cooks it on a little fire, tells you it's a
-  BIG RED HERRING and hands it back. You eat it: "WOW. I WONDER IF I COULD HAVE SPENT MY
-  TIME BETTER." It only bites once.
+  BIG RED HERRING and hands it back. You eat it: "WOW! A BIG RED HERRING. WHAT A GREAT USE OF MY TIME!" "RED HERRING" is always drawn slightly bold. It only bites once.
 
 ### Along the way
 
