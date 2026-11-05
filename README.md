@@ -151,14 +151,27 @@ they say comes out as squawks ("BAWK BUK-BUK BAGAWK."), keeping the punctuation.
 second bolt turns them back; they're a bit shaken ("...WHAT JUST HAPPENED? I HAD
 FEATHERS."). The village's real chickens, hit by the staff, gain the power of speech
 and have an existential crisis ("I THINK, THEREFORE I BAWK."); another bolt takes the
-words away again. The wizard in the castle is immune, so the reveal always works. The
-egg only happens once per game.
+words away again. The egg only happens once per game.
+
+The castle wizard can be zapped too. He becomes a chicken that keeps his hat and staff,
+and squawks his whole speech, YES/NO question included. The reveal still works: the card
+or word appears as usual, and the only real words he says are the answer itself
+("BUK BUK... SEVEN OF DIAMONDS!"). Another bolt turns him back.
 
 ### Music
 
 The title theme is unchanged. The road theme is a slow D-dorian tune over a drone-like
 bass, the castle theme is in E minor, the reveal is a minor arpeggio that opens into
 major, and the ending is bittersweet A minor.
+
+### Sound
+
+Sound starts on the first tap (browsers need a touch before they play audio). It pauses
+when you leave the browser or switch apps, and comes back when you return. If a phone
+refuses to restart sound by itself, the next tap anywhere brings it back. This follows
+the approach in Modern-Ouija-Mini, so a backgrounded tab on Android doesn't keep playing
+(and stuttering). On iPhone it asks for playback audio, so it plays with the silent switch
+on (recent iOS).
 
 ## Run locally
 

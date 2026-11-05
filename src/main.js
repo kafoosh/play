@@ -104,7 +104,6 @@ screen.addEventListener('pointerdown', e => {
 document.addEventListener('contextmenu', e => e.preventDefault());
 // iOS only counts some events as a gesture that may start audio.
 for (const ev of ['touchend', 'click']) document.addEventListener(ev, () => Audio.unlock(), { passive: true });
-document.addEventListener('visibilitychange', () => Audio.setPaused(document.hidden));
 
 // Full screen: a whole number of device pixels per game pixel keeps the art crisp,
 // with at least 160 game pixels across the short side of the screen.
@@ -590,7 +589,7 @@ const ClassScene = {
     const c = this.heroes[this.i].def;
     box(ctx, 6, 70, 148, 40);
     text(ctx, c.name, 14, 77, UI.accent);
-    text(ctx, `WEAPON: ${c.weapon} (${c.range})`, 14, 87, UI.text);
+    text(ctx, `WEAPON: ${c.weapon}`, 14, 87, UI.text);
     text(ctx, `HP ${c.hp}  MP ${c.mp}`, 14, 97, UI.text);
     box(ctx, 48, 113, 64, 19);
     textCenter(ctx, 'CHOOSE', 80, 119, UI.text);
@@ -805,11 +804,12 @@ const Play = {
   // The chicken staff. Anyone (but the wizard) becomes a chicken; a second bolt turns
   // them back. A real chicken hit by it gains the power of speech (and loses it again).
   chicken(n, dir) {
-    if (n.id === 'wizard') { this.hit(n, dir); return; }
     Audio.sfx('poof');
     for (let i = 0; i < 14; i++) { const a = Math.random() * Math.PI * 2, v = 10 + Math.random() * 25; parts.push({ k: 'spark', x: n.px + 8, y: n.py + 6, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 8, life: 0.6, col: i % 2 ? '#e8e0d0' : '#c8c0d8', world: true }); }
     let shout;
-    if (n.chicken) {
+    if (n.id === 'wizard') {
+      n.chicken = !n.chicken; shout = n.chicken ? 'BAWK!?' : 'HM.'; // keeps his hat and staff
+    } else if (n.chicken) {
       Object.assign(n, n.orig); n.chicken = false; n.dazed = true; shout = '...HUH?';
     } else if (n.look.kind === 'chicken') {
       n.awake = !n.awake; shout = n.awake ? '!?' : 'BAWK.';
@@ -849,7 +849,7 @@ const Play = {
     const w = m.def.warps[`${p.x},${p.y}`];
     if (w) { Audio.sfx('door'); fadeTo(() => this.load(w.map, w.x, w.y, w.dir), 0.25); return; }
     if (m.name === 'castle') {
-      if (p.y <= 6 && !G.flags.closer) { G.flags.closer = 1; this.run(function* () { yield* talk(SCRIPT.comeCloser, true, null, 'WIZARD'); }); }
+      if (p.y <= 6 && !G.flags.closer) { G.flags.closer = 1; this.run(function* () { yield* talk(SCRIPT.comeCloser.map(wz), true, null, 'WIZARD'); }); }
       if (p.y <= 4 && !G.flags.met) { p.dir = 'up'; this.run(wizardScene); }
     }
   },
@@ -962,7 +962,7 @@ const Play = {
       if (sx > VW || sy > VH || sx + r * 2 < 0 || sy + r * 2 < 0) continue;
       ctx.drawImage(glow(r, L.col), sx, sy);
     }
-    if (wiz) ctx.drawImage(glow(wiz.frame ? 40 : 22, '#3ab8e0'), wiz.px - cx + 15 - (wiz.frame ? 40 : 22), wiz.py - cy - 6 - (wiz.frame ? 40 : 22));
+    if (wiz) { const r = wiz.frame ? 40 : 22, ox = wiz.chicken ? 12 : 15, oy = wiz.chicken ? -3 : -6; ctx.drawImage(glow(r, '#3ab8e0'), wiz.px - cx + ox - r, wiz.py - cy + oy - r); }
     ctx.globalCompositeOperation = 'source-over';
     for (const f of m.flames) flame(ctx, f.x - cx, f.y - cy, this.time + f.x, f.big);
     this.drawShots(cx, cy);
@@ -1045,6 +1045,16 @@ const Play = {
     if (Math.random() < 0.5) parts.push({ k: 'spark', x: v.x + 4 + Math.random() * 10, y: v.y + 12, vx: 0, vy: 8, life: 0.5, col: '#8a4ab0', world: true });
   },
   drawWizard(n, cx, cy) {
+    if (n.chicken) {
+      // a chicken in a wizard's hat, still holding the staff
+      const x = n.px - cx, y = n.py - cy, hop = n.frame ? -2 : 0, up = n.frame ? 3 : 0;
+      ctx.drawImage(charSprite(LOOKS.chicken, 'left', Math.floor(this.time * 3) % 2), x, y + hop);
+      ctx.fillStyle = C.ink; ctx.fillRect(x + 11, y - 1 - up + hop, 3, 13 + up); ctx.fillStyle = C.wood; ctx.fillRect(x + 12, y - up + hop, 1, 11 + up);
+      ctx.fillStyle = C.ink; ctx.fillRect(x + 10, y - 5 - up + hop, 5, 5); ctx.fillStyle = n.frame ? '#ffffff' : C.cyan; ctx.fillRect(x + 11, y - 4 - up + hop, 3, 3);
+      ctx.drawImage(hatSprite(false), x + 1, y - 2 + hop);
+      if (Math.random() < 0.06 || n.frame) parts.push({ k: 'spark', x: n.px + 12 + Math.random() * 3 - 1, y: n.py - 4 - up + Math.random() * 3, vx: 0, vy: -6, life: 0.4, col: C.cyan, world: true });
+      return;
+    }
     const bob = n.frame ? 0 : Math.round(Math.sin(this.time * 2) * 0.6);
     ctx.drawImage(charSprite(n.look, 'down', n.frame ? 1 : 0), n.px - cx - 1, n.py - cy - 11 + bob);
     if (Math.random() < 0.06 || n.frame) parts.push({ k: 'spark', x: n.px + 15 + Math.random() * 3 - 1, y: n.py - 6 + Math.random() * 3, vx: 0, vy: -6, life: 0.4, col: C.cyan, world: true });
@@ -1071,8 +1081,11 @@ const Play = {
 const wait = s => { const until = Play.time + s; return () => Play.time >= until; };
 function* talk(lines, low = false, pos = null, name = null) { say(lines, { low, pos: pos || 'auto', name }); yield () => !D.active; }
 // "NO" loops back until they say yes.
-const ask = (q = SCRIPT.ask) => ({ ask: q, yes: [], no: () => [...SCRIPT.askNo, ask(SCRIPT.askAgain)] });
-const askWord = (q = SCRIPT.askWord) => ({ ask: q, yes: [], no: () => [...SCRIPT.askNoWord, askWord(SCRIPT.askAgain)] });
+// When the wizard is a chicken he squawks everything, except the card or word itself.
+const henWizard = () => !!(Play.npcs && Play.npc('wizard').chicken);
+const wz = l => (henWizard() ? squawk(fill(l)) : l);
+const ask = (q = SCRIPT.ask) => ({ ask: wz(q), yes: [], no: () => [...SCRIPT.askNo.map(wz), ask(SCRIPT.askAgain)] });
+const askWord = (q = SCRIPT.askWord) => ({ ask: wz(q), yes: [], no: () => [...SCRIPT.askNoWord.map(wz), askWord(SCRIPT.askAgain)] });
 // The thing the wizard reveals: the armed word on a scroll, or the armed card.
 const armedReveal = () => (G.armed.word ? { word: G.armed.word } : armedCard());
 function revealCanvas(r) {
@@ -1119,7 +1132,7 @@ function* wizardScene() {
   this.p.dir = 'up';
   yield wait(0.3);
   const word = G.armed.word;
-  yield* talk([...SCRIPT.wizard1, word ? askWord() : ask(), ...(word ? SCRIPT.wizard2Word : SCRIPT.wizard2)], true, null, 'WIZARD');
+  yield* talk([...SCRIPT.wizard1.map(wz), word ? askWord() : ask(), ...(word ? SCRIPT.wizard2Word : SCRIPT.wizard2).map(wz)], true, null, 'WIZARD');
   // the wind returns
   Audio.stopMusic();
   wiz.frame = 1;
@@ -1144,7 +1157,8 @@ function* wizardScene() {
   setTimeout(() => Audio.music('fanfare'), 250);
   for (let i = 0; i < 30; i++) parts.push({ k: 'wind', x: cx - Math.random() * 60, y: cy + Math.random() * VH, vx: 200 + Math.random() * 100, vy: 0, len: 8 + (Math.random() * 10 | 0), life: 1.5, world: true });
   yield () => !this.card.waitA && this.card.t > 1.2;
-  yield* talk(SCRIPT.wizard3, true, 'bottom', 'WIZARD');
+  const said = this.card.word || cardName(this.card.v, this.card.s);
+  yield* talk(henWizard() ? [`BUK BUK... ${said}!`, wz('FAREWELL, {N}.')] : SCRIPT.wizard3, true, 'bottom', 'WIZARD');
   yield wait(0.3);
   fadeTo(() => setScene(End), 0.6);
 }
@@ -1173,8 +1187,6 @@ const End = {
     box(ctx, Math.round(cx - 66), by, 132, 28);
     textCenter(ctx, 'THANKS FOR PLAYING,', cx, by + 7, UI.text);
     textCenter(ctx, G.name + '!', cx, by + 17, UI.accent);
-    if (this.t > 3 && Math.floor(this.t * 2) % 2) textCenter(ctx, 'PRESS A', cx, VH - 12, '#e9dcb8', 1, C.ink);
-    else textCenter(ctx, '@ODDPAQ', cx, VH - 12, '#c8b890', 1, C.ink);
     drawVignette();
   },
   onA() { if (this.t > 3) fadeTo(() => setScene(Title), 0.5); },
@@ -1222,5 +1234,5 @@ if (dbg) {
   }
 } else setScene(Title);
 requestAnimationFrame(frame);
-window.__G = G; window.__D = D; window.__SKY = SKY;
+window.__G = G; window.__D = D; window.__SKY = SKY; window.__audio = Audio.audioState; window.__ac = Audio.audioCtx;
 window.__sceneName = () => (G.scene === Title ? 'title' : G.scene === NameEntry ? 'name' : G.scene === ClassScene ? 'class' : G.scene === Play ? 'play' : 'end');

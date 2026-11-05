@@ -456,10 +456,15 @@ export function charSprite(look, dir = 'down', frame = 0) {
 // The hat from the evil wizard: worn over the hero's head.
 const HAT = ['......oo....', '.....ohho...', '.....ohho...', '....ohhhho..', '....ohyhho..', '...ohhhhhho.',
   '...obbbbbbo.', 'oohhhhhhhhoo', '.oooooooooo.'];
-let hatCanvas = null;
-export function hatSprite() {
-  if (!hatCanvas) { let x; [hatCanvas, x] = makeCanvas(12, 9); grid(x, HAT, 0, 0, { o: C.ink, h: '#3a1a3e', y: '#e8c84a', b: '#a8302a' }); }
-  return hatCanvas;
+const hats = {};
+// evil: the dark hat from the evil wizard. Otherwise the castle wizard's purple one.
+export function hatSprite(evil = true) {
+  const k = evil ? 'evil' : 'good';
+  if (!hats[k]) {
+    let x; [hats[k], x] = makeCanvas(12, 9);
+    grid(x, HAT, 0, 0, evil ? { o: C.ink, h: '#3a1a3e', y: '#e8c84a', b: '#a8302a' } : { o: C.ink, h: '#4e2e8a', y: C.gold, b: '#2e1c5a' });
+  }
+  return hats[k];
 }
 
 // ---------------------------------------------------------------- object sprites
