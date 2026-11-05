@@ -187,7 +187,8 @@ outside you've grown a pair of wings: "HUH. I GUESS CRIMSON COW GIVES YOU FEATHE
 - **Bard Christian**, a hooded friar with a lute, plays to the ruins of the Tower of
   Winds. The low strings call a Black Tiger, the high ones a White Ghost.
 - The **Fan Seller** by the well cries "TALLY HO! TALLY HO!" With no wind, everyone's
-  building fans. The fronts sold first, so all she has left are fan backs. Tally ho!
+  building fans. Fan fronts are sold out, so all she has left are fan backs. "TALLY HO!
+  FAN BACKS!"
 - The pet in your house is a cream long-haired dachshund. The witches have a black cat, Soot.
 
 ### Secret: the evil wizard
