@@ -348,10 +348,14 @@ function backdropArt() {
 const grassTop = (x, H) => H + Math.round(Math.sin(x / 31 + 1) * 3);
 function drawBackdrop(t, night = false) {
   const art = backdropArt();
-  const H = Math.round(VH * 0.62);
+  // Wide screens: the sky reaches down to just above START, so it has more room.
+  let H = Math.round(VH * 0.62);
+  if (VW > VH) H = Math.max(H, startBox().y - 10);
   const sky = night ? ['#0c0a1c', '#141228', '#1c1834', '#261e40', '#32264a'] : ['#16132e', '#241c46', '#3e2a58', '#6e3e5e', '#b0624e'];
-  // Five equal colour bands. The value taps use them: see skyValue().
-  const bh = Math.ceil(H / sky.length), edges = [0, bh, 2 * bh, 3 * bh, 4 * bh, H];
+  // Five colour bands. The value taps use them: see skyValue(). The four purple bands are
+  // equal and always sit clear above the castle flag (58px over the grass); the orange band
+  // takes the rest, so it holds the mountains, castle and trees on any screen shape.
+  const bh = Math.max(4, Math.min(Math.ceil(H / sky.length), Math.floor((H - 58) / 4))), edges = [0, bh, 2 * bh, 3 * bh, 4 * bh, H];
   SKY.bh = bh; SKY.H = H;
   for (let i = 0; i < sky.length; i++) {
     ctx.fillStyle = sky[i]; ctx.fillRect(0, edges[i], VW, edges[i + 1] - edges[i] + 1);
