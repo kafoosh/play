@@ -144,6 +144,10 @@ function spark(x, y, n = 6, col = C.gold, world = false) {
 }
 function updateParts(dt) {
   for (const p of parts) {
+    if (p.k === 'pix' && (p.hold -= dt) <= 0) {
+      const a = Math.random() * Math.PI * 2, v = 12 + Math.random() * 30;
+      Object.assign(p, { k: 'spark', vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.2 + Math.random() * 0.3, col: '#ffe9a0', world: false });
+    }
     p.life -= dt; p.x += (p.vx || 0) * dt; p.y += (p.vy || 0) * dt;
     if (p.k === 'spark') { p.vx *= 0.92; p.vy *= 0.92; }
     if (p.k === 'z' || p.k === 'note') p.x += Math.sin(p.life * 5) * 0.3;
@@ -171,16 +175,7 @@ function drawParts(cx = 0, cy = 0) {
         ctx.globalCompositeOperation = 'source-over';
       }
     }
-    else if (p.k === 'pix') {
-      const age = p.max - p.life - p.d;
-      if (age < 0) continue;
-      const k = Math.min(1, age / 0.08), drift = Math.max(0, age - 0.13) * 1.8;
-      const px = p.ox + (p.tx - p.ox) * (k + drift), py = p.oy + (p.ty - p.oy) * (k + drift);
-      const a = Math.min(1, p.life / 0.25) * 0.55;
-      ctx.globalCompositeOperation = 'lighter';
-      ctx.fillStyle = `rgba(240,226,180,${a.toFixed(2)})`; ctx.fillRect(Math.round(px), Math.round(py), 1, 1);
-      ctx.globalCompositeOperation = 'source-over';
-    }
+    else if (p.k === 'pix') { ctx.fillStyle = '#ffe9a0'; ctx.fillRect(x, y, 1, 1); }
     else if (p.k === 'say') {
       ctx.globalAlpha = Math.min(1, p.life / 0.4);
       tinyText(ctx, p.text, x, y);
@@ -200,14 +195,11 @@ function drawParts(cx = 0, cy = 0) {
 function mote(x, y, world = false) {
   parts.push({ k: 'mote', x, y, vx: (Math.random() - 0.5) * 4, vy: -3 - Math.random() * 5, life: 3 + Math.random() * 3, p: Math.random() * 6, col: Math.random() < 0.55 ? '#7ae0ff' : '#ffd27a', world });
 }
-// A sky tap: a little burst of sparkles that gathers into the number's shape for a
-// moment, then scatters and fades. Pale and quick, so it reads as a twinkle.
+// A sky tap: sparkle dots that sit in the number's shape for a split second, then fall
+// apart into ordinary tap sparkles (the same as a tap on the grass).
 function numberBurst(x, y, v) {
   const dots = glyphDots(String(v)), w = String(v).length * 6 - 1;
-  for (const [i, j] of dots) {
-    const tx = x + (i - w / 2) * 2, ty = y + (j - 3.5) * 2;
-    parts.push({ k: 'pix', x, y, tx, ty, ox: x, oy: y, life: 0.5, max: 0.5, d: Math.random() * 0.04 });
-  }
+  for (const [i, j] of dots) parts.push({ k: 'pix', x: x + (i - w / 2) * 2, y: y + (j - 3.5) * 2, hold: 0.09, life: 1 });
 }
 // Darkened corners, cached per screen size.
 let vig = null;
