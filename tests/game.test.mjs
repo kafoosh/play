@@ -67,7 +67,8 @@ test('all text can be drawn by the pixel font and fits the box', () => {
   for (const c of CLASSES) all.push(c.name, c.weapon);
   all.push(...GRUDGE, ...EGG.hello, ...EGG.got, ...EGG.restored);
   for (const w of Object.values(EGG.woke)) all.push(...w.talk, ...w.again);
-  for (const v of Object.values(QUEST)) all.push(...(typeof v === 'string' ? [v] : Array.isArray(v) ? v : Object.values(v).flat()));
+  const flat = v => (typeof v === 'string' ? [v] : Array.isArray(v) ? v.flatMap(flat) : Object.values(v).flatMap(flat));
+  for (const v of Object.values(QUEST)) all.push(...flat(v));
   for (const v of Object.values(FISH)) all.push(...v);
   for (const n of NPCS) for (const l of n.talk || []) all.push(squawk(l));
   for (const s of all) {

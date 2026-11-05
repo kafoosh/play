@@ -1003,9 +1003,14 @@ const Play = {
       if (!n.told) {
         n.told = true;
         const all = W.every(id => this.npc(id).told);
-        lines = [...QUEST.witchTalk[n.id], ...(all ? [] : QUEST.othersToo)];
+        const left = W.filter(id => !this.npc(id).told);
+        lines = [...QUEST.witchTalk[n.id], ...(all ? [] : [QUEST.witchHint[n.id][left[0]][0]])];
         if (all) after = () => this.run(function* () { yield* potionScene.call(this, n); });
-      } else lines = QUEST.witchWait[n.id];
+      } else { // a hint about a sister you still haven't spoken to, a different one each time
+        const left = W.filter(id => !this.npc(id).told), hs = left.flatMap(id => QUEST.witchHint[n.id][id]);
+        n.hints = (n.hints || 0) + 1;
+        lines = [hs[n.hints % hs.length]];
+      }
     }
     else if (n.id === 'dog' && n.talked % 3 === 2 && !n.moving) { n.talked++; this.run(function* () { yield* bellyScene.call(this, n); }); return; }
     else if (n.id === 'bard' && !n.chicken && !n.awake) {
