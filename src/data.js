@@ -242,7 +242,7 @@ export const NPCS = [
     again: ['I KEEP TO THE MIDDLE STRINGS. SAFER THAT WAY.'] },
   // no wind since the Still Night, so everyone's building fans
   { id: 'fans', name: 'FAN SELLER', map: 'world', x: 8, y: 33, look: 'fanseller', dir: 'down', fan: true,
-    talk: ['TALLY HO! TALLY HO!', 'FAN PARTS! NO WIND, SO BUILD YOUR OWN BREEZE.', 'RIBS, RIVETS, HANDLES. THE FRONTS SOLD FIRST, OF COURSE.', 'ALL I\'VE GOT LEFT ARE FAN BACKS.', 'TALLY HO!'],
+    talk: ['TALLY HO! TALLY HO!', 'FAN PARTS! NO WIND, SO BUILD YOUR OWN BREEZE.', 'RIBS, RIVETS, HANDLES. THE FRONTS SOLD FIRST, OF COURSE.', 'ALL I\'VE GOT LEFT ARE FAN BACKS.', 'STILL, HALF A FAN MAKES HALF A BREEZE. TALLY HO!'],
     again: ['FAN BACKS! HALF A FAN STILL MAKES HALF A BREEZE.'] },
   { id: 'sleeper', name: '???', map: 'world', x: 15, y: 17, look: 'sleeper', sleep: true,
     talk: ['ZZZ...'], again: ['ZZZ... FIVE MORE MINUTES... ZZZ...'] },
