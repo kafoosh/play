@@ -484,6 +484,14 @@ export function wingSprite() {
   return wingCanvas;
 }
 
+// The Crimson Cow: a little crimson bottle with a cork and a pale label.
+const POTION = ['..ooo..', '..oko..', '.ooooo.', 'oRRRRRo', 'oRWWWRo', 'oRWRWRo', 'oRRRRRo', '.ooooo.'];
+let potionCanvas = null;
+export function potionSprite() {
+  if (!potionCanvas) { let x; [potionCanvas, x] = makeCanvas(8, 8); grid(x, POTION, 0, 0, { o: C.ink, k: '#a0704a', R: '#c8202a', W: '#f0e2c0' }); }
+  return potionCanvas;
+}
+
 // A small rusty key lying on the ground.
 const KEY = ['.oo.......', 'oyyo......', 'oy.yoooooo', 'oyyoyyyyyo', '.oo.o.oo.o', '....o..o..'];
 let keyCanvas = null;

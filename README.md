@@ -150,9 +150,10 @@ Hit the frog (by the lake) with your weapon, or just talk to it (it
 doesn't show a speech bubble like the others, so it isn't obvious), and it coughs up a
 rusty key.
 It always lands on open ground you can reach (never in the water), and nobody wanders onto
-it. Pick it up, then press A at the blue door: "LOCKED." / "...WAIT. THE KEY!" and it opens. Three witches have been stuck inside since the
-frog swallowed their key and jumped out the window. They give you a **Crimson Cow**
-potion, you drink it (it does nothing, but you feel energised), and when you step back
+it. Pick it up, then press A at the blue door: "LOCKED." / "...WAIT. THE KEY!" and it opens. Inside are three witches, stuck in for three days since their own frog swallowed the
+door key and escaped out the window. Each tells her part of the story when you talk to
+her; talk to all three (any order). The last one tosses you a **Crimson Cow** potion: you
+hold it up, drink it (it does nothing, but you feel energised), and when you step back
 outside you've grown a pair of wings: "HUH. I GUESS CRIMSON COW GIVES YOU FEATHERS."
 
 ### Along the way
