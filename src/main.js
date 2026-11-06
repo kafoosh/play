@@ -752,14 +752,19 @@ const Play = {
   },
   // The frog coughs up the witches' key onto a free tile next to it (once).
   // It lands on the nearest open ground you can walk to: never water, trees, rocks
-  // or a doorway. Nearest to the frog first, then nearest to you.
+  // or a doorway. Nearest to the frog first, then nearest to you. The frog (and anyone
+  // else standing about) counts as a wall here, so the key never lands behind it in a
+  // dead end by the lake.
   dropKey(n, dir) {
     if (G.flags.keyDropped) return;
     const OPEN = new Set(['grass', 'grass2', 'flowers', 'tall', 'path', 'rubble']), m = this.map, p = this.p;
     const reach = new Set([p.x + ',' + p.y]), q = [[p.x, p.y]];
     while (q.length && reach.size < 900) {
       const [x, y] = q.shift();
-      for (const [dx, dy] of Object.values(DIRV)) { const k = (x + dx) + ',' + (y + dy); if (!reach.has(k) && !m.solid(x + dx, y + dy)) { reach.add(k); q.push([x + dx, y + dy]); } }
+      for (const [dx, dy] of Object.values(DIRV)) {
+        const nx = x + dx, ny = y + dy, k = nx + ',' + ny;
+        if (!reach.has(k) && !m.solid(nx, ny) && !this.npcAt(nx, ny)) { reach.add(k); q.push([nx, ny]); }
+      }
     }
     const ok = (x, y) => reach.has(x + ',' + y) && OPEN.has(m.kind(x, y)) && !m.def.warps[x + ',' + y] && !this.npcAt(x, y) && !(p.x === x && p.y === y);
     let best = null;
@@ -955,6 +960,13 @@ const Play = {
     const n = this.npcAt(nx, ny);
     if (!n && this.free(nx, ny, p)) { this.move(p, d, SPEED); return; }
     if (n && n.bump && !n.moving) { this.talkTo(n); return; }
+    // Walk into the frog and it hops out of your way (never onto the key). Boxed in, in a
+    // dead end, it hops back past you instead, so it can never keep you from the key.
+    if (n && n.id === 'frog' && !n.moving && !p.moving) {
+      if (this.shove(n, d)) return;
+      this.move(n, OPP[d], NPC_SPEED * 2); n.t = 0; n.faceAfter = OPP[d];
+      this.move(p, d, SPEED); return;
+    }
     if (this.map.name === 'world' && nx === 6 && ny === 28 && G.flags.unlocked) { this.enterWitches(); return; }
     if (this.bumpT <= 0) { Audio.sfx('bump'); this.bumpT = 0.3; }
   },

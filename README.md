@@ -154,8 +154,9 @@ leads away from under its window toward the lake.
 Hit the frog (by the lake) with your weapon, or just talk to it (it
 doesn't show a speech bubble like the others, so it isn't obvious), and it coughs up a
 rusty key.
-It always lands on open ground you can reach (never in the water), and nobody wanders onto
-it. Pick it up, then press A at the blue door: "LOCKED." / "...WAIT. THE KEY!" and it opens. Inside are three witches, stuck in for three days since their own frog swallowed the
+It always lands on open ground you can reach (never in the water, and never behind the
+frog), and nobody wanders onto it. Walk into the frog and it hops out of your way; in a
+dead end by the lake it hops back past you instead. Pick it up, then press A at the blue door: "LOCKED." / "...WAIT. THE KEY!" and it opens. Inside are three witches, stuck in for three days since their own frog swallowed the
 door key and escaped out the window. Each tells her part of the story when you talk to
 her, and lets slip a hint about a sister you haven't spoken to yet; talk to all three (any order). The third one tosses you a can of **Crimson Cow** (silver and blue): you
 hold it up, drink it (it does nothing, but you feel energised), and when you step back
