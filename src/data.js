@@ -237,7 +237,7 @@ export const NPCS = [
     again: ['ANOTHER TIME, I SAID. A GOOD TALE NEEDS A FIRE AND A FULL CUP.'] },
   // a travelling friar with a lute, playing to the ruins of the Tower of Winds
   { id: 'friar', name: 'BARD CHRISTIAN', map: 'world', x: 7, y: 13, look: 'friar', dir: 'down', notes: true, lute: true,
-    talk: ['PEACE, FRIEND. I AM BARD CHRISTIAN.', 'I PLAYED FOR THE OLD TOWER, BEFORE THE WIND LEFT.', 'LOW STRINGS CALL A BLACK TIGER. HIGH ONES, A WHITE GHOST.', 'BOTH AT ONCE? THE ABBOT SAYS NEVER.'],
+    talk: ['PEACE, FRIEND. I AM BARD CHRISTIAN.', 'I PLAYED FOR THE OLD TOWER, BEFORE THE WIND LEFT.', 'LOW NOTES ON MY LYRE, DARK AS A BLACK TIGER.', 'HIGH NOTES PURE WHITE, LIKE A GHOST.', 'BOTH AT ONCE? THE ABBOT SAYS NEVER.'],
     again: ['I KEEP TO THE MIDDLE STRINGS. SAFER THAT WAY.'] },
   // no wind since the Still Night, so everyone's building fans
   { id: 'fans', name: 'FAN SELLER', map: 'world', x: 8, y: 33, look: 'fanseller', dir: 'down', fan: true,
@@ -406,7 +406,7 @@ export const FISH = {
   bardDone: ['A BIG RED HERRING? HA! THE LAKE NEVER GAVE ME ONE OF THOSE.'],
   pile: ['A PILE OF WORMS. THEY WRIGGLE.'],
   pickWorm: ['YOU PICK UP A WORM.'],
-  wormFriend: ['I\'D LOVE FISHING WITH YOU, EVEN IF YOU ARE A WORM.'],
+  wormFriend: ['I\'D LOVE FISHING WITH YOU, EVEN IF YOU ARE JUST A WORM.'],
   haveWorm: ['YOU ALREADY HAVE A WORM. ONE IS PLENTY.'],
   baited: ['YOUR HOOK ALREADY HAS A WORM ON IT.'],
   bait: ['YOU PUT A WORM ON THE HOOK.'],
