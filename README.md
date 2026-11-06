@@ -32,10 +32,12 @@ Arm the card on the **title screen**, then hand over the phone.
    +--------------------+
    ```
 
-   The sky fits itself to the screen: the purple bands always sit above the castle's
-   flags, and the orange band holds all the scenery, so all five colours show on any
-   phone, tablet or computer, upright or sideways. On a wide screen the purple bands are
-   thinner and the orange band is relatively taller. Go by the colour. Taps on the grass below the horizon don't change
+   The sky fits itself to the screen: on any phone, tablet or computer, upright or
+   sideways, all five bands are the same height. The orange band is measured only down
+   to the valleys of the mountain outline; the mountains, castle and trees below that are
+   still orange (13), they just don't make the band bigger. On a wide screen the castle
+   reaches up into the lowest purple band or two; taps there count as the band colour
+   behind it. Go by the colour. Taps on the grass below the horizon don't change
    anything (they just sparkle), so a stray tap near START is harmless.
 
    Values are always numbers, here and in the URL: 1 = Ace, 11 = Jack, 12 = Queen,
@@ -59,7 +61,8 @@ A button or keyboard instead of a tap on START, the suit defaults to Spades.
 ### Cheat sheet
 
 **Triple-tap the empty grass at the bottom middle** of the title screen (below START)
-to see the value grid, the suit order and the card that is currently armed. Tap anywhere
+to see the value grid (each row painted in its sky colour), a little START button with
+its C H S D quarters laid over it, and the card that is currently armed. Tap anywhere
 to close it.
 
 ### Backup: URL force

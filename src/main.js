@@ -323,6 +323,10 @@ function drawDialog(by) {
 const STARS = Array.from({ length: 60 }, (_, i) => ({ x: hash(i, 1), y: hash(i, 2), p: hash(i, 3) * 6 }));
 let deco = null;
 const SKY = { bh: 30, H: 150 };
+// sky colour bands, top to bottom: four purples (values 1-12), then orange (13)
+const SKY_DAY = ['#16132e', '#241c46', '#3e2a58', '#6e3e5e', '#b0624e'];
+const SKY_NIGHT = ['#0c0a1c', '#141228', '#1c1834', '#261e40', '#32264a'];
+const VALLEY = 18; // the far mountains' valleys sit this far above the grass line
 function backdropArt() {
   if (deco) return deco;
   // long thin dusk clouds
@@ -366,11 +370,13 @@ function drawBackdrop(t, night = false) {
   // Wide screens: the sky reaches down to just above START, so it has more room.
   let H = Math.round(VH * 0.62);
   if (VW > VH) H = Math.max(H, startBox().y - 10);
-  const sky = night ? ['#0c0a1c', '#141228', '#1c1834', '#261e40', '#32264a'] : ['#16132e', '#241c46', '#3e2a58', '#6e3e5e', '#b0624e'];
-  // Five colour bands. The value taps use them: see skyValue(). The four purple bands are
-  // equal and always sit clear above the castle flag (58px over the grass); the orange band
-  // takes the rest, so it holds the mountains, castle and trees on any screen shape.
-  const bh = Math.max(4, Math.min(Math.ceil(H / sky.length), Math.floor((H - 58) / 4))), edges = [0, bh, 2 * bh, 3 * bh, 4 * bh, H];
+  const sky = night ? SKY_NIGHT : SKY_DAY;
+  // Five colour bands. The value taps use them: see skyValue(). All five are the same
+  // height on any screen shape, counting the orange band only down to the mountain valleys
+  // (VALLEY px over the grass). Below that, the mountains, castle and trees are still orange
+  // (13), they just don't make the band look bigger. On wide screens the castle reaches up
+  // into the lowest purple band; taps there go by the band colour behind it.
+  const bh = Math.max(4, Math.floor((H - VALLEY) / sky.length)), edges = [0, bh, 2 * bh, 3 * bh, 4 * bh, H];
   SKY.bh = bh; SKY.H = H;
   for (let i = 0; i < sky.length; i++) {
     ctx.fillStyle = sky[i]; ctx.fillRect(0, edges[i], VW, edges[i + 1] - edges[i] + 1);
@@ -393,7 +399,7 @@ function drawBackdrop(t, night = false) {
   // far mountains
   ctx.fillStyle = night ? '#1a1830' : '#2c2244';
   for (let x = 0; x < VW; x++) {
-    const u = x / VW, h = H - 18 - Math.round(Math.abs(((u * 5.3) % 1) - 0.5) * 22 + Math.sin(u * 23) * 2);
+    const u = x / VW, h = H - VALLEY - Math.round(Math.abs(((u * 5.3) % 1) - 0.5) * 22 + Math.sin(u * 23) * 2);
     ctx.fillRect(x, h, 1, VH - h);
   }
   ctx.fillStyle = night ? '#141228' : '#221a36';
@@ -497,19 +503,25 @@ function drawCheat() {
   ctx.save(); ctx.translate(ox, oy);
   box(ctx, 6, 6, 148, 132);
   textCenter(ctx, 'CHEAT SHEET', 80, 13, UI.accent);
-  const gx = 22, gy = 22, cw = 39, ch = 11;
+  // each row painted in its own sky colour, as on the title screen
+  const gx = 22, gy = 22, cw = 39, ch = 11, ink = '#f4ecd8';
   VALUE_GRID.forEach((row, j) => row.forEach((v, i) => {
-    ctx.fillStyle = UI.paperD; ctx.fillRect(gx + i * cw, gy + j * ch, cw - 2, ch - 2);
-    textCenter(ctx, String(v), gx + i * cw + cw / 2 - 1, gy + j * ch + 1, UI.text);
+    ctx.fillStyle = SKY_DAY[j]; ctx.fillRect(gx + i * cw, gy + j * ch, cw - 2, ch - 2);
+    textCenter(ctx, String(v), gx + i * cw + cw / 2 - 1, gy + j * ch + 1, ink);
   }));
-  ctx.fillStyle = UI.paperD; ctx.fillRect(gx, gy + 4 * ch, cw * 3 - 2, ch - 2);
-  textCenter(ctx, '13', gx + cw * 1.5 - 1, gy + 4 * ch + 1, UI.text);
-  textCenter(ctx, 'PURPLE 1-12. ORANGE 13', 80, 79, UI.dim);
-  ['C', 'H', 'S', 'D'].forEach((s, i) => {
-    ctx.fillStyle = '#ecc890'; ctx.fillRect(32 + i * 24, 90, 22, 12);
-    textCenter(ctx, s, 43 + i * 24, 93, s === 'H' || s === 'D' ? C.red : UI.text);
+  ctx.fillStyle = SKY_DAY[4]; ctx.fillRect(gx, gy + 4 * ch, cw * 3 - 2, ch - 2);
+  textCenter(ctx, '13', gx + cw * 1.5 - 1, gy + 4 * ch + 1, ink);
+  // a little START button with see-through C H S D quarters laid over it
+  const bx = 28, by = 82, bw = 104, bht = 28;
+  box(ctx, bx, by, bw, bht);
+  textCenter(ctx, 'START', 80, by + 16, UI.text);
+  CHASED.forEach((s, q) => {
+    const a = Math.max(bx + 4, Math.round(bx + q * bw / 4)), b = Math.min(bx + bw - 4, Math.round(bx + (q + 1) * bw / 4));
+    ctx.fillStyle = q % 2 ? 'rgba(200,140,70,0.5)' : 'rgba(236,200,144,0.5)';
+    ctx.fillRect(a + (q ? 1 : 0), by + 4, b - a - (q ? 1 : 0), bht - 8);
+    if (q) { ctx.fillStyle = UI.edge; ctx.fillRect(a, by + 4, 1, bht - 8); }
+    textCenter(ctx, s, (a + b) / 2, by + 6, s === 'H' || s === 'D' ? C.red : UI.text);
   });
-  text(ctx, 'START = SUIT', 44, 105, UI.dim);
   const a = G.armed;
   const lab = a.v || a.s ? `${a.v ? a.v : '?'}${a.s ? { C: '♣', H: '♥', S: '♠', D: '♦' }[a.s] : '?'}` : '--';
   textCenter(ctx, a.word ? 'WORD: ' + a.word.slice(0, 16) : 'ARMED: ' + lab + (G.locked ? ' (URL)' : ''), 80, 116, UI.accent);
