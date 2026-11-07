@@ -324,6 +324,7 @@ test('book: every line can be drawn and fits the box', () => {
   for (const L of Object.keys(FAV)) {
     all.push(letterQuestion(L));
     for (const s of flat(BOOK)) all.push(bookLine(s, L));
+    assert.ok(wrap(BOOK.askClosed, 23).length <= 3, 'the YES/NO question fits one box');
     assert.ok(wrap(letterQuestion(L), 23).length <= 3, 'the question fits one box');
   }
   for (const s of all) {
@@ -332,6 +333,11 @@ test('book: every line can be drawn and fits the box', () => {
     for (const ch of t) assert.ok(GLYPH_SET.has(ch), `missing glyph "${ch}" in: ${s}`);
     for (const line of wrap(t, 23)) assert.ok(line.length <= 23, `too long: ${line}`);
   }
+});
+
+test('book: the ribbon label and the caption fit on the narrowest screen', () => {
+  for (let p = 1; p <= TOME.length; p++) assert.ok((`CLOSE ON PAGE ${p}`.length * 6 - 1) + 16 <= 152 - 24);
+  assert.ok('STARE AT ONE WORD'.length <= 23);
 });
 
 test('apprentice stands by the house in book mode only', () => {

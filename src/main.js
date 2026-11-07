@@ -1633,26 +1633,29 @@ const Table = {
 };
 
 // ================================================================ the apprentice's book
-// Book mode: the master's old book fills the play area, one page at a time. The page is
-// turned with the folded corners at the bottom of the page (or left and right on the
-// D-pad). CLOSE is a red ribbon under the book, well away from the corners: the page
-// showing when the book is closed is the page their word is on.
+// Book mode: the master's old book fills the play area, one page at a time. Reading comes
+// first: turn the pages back and forth with the arrows at the foot of the page (or left
+// and right on the D-pad; A turns to the next page). Closing is a separate, deliberate
+// step: the red ribbon under the book says CLOSE ON PAGE 2 (whichever page is showing).
+// Tap it, or press DOWN to pick it and then A. A on its own never closes the book. The
+// page showing when it closes is the page their word is on.
 const Tome = {
-  on: false, closed: false, page: 0, t: 0, turnT: 0, dir: 1, focus: false, pad: false,
-  open() {
-    Object.assign(this, { on: true, closed: false, page: 0, t: 0, turnT: 0, focus: false, pad: false, hint: 0 });
+  on: false, closed: false, page: 0, t: 0, turnT: 0, dir: 1, focus: false, pad: false, hint: 0,
+  open(page = 0) {
+    Object.assign(this, { on: true, closed: false, page, t: 0, turnT: 0, focus: false, pad: false, hint: 0 });
     // work out the first questions while they read, so nothing stalls later
     TOME.forEach((_, p) => setTimeout(() => bookNext(p, []), 300 + p * 150));
   },
   input() { return this.on && !D.active; },
   last() { return TOME.length - 1; },
+  label() { return `CLOSE ON PAGE ${this.page + 1}`; },
   turn(d) {
     const p = this.page + d;
     if (p < 0 || p > this.last()) { Audio.sfx('bump'); return; }
     this.page = p; this.dir = d; this.turnT = 1; this.focus = false; Audio.sfx('move');
   },
   shut() {
-    if (this.t < 0.6) return; // a stray tap (or a mashed A) as it opens doesn't count
+    if (this.t < 0.6) return; // a stray tap as it opens doesn't count
     this.on = false; this.closed = true;
     G.book = { page: this.page, answers: [] };
     Audio.sfx('door');
@@ -1660,23 +1663,24 @@ const Tome = {
   geom() {
     const w = Math.min(UIX1 - UIX0 - 8, 158), x = Math.round((UIX0 + UIX1 - w) / 2), chars = Math.floor((w - 14) / 6);
     const rows = Math.max(...TOME.map(p => wrap(p.text, chars).length));
-    const h = 28 + rows * 9 + 18, total = h + 18;
+    const h = 28 + rows * 9 + 20, total = 12 + h + 19;
     const room = total <= UIB - 4 ? UIB : VH; // squeezed between the controls: use the whole screen
-    const y = Math.max(2, Math.round((room - total) / 2));
+    const top = Math.max(2, Math.round((room - total) / 2)), y = top + 12;
+    const cw = textWidth(this.label()) + 16;
     return {
-      x, y, w, h, chars,
-      prev: { x: x + 3, y: y + h - 20, w: 30, h: 18 }, next: { x: x + w - 33, y: y + h - 20, w: 30, h: 18 },
-      close: { x: Math.round(x + w / 2 - 25), y: y + h + 5, w: 50, h: 13 },
+      x, y, w, h, chars, top,
+      prev: { x: x + 2, y: y + h - 22, w: 46, h: 20 }, next: { x: x + w - 48, y: y + h - 22, w: 46, h: 20 },
+      close: { x: Math.round(x + w / 2 - cw / 2), y: y + h + 5, w: cw, h: 13 },
     };
   },
-  update(dt) { if (this.on) { this.t += dt; this.turnT = Math.max(0, this.turnT - dt * 7); this.hint = Math.max(0, (this.hint || 0) - dt); } },
+  update(dt) { if (this.on) { this.t += dt; this.turnT = Math.max(0, this.turnT - dt * 7); this.hint = Math.max(0, this.hint - dt); } },
   onDir(d) {
     this.pad = true;
     if (d === 'left' || d === 'right') this.turn(d === 'left' ? -1 : 1);
     else if ((d === 'down') !== this.focus) { this.focus = d === 'down'; Audio.sfx('move'); }
   },
-  // A reads on. It only closes the book once DOWN has picked CLOSE, so a stray A never
-  // does; on the last page, A just points at CLOSE (and DOWN).
+  // A reads on. It only closes the book once DOWN has picked the ribbon; on the last page
+  // it just points at the ribbon.
   onA() {
     if (this.t < 0.4) return; // still mashing A from the conversation before
     if (this.focus) this.shut();
@@ -1688,20 +1692,21 @@ const Tome = {
     this.pad = false;
     const g = this.geom(), hit = b => x >= b.x - 2 && x < b.x + b.w + 2 && y >= b.y - 2 && y < b.y + b.h + 2;
     if (hit(g.close)) this.shut();
-    else if (hit(g.prev) && this.page > 0) this.turn(-1);
-    else if (hit(g.next) && this.page < this.last()) this.turn(1);
+    else if (hit(g.prev)) this.turn(-1);
+    else if (hit(g.next)) this.turn(1);
   },
   draw() {
     if (!this.on) return;
     const g = this.geom(), { x, y, w, h } = g, pg = TOME[this.page], t = this.t;
-    ctx.fillStyle = 'rgba(10,6,20,0.62)'; ctx.fillRect(0, 0, VW, VH);
+    ctx.fillStyle = 'rgba(10,6,20,0.68)'; ctx.fillRect(0, 0, VW, VH);
+    textCenter(ctx, 'STARE AT ONE WORD', x + w / 2, g.top, C.gold, 1, C.ink);
     // leather cover, then the page
     ctx.fillStyle = '#1c0e0a'; ctx.fillRect(x - 3, y - 2, w + 6, h + 4); ctx.fillRect(x - 4, y - 1, w + 8, h + 2);
     ctx.fillStyle = '#5a2a1c'; ctx.fillRect(x - 2, y - 1, w + 4, h + 2);
     ctx.fillStyle = '#c8a878'; ctx.fillRect(x + 1, y + 2, w - 2, h - 3); // page edges below
     ctx.fillStyle = '#efe2bf'; ctx.fillRect(x + 1, y + 1, w - 2, h - 4);
     ctx.fillStyle = '#e0cfa4'; ctx.fillRect(x + 1, y + 1, 2, h - 4); // towards the spine
-    ctx.fillStyle = '#e6d6ae'; for (let i = 0; i < 10; i++) ctx.fillRect(x + 5 + ((hash(i, 31) * (w - 14)) | 0), y + 5 + ((hash(i, 37) * (h - 14)) | 0), 2, 1);
+    ctx.fillStyle = '#e6d6ae'; for (let i = 0; i < 10; i++) ctx.fillRect(x + 5 + ((hash(i, 31) * (w - 14)) | 0), y + 5 + ((hash(i, 37) * (h - 30)) | 0), 2, 1);
     // the text slides in a little as the page turns
     const off = Math.round(this.turnT * 10 * this.dir);
     textCenter(ctx, pg.title, x + w / 2 + off, y + 6, UI.accent);
@@ -1713,31 +1718,38 @@ const Tome = {
       if (i) text(ctx, ln, lx, ly, UI.text);
       else { text(ctx, ln[0], lx, ly, UI.accent); text(ctx, ln.slice(1), lx + 6, ly, UI.text); } // a red capital
     });
-    // folded corners to turn the page
-    const corner = (b, right) => {
-      const cx = right ? x + w - 2 : x + 1, by = y + h - 4;
-      for (let i = 0; i < 9; i++) {
-        ctx.fillStyle = '#c4a674'; ctx.fillRect(right ? cx - 9 + i : cx, by - 9 + i, right ? 9 - i : 9 - i, 1);
-        ctx.fillStyle = '#8a6a44'; ctx.fillRect(right ? cx - 9 + i : cx + 8 - i, by - 9 + i, 1, 1);
+    // the foot of the page: turn arrows either side of a dot for each page
+    const fy = y + h - 15;
+    ctx.fillStyle = UI.paperD; ctx.fillRect(x + 6, fy - 4, w - 12, 1);
+    const n = TOME.length, dx0 = Math.round(x + w / 2 - (n * 8 - 3) / 2);
+    for (let i = 0; i < n; i++) {
+      ctx.fillStyle = i === this.page ? UI.accent : UI.dim;
+      if (i === this.page) ctx.fillRect(dx0 + i * 8, fy + 1, 5, 5);
+      else { ctx.fillRect(dx0 + i * 8 + 1, fy + 2, 3, 1); ctx.fillRect(dx0 + i * 8 + 1, fy + 4, 3, 1); ctx.fillRect(dx0 + i * 8 + 1, fy + 2, 1, 3); ctx.fillRect(dx0 + i * 8 + 3, fy + 2, 1, 3); }
+    }
+    const bob = Math.floor(t * 3) % 2 ? 1 : 0;
+    const arrow = (right, can) => {
+      const ax = right ? x + w - 20 : x + 14;
+      if (can) { // a folded corner behind it
+        const cx = right ? x + w - 2 : x + 1, by = y + h - 4;
+        for (let i = 0; i < 7; i++) { ctx.fillStyle = '#c4a674'; ctx.fillRect(right ? cx - 7 + i : cx, by - 7 + i, 7 - i, 1); }
       }
-      const bob = Math.floor(t * 3) % 2 && !this.pad ? 1 : 0;
-      text(ctx, right ? '▶' : '◀', right ? cx - 20 + bob : cx + 13 - bob, by - 8, UI.accent);
+      text(ctx, right ? '▶' : '◀', ax + (can ? (right ? bob : -bob) : 0), fy, can ? UI.accent : UI.paperD);
     };
-    if (this.page > 0) corner(g.prev, false);
-    if (this.page < this.last()) corner(g.next, true);
-    textCenter(ctx, `${this.page + 1}/${TOME.length}`, x + w / 2, y + h - 12, UI.dim);
-    // the ribbon: CLOSE
+    arrow(false, this.page > 0); arrow(true, this.page < this.last());
+    // the ribbon: CLOSE ON PAGE n
     const c = g.close, on = this.focus;
     if (on) { // picked with the D-pad: a gold edge and a pointer
       ctx.fillStyle = C.gold; ctx.fillRect(c.x - 2, c.y - 1, c.w + 4, c.h + 3);
       if (Math.floor(t * 3) % 3) text(ctx, '▶', c.x - 9, c.y + 3, C.gold);
+    } else if (this.pad) { // D-pad players: DOWN gets you to the ribbon
+      if (this.hint <= 0 || Math.floor(t * 6) % 2) text(ctx, '▼', c.x - 9, c.y + 3, this.hint > 0 ? C.gold : UI.dim);
     }
-    if (!on && this.hint > 0 && Math.floor(t * 6) % 2) text(ctx, '▼', c.x + c.w / 2 - 2, c.y - 8, C.gold); // press DOWN
     ctx.fillStyle = C.ink; ctx.fillRect(c.x - 1, c.y, c.w + 2, c.h + 1);
     ctx.fillStyle = on ? '#c83a32' : '#9a2a26'; ctx.fillRect(c.x, c.y, c.w, c.h);
     ctx.fillStyle = on ? '#e8584a' : '#b8342e'; ctx.fillRect(c.x, c.y, c.w, 2);
     ctx.fillStyle = C.ink; for (const ex of [c.x, c.x + c.w - 3]) for (let i = 0; i < 3; i++) ctx.fillRect(ex + (ex === c.x ? 0 : 2 - i), c.y + c.h - 3 + i, i + 1, 1); // notched ends
-    textCenter(ctx, 'CLOSE', c.x + c.w / 2, c.y + 3, '#fff2d0');
+    textCenter(ctx, this.label(), c.x + c.w / 2, c.y + 3, '#fff2d0');
   },
 };
 
@@ -1855,9 +1867,14 @@ function* bookScene() {
   a.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
   p.dir = OPP[a.dir];
   yield* say2([...B.hello, ...B.give]);
-  Tome.open(); Audio.sfx('twinkle');
-  yield () => Tome.closed;
-  yield wait(0.4);
+  // read, close it on the word's page; if they're not happy, back into the book they go
+  for (let page = 0, again = true; again;) {
+    Tome.open(page); Audio.sfx('twinkle');
+    yield () => Tome.closed;
+    page = G.book.page;
+    yield wait(0.4);
+    yield* say2([{ ask: B.askClosed, yes: () => { again = false; return B.closedYes; }, no: () => { again = true; return B.closedNo; } }]);
+  }
   const L = nextLetter(), second = () => { const l = nextLetter(); return l ? [bookLine(T[1].pre, l), letterAsk(l, [T[1].yes], [T[1].no])] : []; };
   yield* say2([...B.closed, bookLine(T[0].pre, L), letterAsk(L, [T[0].yes], [T[0].no], second)]);
   // he reaches for a third letter: the magic gathers round him, then fizzles out

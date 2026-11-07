@@ -663,8 +663,12 @@ export function bookWord(page, answers) {
 export const BOOK = {
   // the apprentice stops you as you leave the house
   hello: ['HEY! {N}! WAIT UP!', 'I\'M THE WIZARD\'S APPRENTICE. WELL. TRAINEE.', 'I NEED SOMEONE TO PRACTISE ON. YOU\'LL DO.'],
-  give: ['HERE. THE MASTER\'S OLD BOOK. DON\'T TELL HIM.', 'READ IT. PICK A WORD THAT GRABS YOU.', 'STARE AT IT TILL IT STICKS. THEN CLOSE THE BOOK.'],
-  closed: ['GOT ONE? DON\'T SAY IT!', 'OK. HERE GOES...'],
+  give: ['HERE. THE MASTER\'S OLD BOOK. DON\'T TELL HIM.', 'FLIP THROUGH. PICK A WORD THAT GRABS YOU.', 'STARE AT IT TILL IT STICKS.', 'THEN CLOSE THE BOOK ON THAT PAGE.'],
+  // after the book is closed: NO opens it again
+  askClosed: 'GOT A WORD? AND YOU CLOSED IT ON ITS PAGE?',
+  closedYes: [],
+  closedNo: ['THEN HAVE ANOTHER LOOK. NO RUSH.'],
+  closed: ['GOOD. DON\'T SAY IT!', 'OK. HERE GOES...'],
   // his two goes: the line before the question, then what he says to YES and to NO
   tries: [
     { pre: 'I\'M GETTING... {AL}!', yes: 'IT WORKED! IT ACTUALLY WORKED!', no: 'OH. THAT WAS A WARM-UP.' },
