@@ -369,6 +369,10 @@ export const QUEST = {
     askWord: 'TELL ME. DO YOU HAVE A WORD IN MIND?',
     yes: ['GOOD. HOLD ON TO IT. GO ON.'],
     no: ['THEN THINK OF ONE BEFORE YOU REACH HIS DOOR.', 'HE HAS NO TIME FOR AN EMPTY HEAD.', 'GO ON, THEN.'],
+    // fortune mode (/!card): the lucky card from the fortune teller
+    askLucky: 'TELL ME. DO YOU HAVE A LUCKY CARD?',
+    yesLucky: ['GOOD. IF THE WIZARD ASKS, THINK OF THAT CARD.', 'GO ON.'],
+    noLucky: ['NO? THE CARD YOU PEEKED AT, BACK AT THE FORTUNE TELLER\'S. THAT\'S YOUR LUCKY CARD.', 'IF THE WIZARD ASKS, THINK OF THAT ONE.', 'GO ON, THEN.'],
   },
   frogKey: ['THE FROG COUGHS UP SOMETHING SHINY!'],
   gotKey: ['YOU GOT A RUSTY KEY!'],

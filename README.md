@@ -125,6 +125,8 @@ fortune teller (after the magician Dani DaOrtiz: red beanie, glasses, long dark 
 8. She tells them to remember their card, put the rest back in the deck and keep their
    own card face up in the middle.
 
+On the way, the hermit in the woods asks if they have a lucky card, and tells them to
+think of it if the wizard asks (on NO, he reminds them it's the card they peeked at).
 At the castle the wizard does his usual "are you thinking of a card?" and names it.
 The end screen shows a face-down spread with their card face up, outjogged in the middle.
 

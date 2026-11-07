@@ -1675,7 +1675,8 @@ function* hermitScene() {
   h.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
   p.dir = OPP[h.dir];
   const word = !!G.armed.word;
-  yield* talk([...Q.hello, { ask: word ? Q.askWord : Q.askCard, yes: Q.yes, no: Q.no }], false, null, 'HERMIT');
+  const lucky = !word && G.armed.fortune; // fortune mode: the lucky card from the fortune teller
+  yield* talk([...Q.hello, { ask: word ? Q.askWord : lucky ? Q.askLucky : Q.askCard, yes: lucky ? Q.yesLucky : Q.yes, no: lucky ? Q.noLucky : Q.no }], false, null, 'HERMIT');
   // then she goes back to her spot, off the path
   for (let i = 0; i < 12 && !(h.x === h.home.x && h.y === h.home.y); i++) {
     const d = this.bfsDir(h, (x, y) => x === h.home.x && y === h.home.y);
