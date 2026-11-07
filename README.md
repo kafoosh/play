@@ -172,8 +172,8 @@ and the cheat sheet shows `BOOK TEST (URL)`.
 2. The apprentice tries to read their mind. First a straight guess: "I'M GETTING... AN
    R!" and "DOES THE WORD YOU'RE THINKING OF HAVE AN R IN IT?". Then he calls the winds
    for a second go: the magic gathers, peters out, and lets out one sad spark ("...PFT."
-   "*COUGH*"). He asks anyway: "THERE WASN'T A G IN IT, WAS THERE?", answered with
-   **THERE WAS** or **THERE WASN'T**. Then he goes off to practise.
+   "*COUGH*"). He asks anyway: "I THINK I SAW A G IN THERE." "WAS THERE A G IN IT?"
+   Then he goes off to practise.
 3. The **bridge guard** asks for the password, gives up, and asks one letter instead
    (only if it's still needed).
 4. The **hermit** collects words. He just talks about his favourite word (MOSS).

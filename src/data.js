@@ -575,7 +575,7 @@ export function cardReading(cards) {
 // Every word worth choosing has five letters or more, and every shorter word is filler
 // (the tests check this). Each page has seven or eight such words, few enough that three
 // yes/no letter questions always tell them apart: the apprentice asks two ("DOES THE WORD
-// YOU'RE THINKING OF HAVE AN R IN IT?", then "THERE WASN'T AN R IN IT, WAS THERE?") and
+// YOU'RE THINKING OF HAVE AN R IN IT?", then "WAS THERE A G IN IT?") and
 // the bridge guard the third. Then the wizard names the word.
 export const TOME = [
   { title: 'I. THE WINDS', text: 'ONCE THE WINDS WANDERED THE KINGDOM. THE NORTHERN WINDS BROUGHT SNOWFALL. THE SOUTHERN WINDS BROUGHT BIRDSONG.' },
@@ -653,8 +653,7 @@ export const BOOK = {
   // his second go: he calls the winds, the magic fizzles out, and he asks anyway
   fizzle: ['ONE MORE. I CAN FEEL IT...'],
   fizzled: ['...PFT.', '*COUGH*', 'I THINK I SAW {AL} IN THERE.'],
-  askFizzled: 'THERE WASN\'T {AL} IN IT, WAS THERE?',
-  fizzledOpts: ['THERE WAS', 'THERE WASN\'T'],
+  askFizzled: 'WAS THERE {AL} IN IT?',
   fizzledWas: ['THERE WAS?!', 'HA! STILL GOT IT. SORT OF.'],
   fizzledWasnt: ['NO. OF COURSE NOT.', 'THAT WAS IT, THEN. THAT WAS ALL OF IT.'],
   bye: ['HOW DOES THE MASTER DO THIS?', 'I NEED MORE PRACTICE. I\'LL TAKE THE BOOK BACK.', 'KEEP YOUR WORD IN MIND. THE MASTER\'S NORTH, OVER THE BRIDGE.'],

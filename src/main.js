@@ -305,19 +305,14 @@ function dialogBoxY(playerScreenY) {
   if (D.pos === 'top') return top;
   return playerScreenY + 10 > bottom ? top : bottom;
 }
-// The answers to a question: YES and NO, unless the question brings its own labels.
-const choiceLabels = () => (D.page && D.page.ask && D.page.ask.opts) || ['YES', 'NO'];
 function choiceBox(by) {
-  const w = dialogW(), bx = dialogX(), cw = Math.max(44, 24 + Math.max(...choiceLabels().map(l => textWidth(l))));
-  const cx = bx + w - cw - 2, above = by > VH / 3;
-  // a wide box above the text box would cover the speaker's name tab: lift it over the tab
-  const tab = D.name ? bx + 6 + textWidth(D.name) + 14 : -1, lift = above && cx < tab ? 14 : 0;
-  return [cx, above ? by - 30 - lift : by + 46, cw];
+  const w = dialogW(), bx = dialogX();
+  return [bx + w - 46, by > VH / 3 ? by - 30 : by + 46];
 }
 function dialogTap(x, y, by) {
   if (D.page && D.page.ask && D.shown >= D.total) {
-    const [cx, cy, cw] = choiceBox(by);
-    if (x >= cx && x < cx + cw && y >= cy && y < cy + 28) { answer(y < cy + 14 ? 0 : 1); return; }
+    const [cx, cy] = choiceBox(by);
+    if (x >= cx && x < cx + 44 && y >= cy && y < cy + 28) { answer(y < cy + 14 ? 0 : 1); return; }
   }
   dialogA();
 }
@@ -348,9 +343,9 @@ function drawDialog(by) {
   });
   if (D.shown >= D.total) {
     if (D.page.ask) {
-      const [cx, cy, cw] = choiceBox(by), [l0, l1] = choiceLabels();
-      box(ctx, cx, cy, cw, 28);
-      text(ctx, l0, cx + 16, cy + 7, UI.text); text(ctx, l1, cx + 16, cy + 17, UI.text);
+      const [cx, cy] = choiceBox(by);
+      box(ctx, cx, cy, 44, 28);
+      text(ctx, 'YES', cx + 16, cy + 7, UI.text); text(ctx, 'NO', cx + 16, cy + 17, UI.text);
       text(ctx, '▶', cx + 8, cy + 7 + D.choice * 10, UI.accent);
     } else if (Math.floor(G.time * 3) % 2) text(ctx, '▼', bx + w - 13, by + 34, UI.accent);
   }
@@ -1766,12 +1761,11 @@ const askWord = (q = SCRIPT.askWord) => ({ ask: wz(q), yes: [], no: () => [...SC
 // Book mode: one letter question. Its answer is kept as answer number k, so going back
 // with B and answering again replaces it, and the questions after it are worked out anew.
 // `then` gives what comes after the answer (made when it's reached, from the answers so far).
-// `q` and `opts` change the wording and the answer labels; the first answer always means
-// the letter is in the word.
-function letterAsk(L, yes, no, then = () => [], q = letterQuestion(L), opts = null) {
+// `q` changes the wording (YES always means the letter is in the word).
+function letterAsk(L, yes, no, then = () => [], q = letterQuestion(L)) {
   const k = G.book.answers.length;
   const go = v => () => { G.book.answers.length = k; G.book.answers.push([L, v]); return [...(v ? yes : no), ...then()]; };
-  return { ask: q, yes: go(true), no: go(false), opts };
+  return { ask: q, yes: go(true), no: go(false) };
 }
 // The next letter to ask, or null once the word is known: no question is ever asked for show.
 const nextLetter = () => bookNext(G.book.page, G.book.answers);
@@ -1883,7 +1877,7 @@ function* bookScene() {
   yield* say2([...B.closed, bookLine(F.pre, L), letterAsk(L, [F.yes], [F.no])]);
   // his second go: he calls the winds. The magic gathers round him (less and less of it),
   // goes quiet... and lets out one sad little spark that drops at his feet, and a puff.
-  // He asks anyway: "THERE WASN'T AN R IN IT, WAS THERE?"
+  // He asks anyway: "WAS THERE A G IN IT?"
   yield* say2(B.fizzle);
   Audio.sfx('twinkle');
   const t0 = this.time, ox = a.px + 8, oy = a.py + 2;
@@ -1905,7 +1899,7 @@ function* bookScene() {
   yield* say2(B.fizzled.slice(0, 2)); // "...PFT." "*COUGH*"
   a.dir = look;
   const L2 = nextLetter();
-  if (L2) yield* say2([bookLine(B.fizzled[2], L2), letterAsk(L2, B.fizzledWas, B.fizzledWasnt, undefined, bookLine(B.askFizzled, L2), B.fizzledOpts)]);
+  if (L2) yield* say2([bookLine(B.fizzled[2], L2), letterAsk(L2, B.fizzledWas, B.fizzledWasnt, undefined, bookLine(B.askFizzled, L2))]);
   else yield* say2(B.fizzledWasnt.slice(1));
   yield* say2(B.bye);
   this.reading = false;

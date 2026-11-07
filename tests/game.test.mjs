@@ -343,11 +343,6 @@ test('book: the book and its arrow fit on the narrowest screen', () => {
   assert.ok(4 + w + 4 + 2 + 7 + 2 <= 160 - 4, 'cover, book, arrow and its bob, with room to spare');
 });
 
-test('book: his THERE WAS / THERE WASN\'T answers fit beside the text box', () => {
-  assert.equal(BOOK.fizzledOpts.length, 2);
-  for (const l of BOOK.fizzledOpts) assert.ok(24 + (l.length * 6 - 1) <= 154 - 4, l);
-});
-
 test('apprentice stands by the house in book mode only', () => {
   const a = NPCS.find(n => n.id === 'apprentice');
   assert.ok(a && a.bookOnly && !a.fortuneOnly);
