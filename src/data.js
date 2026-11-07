@@ -372,7 +372,7 @@ export const QUEST = {
     // fortune mode (/!card): the lucky card from the fortune teller
     askLucky: 'TELL ME. DO YOU HAVE A LUCKY CARD?',
     yesLucky: ['GOOD. IF THE WIZARD ASKS, THINK OF THAT CARD.', 'GO ON.'],
-    noLucky: ['NO? THE CARD YOU PEEKED AT, BACK AT THE FORTUNE TELLER\'S. THAT\'S YOUR LUCKY CARD.', 'IF THE WIZARD ASKS, THINK OF THAT ONE.', 'GO ON, THEN.'],
+    noLucky: ['NO? I THOUGHT WE ALL GOT A LUCKY CARD FROM THE FORTUNE TELLER.', 'IF THE WIZARD ASKS, THINK OF THAT ONE.', 'GO ON, THEN.'],
   },
   frogKey: ['THE FROG COUGHS UP SOMETHING SHINY!'],
   gotKey: ['YOU GOT A RUSTY KEY!'],
