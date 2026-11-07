@@ -1995,10 +1995,12 @@ const End = {
     let cy = Math.round(VH * 0.42), bottom = cy + 32;
     if (this.spread) {
       // the spread sits below the title, with room above it for their card to rise
-      const top = Math.max(Math.round(VH * 0.08) + 20, cy - 54);
-      bottom = this.drawSpread(cx, top + 18) + 2;
+      // how far their card sticks out: enough to show its corner, less on a short screen
+      const top = Math.max(Math.round(VH * 0.08) + 20, cy - 60);
+      this.jog = Math.max(20, Math.min(30, VH - 34 - 64 - top - 4));
+      bottom = this.drawSpread(cx, top);
     } else ctx.drawImage(this.cc, Math.round(cx - this.cc.width / 2), Math.round(cy - this.cc.height / 2) + Math.round(Math.sin(this.t * 1.6)));
-    const by = Math.max(bottom + 8, Math.round(VH * 0.68));
+    const by = Math.max(bottom + (this.spread ? 5 : 8), Math.round(VH * 0.68));
     box(ctx, Math.round(cx - 66), by, 132, 28);
     textCenter(ctx, 'THANKS FOR PLAYING,', cx, by + 7, UI.text);
     textCenter(ctx, G.name + '!', cx, by + 17, UI.accent);
@@ -2007,15 +2009,16 @@ const End = {
   },
   onA() { if (this.t > 3) fadeTo(() => setScene(Title), 0.5); },
   onTap() { this.onA(); },
-  // A ribbon spread of face-down cards with theirs face up, pushed up out of the middle.
+  // A neat ribbon spread of face-down cards. Their card is face up in the middle of it,
+  // pushed up out of the pack: the cards to its right still cover its lower part.
   drawSpread(cx, top) {
-    const back = cardBack(), W = back.width, H = back.height;
-    const n = Math.max(9, Math.min(17, Math.floor((VW - 16 - W) / 8) + 1)), step = Math.min(10, Math.floor((VW - 16 - W) / (n - 1)));
-    const x0 = Math.round(cx - (W + (n - 1) * step) / 2), y = top, mid = n >> 1;
-    for (let i = 0; i < n; i++) if (i !== mid) ctx.drawImage(back, x0 + i * step, y + (i % 3 === 1 ? 1 : 0));
-    const lift = Math.round(Math.min(1, this.t / 0.8) * 16) + Math.round(Math.sin(this.t * 1.6));
-    ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(glow(34, '#e8b84a'), x0 + mid * step + W / 2 - 34, y - lift + H / 2 - 34); ctx.globalCompositeOperation = 'source-over';
+    const back = cardBack(), W = back.width, H = back.height, room = VW - 16 - W;
+    const n = Math.max(9, Math.min(17, Math.floor(room / 9) + 1)), step = Math.min(11, Math.floor(room / (n - 1)));
+    const x0 = Math.round(cx - (W + (n - 1) * step) / 2), y = top + this.jog, mid = n >> 1;
+    const lift = Math.round(this.jog * (1 - Math.pow(1 - Math.min(1, this.t / 0.9), 3)));
+    for (let i = 0; i < mid; i++) ctx.drawImage(back, x0 + i * step, y);
     ctx.drawImage(this.cc, x0 + mid * step, y - lift);
+    for (let i = mid + 1; i < n; i++) ctx.drawImage(back, x0 + i * step, y);
     return y + H; // bottom of the spread
   },
 };
