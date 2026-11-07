@@ -1,5 +1,5 @@
-import { C, UI, text, textCenter, textWidth, tinyText, hatSprite, wingSprite, keySprite, potionSprite, fishSprite, dogBellySprite, luteSprite, fanSprite, wrap, box, blob, glow, glyphDots, drawCard, makeScroll, charSprite, drawTile, drawOver, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
-import { MAPS, LOOKS, NPCS, SCRIPT, cardName, decodeWord, VALUE_GRID, CHASED, CLASSES, SKINS, HAIRS, OUCH, GRUDGE, KONAMI, EGG, squawk, QUEST, FISH } from './data.js';
+import { C, UI, text, textCenter, textWidth, tinyText, hatSprite, wingSprite, keySprite, potionSprite, fishSprite, dogBellySprite, luteSprite, fanSprite, wrap, box, blob, glow, glyphDots, drawCard, makeScroll, miniCard, MINI_W, MINI_H, charSprite, drawTile, drawOver, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
+import { MAPS, LOOKS, NPCS, SCRIPT, cardName, decodeWord, VALUE_GRID, CHASED, CLASSES, SKINS, HAIRS, OUCH, GRUDGE, KONAMI, EGG, squawk, QUEST, FISH, AWARD, FORTUNE, fortuneTarget, jokerReading, cardReading } from './data.js';
 import * as Audio from './audio.js';
 
 // The game draws at a low resolution that follows the screen's shape: VW x VH game pixels.
@@ -18,6 +18,8 @@ const G = {
   name: '', hero: null, flags: {}, time: 0, fade: null, scene: null,
 };
 if (window.__force) { G.armed = { ...window.__force }; G.locked = true; }
+// "/!card": the fortune teller's self-working trick. The card comes from her reading.
+if (window.__fortune) { G.armed = { v: null, s: null, fortune: true }; G.locked = true; }
 if (window.__forceWord) { const w = decodeWord(window.__forceWord); if (w) { G.armed = { v: null, s: null, word: w }; G.locked = true; } }
 const armedCard = () => ({ v: G.armed.v || 1, s: G.armed.s || 'S' });
 const fill = s => s.replace(/\{N\}/g, G.name || 'HERO');
@@ -524,7 +526,7 @@ function drawCheat() {
   });
   const a = G.armed;
   const lab = a.v || a.s ? `${a.v ? a.v : '?'}${a.s ? { C: '♣', H: '♥', S: '♠', D: '♦' }[a.s] : '?'}` : '--';
-  textCenter(ctx, a.word ? 'WORD: ' + a.word.slice(0, 16) : 'ARMED: ' + lab + (G.locked ? ' (URL)' : ''), 80, 116, UI.accent);
+  textCenter(ctx, a.fortune ? 'FORTUNE TELLER (URL)' : a.word ? 'WORD: ' + a.word.slice(0, 16) : 'ARMED: ' + lab + (G.locked ? ' (URL)' : ''), 80, 116, UI.accent);
   textCenter(ctx, 'TAP TO CLOSE', 80, 126, UI.dim);
   ctx.restore();
 }
@@ -668,10 +670,10 @@ function loadMap(name) {
   for (let ty = 0; ty < h; ty++) for (let tx = 0; tx < w; tx++) {
     const k = tiles[ty][tx][0];
     if (k === 'torch') m.flames.push({ x: tx * 16 + 8, y: ty * 16 + 7, big: false });
-    if (k === 'hearth') m.flames.push({ x: tx * 16 + 8, y: ty * 16 + 15, big: true });
+    if (k === 'hearth') m.flames.push({ x: tx * 16 + 8, y: ty * 16 + 15, big: true, green: name === 'witches' });
     if (k === 'cauldron') m.bubbles.push({ x: tx * 16, y: ty * 16 });
     if (k === 'worms') m.worms.push({ x: tx * 16, y: ty * 16 });
-    const L = LIGHTS[k];
+    const L = k === 'hearth' && name === 'witches' ? [8, 12, 40, '#3ac84a'] : LIGHTS[k]; // the witches' fire is green
     if (L) m.lights.push({ x: tx * 16 + L[0], y: ty * 16 + L[1], r: L[2], col: L[3] });
     if (k === 'tower' && m.kind(tx, ty - 1) !== 'tower') m.lights.push({ x: tx * 16 + 8, y: ty * 16 + 6, r: 10, col: '#c87a2a' });
   }
@@ -689,14 +691,14 @@ const SPEED = 5, NPC_SPEED = 2.6;
 const Play = {
   start() {
     G.flags = {};
-    this.npcs = NPCS.map(n => ({
+    this.npcs = NPCS.filter(n => !n.fortuneOnly || G.armed.fortune).map(n => ({
       ...n, look: LOOKS[n.look], dir: n.dir || 'down', px: n.x * 16, py: n.y * 16, home: { x: n.x, y: n.y },
       moving: false, t: 0, timer: 1 + Math.random() * 2, frame: 0, anim: Math.random() * 3, talked: 0,
     }));
     this.load('home', 2, 3, 'right');
     const wake = SCRIPT.wake.slice(), keys = !window.matchMedia('(pointer: coarse)').matches;
     if (keys) wake[2] = `USE WASD OR THE ARROW KEYS TO WALK. PRESS ${KEY_A.toUpperCase()} TO TALK OR LOOK.`;
-    this.shots = []; this.cool = 0; this.swing = null; this.code = []; this.visitor = null; this.items = [];
+    this.shots = []; this.cool = 0; this.swing = null; this.code = []; this.visitor = null; this.items = []; this.award = null;
     this.run(function* () { yield wait(0.7); yield* talk(wake); });
   },
   load(mapName, x, y, dir) {
@@ -712,6 +714,7 @@ const Play = {
     }
     Audio.music(this.map.def.music);
     if (mapName === 'world' && G.flags.wingsDue && !G.flags.wings) this.run(wingsScene);
+    if (mapName === 'world' && G.armed.fortune && !G.flags.fortune) this.run(fortuneScene);
   },
   run(gen) { this.script = gen.call(this); this.waitFn = null; },
   npcsHere() { return this.npcs.filter(n => n.map === this.map.name); },
@@ -859,13 +862,16 @@ const Play = {
     this.updateShots(dt);
     // effects
     this.fx.flash = Math.max(0, this.fx.flash - dt * 1.4);
+    Table.update(dt);
     if (this.card) this.card.t += dt;
+    if (this.award) this.award.t += dt;
     updateParts(dt);
   },
   // ---- weapons: B button. Close weapons hit what is in front (or around) you;
   // far weapons aim themselves at the nearest person roughly in front of you.
   onB() {
     this.secret('B');
+    if (Table.input() && !D.active) { Table.onB(); return; }
     if (D.active || this.script || G.fade || this.cool > 0 || this.card) return;
     const p = this.p, id = G.flags.chickenStaff ? 'poly' : G.hero.id, pcx = p.px + 8, pcy = p.py + 8;
     this.cool = id === 'bard' ? 0.6 : 0.4;
@@ -935,6 +941,12 @@ const Play = {
     }
     n.hitT = 0.3;
     parts.push({ k: 'say', text: shout, x: n.px + 8, y: n.py - (n.sleep ? 4 : 9), vy: -14, life: 1.3, world: true });
+    // every person in the land a chicken at once (the wizard doesn't count): an award
+    const people = this.npcs.filter(o => (o.chicken && o.orig ? o.orig.look : o.look).kind === 'person');
+    if (!G.flags.chickens && people.length && people.every(o => o.chicken)) {
+      G.flags.chickens = 1; this.award = { t: 0, lines: AWARD.chickens };
+      setTimeout(() => Audio.sfx('item'), 300);
+    }
   },
   hit(n, dir) {
     const key = n.id === 'wizard' ? 'wizard' : n.chicken ? 'chicken' : OUCH[n.id] ? n.id : OUCH[n.look.kind] ? n.look.kind : 'person';
@@ -991,6 +1003,7 @@ const Play = {
   },
   onDir(d) {
     this.secret(d);
+    if (Table.input() && !D.active) { Table.onDir(d); return; }
     if (D.active) dialogDir(d);
     else if (!this.script && !this.p.moving) this.p.dir = d; // a quick tap still turns you
   },
@@ -1006,6 +1019,7 @@ const Play = {
   onA() {
     if (this.secret('A')) return;
     if (this.card && this.card.waitA) { this.card.waitA = false; return; }
+    if (Table.input() && !D.active) { Table.onA(); return; }
     if (D.active) { dialogA(); return; }
     if (this.script || this.p.moving) return;
     const p = this.p, [dx, dy] = DIRV[p.dir], fx = p.x + dx, fy = p.y + dy;
@@ -1031,6 +1045,7 @@ const Play = {
   },
   onTap(x, y) {
     if (this.card && this.card.waitA) { this.card.waitA = false; return; }
+    if (Table.input() && !D.active) { Table.onTap(x, y); return; }
     if (D.active) dialogTap(x, y, this.dialogY);
   },
   talkTo(n) {
@@ -1072,7 +1087,11 @@ const Play = {
   },
   draw() {
     const m = this.map, p = this.p, mw = m.w * 16, mh = m.h * 16;
-    const viewH = UIB; // keep the hero out from under the controls
+    // keep the hero out from under the controls; during the fortune reading, also out from
+    // under her table and the text box (the camera may look past the bottom of the map)
+    const want = this.reading ? Math.max(24, Math.min(UIB, (Table.on ? Table.geom().y : UIB - 46) - 16)) : UIB;
+    this.vh = this.vh ? this.vh + (want - this.vh) * 0.12 : want;
+    const viewH = Math.round(this.vh);
     let cx = p.px + 8 - VW / 2, cy = p.py + 8 - viewH / 2;
     cx = Math.round(mw <= VW ? (mw - VW) / 2 : Math.max(0, Math.min(mw - VW, cx)));
     cy = Math.round(mh <= viewH ? (mh - viewH) / 2 : Math.max(0, Math.min(mh - viewH, cy)));
@@ -1155,7 +1174,7 @@ const Play = {
     if (G.flags.chickenStaff) { const [ox, oy] = this.staffOrb(p.px - cx, p.py - cy - 2), r = this.cool > 0 ? 14 : 8; ctx.drawImage(glow(r, '#6ae84a'), ox + 1 - r, oy - r); }
     if (wiz) { const r = wiz.frame ? 40 : 22, ox = wiz.chicken ? 12 : 15, oy = wiz.chicken ? -3 : -6; ctx.drawImage(glow(r, '#3ab8e0'), wiz.px - cx + ox - r, wiz.py - cy + oy - r); }
     ctx.globalCompositeOperation = 'source-over';
-    for (const f of m.flames) flame(ctx, f.x - cx, f.y - cy, this.time + f.x, f.big);
+    for (const f of m.flames) flame(ctx, f.x - cx, f.y - cy, this.time + f.x, f.big, f.green);
     if (this.fire) this.drawFire(cx, cy, true);
     for (const b of m.bubbles) for (let i = 0; i < 3; i++) {
       const ph = (this.time * 1.2 + i / 3) % 1;
@@ -1182,11 +1201,26 @@ const Play = {
       if (wiz) this.drawWizard(wiz, cx, cy);
     }
     if (this.visitor) this.drawVisitor(cx, cy);
+    Table.draw();
     drawParts(cx, cy);
     if (this.card) this.drawReveal();
     if (this.fx.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${Math.min(1, this.fx.flash)})`; ctx.fillRect(0, 0, VW, VH); }
     this.dialogY = dialogBoxY(p.py - cy);
     drawDialog(this.dialogY);
+    if (this.award) this.drawAward();
+  },
+  // An award banner slides down from the top, stays a while, then slides away.
+  drawAward() {
+    const a = this.award, T = 4.5;
+    if (a.t > T) { this.award = null; return; }
+    const k = Math.min(1, a.t / 0.35, (T - a.t) / 0.35), w = 140, h = 40;
+    const x = Math.round((VW - w) / 2), y = Math.round(-h + (h + 6) * (1 - Math.pow(1 - Math.max(0, k), 3)));
+    box(ctx, x, y, w, h);
+    ctx.drawImage(charSprite(LOOKS.chicken, 'down', Math.floor(this.time * 3) % 2), x + 7, y + 12);
+    text(ctx, a.lines[0], x + 28, y + 6, UI.accent);
+    text(ctx, a.lines[1], x + 28, y + 17, UI.text);
+    text(ctx, a.lines[2], x + 28, y + 27, UI.text);
+    if (Math.random() < 0.3) parts.push({ k: 'spark', x: x + 10 + Math.random() * (w - 20), y: y + h - 2, vx: 0, vy: 10, life: 0.4, col: C.gold });
   },
   // The evil wizard's staff, in the hero's hand: dark wood, a green orb that flashes when it fires.
   staffOrb(hx, hy) { return [hx + (this.p.dir === 'left' || this.p.dir === 'up' ? 1 : 12), hy - 4]; },
@@ -1350,6 +1384,221 @@ const Play = {
   },
 };
 
+// ================================================================ the fortune teller's table
+// A compact panel like a text box with a strip of green felt. The spectator shows where
+// the jokers fell (the cards part to show where a joker would go), then names the cards
+// she points at with value and suit chips. Card faces are never drawn. Taps, or the
+// D-pad with A (B undoes).
+const CARD_STEP = MINI_W + 2;
+const VCHIPS = [[1, 2, 3, 4, 5, 6, 7], [8, 9, 10, 11, 12, 13]];
+const FU = FORTUNE.ui;
+const SUIT_CH = { C: '♣', H: '♥', S: '♠', D: '♦' };
+const Table = {
+  on: false, mode: null, t: 0, row: [],
+  open() {
+    this.on = true; this.t = 0; this.mode = 'jokers'; this.placed = []; this.gap = 2; this.hx = null;
+    this.row = Array.from({ length: 5 }, () => ({ face: 'back', x: null, lift: 0, pop: 0 }));
+    this.cur = 1; this.pad = false; this.hi = null; this.warn = 0; this.entered = []; this.order = [];
+  },
+  close() { this.on = false; this.mode = null; },
+  input() { return this.on && (this.mode === 'jokers' || this.mode === 'check' || this.mode === 'card'); },
+  // the jokers' places in the row of seven
+  jokers() { return this.row.map((it, i) => (it.face === 'joker' ? i : -1)).filter(i => i >= 0); },
+  // after the jokers: point at these cards (row indexes), one at a time
+  askCards(order) {
+    this.mode = 'card'; this.order = order; this.k = 0; this.entered = []; this.sel = { v: null, s: null };
+    this.cur = { r: 0, c: 0 }; this.hi = null;
+  },
+  show(hi) { this.mode = 'show'; this.hi = hi || null; },
+  geom() {
+    const w = dialogW(), x = dialogX();
+    const h = this.mode === 'card' ? 78 : this.mode === 'show' ? 38 : 58;
+    const bottom = D.active ? UIB - 46 - 16 : UIB - 4;
+    return { x, y: Math.max(16, bottom - h), w, h };
+  },
+  rowY(g) { return g.y + (this.mode === 'jokers' || this.mode === 'check' ? 36 : 18); },
+  // where each card sits; in the joker step the cards part at the chosen gap
+  layout(g, split = this.mode === 'jokers' ? 6 : 0) {
+    const n = this.row.length, total = n * CARD_STEP - 2 + split, x0 = Math.round(g.x + g.w / 2 - total / 2);
+    return this.row.map((_, i) => x0 + i * CARD_STEP + (i >= this.gap ? split : 0));
+  },
+  gapX(g) {
+    const xs = this.layout(g);
+    return this.gap < xs.length ? xs[this.gap] - 4 : xs[xs.length - 1] + MINI_W + 3;
+  },
+  update(dt) {
+    if (!this.on) return;
+    this.t += dt; this.warn = Math.max(0, this.warn - dt);
+    const g = this.geom(), xs = this.layout(g), pointed = this.mode === 'card' ? this.order[this.k] : -1;
+    this.row.forEach((it, i) => {
+      it.x = it.x === null ? xs[i] : it.x + (xs[i] - it.x) * Math.min(1, dt * 16);
+      it.lift += ((i === pointed ? 3 : 0) - it.lift) * Math.min(1, dt * 18);
+      it.pop = Math.max(0, it.pop - dt * 5);
+    });
+    if (this.mode === 'jokers') { const hx = this.gapX(g); this.hx = this.hx === null ? hx : this.hx + (hx - this.hx) * Math.min(1, dt * 18); }
+  },
+  // ---- the joker step
+  place(gap) {
+    this.gap = gap;
+    this.row.splice(gap, 0, { face: 'joker', x: this.hx - MINI_W / 2, lift: 0, pop: 1 });
+    this.placed.push(gap); Audio.sfx('select');
+    spark(this.hx, this.rowY(this.geom()) + 6, 8, C.gold);
+    if (this.placed.length === 2) { this.mode = 'check'; this.cur = 1; }
+    else this.gap = Math.min(this.row.length, gap + 1);
+  },
+  undo() {
+    if (!this.placed.length) { Audio.sfx('bump'); return; }
+    const gap = this.placed.pop();
+    this.row.splice(gap, 1); this.gap = gap; this.mode = 'jokers'; this.hx = null; Audio.sfx('move');
+  },
+  // ---- naming a card
+  pick(r, c) {
+    const s = this.sel;
+    if (r < 2) { s.v = VCHIPS[r][c]; Audio.sfx('move'); if (this.pad) this.cur = s.s ? { r: 2, c: 4 } : { r: 2, c: 0 }; }
+    else if (c < 4) { s.s = CHASED[c]; Audio.sfx('move'); if (this.pad) this.cur = s.v ? { r: 2, c: 4 } : { r: 0, c: 0 }; }
+    else { this.ok(); return; }
+    if (s.v && s.s) this.row[this.order[this.k]].pop = 0.6;
+  },
+  ok() {
+    const s = this.sel;
+    if (!s.v || !s.s) { Audio.sfx('bump'); return; }
+    if (this.entered.some(e => e.v === s.v && e.s === s.s)) { this.warn = 1.4; Audio.sfx('bump'); return; }
+    const it = this.row[this.order[this.k]];
+    it.pop = 1;
+    this.entered.push({ v: s.v, s: s.s }); Audio.sfx('select');
+    spark(it.x + MINI_W / 2, this.rowY(this.geom()) + 4, 10, C.gold);
+    this.sel = { v: null, s: null }; this.cur = { r: 0, c: 0 };
+    if (++this.k >= this.order.length) this.show(this.order);
+  },
+  back() {
+    const s = this.sel;
+    if (s.v || s.s) { this.sel = { v: null, s: null }; Audio.sfx('move'); return; }
+    if (!this.k) { Audio.sfx('bump'); return; }
+    this.k--; this.sel = { ...this.entered.pop() }; Audio.sfx('move');
+  },
+  chips(g) {
+    const out = [];
+    VCHIPS.forEach((vals, r) => {
+      const w = 16, tw = vals.length * (w + 2) - 2, x0 = Math.round(g.x + g.w / 2 - tw / 2);
+      vals.forEach((v, c) => out.push({ r, c, x: x0 + c * (w + 2), y: g.y + 38 + r * 12, w, h: 10, v }));
+    });
+    const tw = 4 * 18 + 26 + 4 * 2, x0 = Math.round(g.x + g.w / 2 - tw / 2);
+    CHASED.forEach((s, c) => out.push({ r: 2, c, x: x0 + c * 20, y: g.y + 63, w: 18, h: 10, s }));
+    out.push({ r: 2, c: 4, x: x0 + 4 * 20, y: g.y + 63, w: 26, h: 10, ok: true });
+    return out;
+  },
+  checkChips(g) {
+    const cx = Math.round(g.x + g.w / 2);
+    return [{ c: 0, x: cx - 40, y: g.y + 18, w: 36, h: 11, label: 'UNDO' }, { c: 1, x: cx + 4, y: g.y + 18, w: 36, h: 11, label: 'YES' }];
+  },
+  undoChip(g) { return { x: g.x + g.w - 36, y: g.y + 4, w: 30, h: 10 }; },
+  // ---- input
+  onDir(d) {
+    this.pad = true;
+    if (this.mode === 'jokers') {
+      if (d === 'left' || d === 'right') { this.gap = Math.max(0, Math.min(this.row.length, this.gap + (d === 'left' ? -1 : 1))); Audio.sfx('move'); }
+    } else if (this.mode === 'check') {
+      if (d === 'left' || d === 'right') { this.cur = 1 - this.cur; Audio.sfx('move'); }
+    } else if (this.mode === 'card') {
+      const len = r => (r < 2 ? VCHIPS[r].length : 5), c = this.cur;
+      if (d === 'left') c.c = (c.c + len(c.r) - 1) % len(c.r);
+      if (d === 'right') c.c = (c.c + 1) % len(c.r);
+      if (d === 'up' || d === 'down') { c.r = (c.r + (d === 'up' ? 2 : 1)) % 3; c.c = Math.min(c.c, len(c.r) - 1); }
+      Audio.sfx('move');
+    }
+  },
+  onA() {
+    if (this.mode === 'jokers') this.place(this.gap);
+    else if (this.mode === 'check') { if (this.cur) this.confirm(); else this.undo(); }
+    else if (this.mode === 'card') this.pick(this.cur.r, this.cur.c);
+  },
+  onB() {
+    if (this.mode === 'jokers' || this.mode === 'check') this.undo();
+    else if (this.mode === 'card') this.back();
+  },
+  confirm() { Audio.sfx('sparkle'); this.show(this.jokers()); },
+  onTap(x, y) {
+    this.pad = false;
+    const g = this.geom(), hit = b => x >= b.x - 1 && x < b.x + b.w + 1 && y >= b.y - 1 && y < b.y + b.h + 1;
+    if (this.mode === 'jokers') {
+      if (this.placed.length && hit(this.undoChip(g))) { this.undo(); return; }
+      if (y < g.y + 13 || y > g.y + g.h) return;
+      // the nearest gap between cards, laid out as if nothing had parted
+      const xs = this.layout(g, 0);
+      let best = 0, bd = 1e9;
+      for (let i = 0; i <= xs.length; i++) {
+        const bx = i < xs.length ? xs[i] - 1 : xs[xs.length - 1] + MINI_W + 1, dd = Math.abs(x - bx);
+        if (dd < bd) { bd = dd; best = i; }
+      }
+      this.gap = best; this.hx = this.gapX(g); this.place(best);
+    } else if (this.mode === 'check') {
+      for (const b of this.checkChips(g)) if (hit(b)) { if (b.c) this.confirm(); else this.undo(); }
+    } else if (this.mode === 'card') {
+      for (const b of this.chips(g)) if (hit(b)) { this.pick(b.r, b.c); return; }
+    }
+  },
+  // ---- drawing
+  chip(b, on, focus, dim = false) {
+    ctx.fillStyle = UI.edgeD; ctx.fillRect(b.x + 1, b.y + 1, b.w - 2, b.h); // shadow
+    const p = on ? 1 : 0;
+    ctx.fillStyle = UI.edgeD; ctx.fillRect(b.x + 1, b.y + p, b.w - 2, b.h); ctx.fillRect(b.x, b.y + 1 + p, b.w, b.h - 2);
+    ctx.fillStyle = dim ? UI.paperD : on ? '#f4c45a' : '#f4ead0'; ctx.fillRect(b.x + 1, b.y + 1 + p, b.w - 2, b.h - 2);
+    if (focus && Math.floor(this.t * 4) % 2) { ctx.fillStyle = UI.accent; ctx.fillRect(b.x + 1, b.y + b.h - 2 + p, b.w - 2, 1); }
+    return p;
+  },
+  draw() {
+    if (!this.on) return;
+    const g = this.geom(), { x, y, w, h } = g, ry = this.rowY(g), t = this.t;
+    if (!D.active) { box(ctx, x + 6, y - 13, textWidth('FORTUNE TELLER') + 14, 16, '#9a643e'); text(ctx, 'FORTUNE TELLER', x + 13, y - 9, '#fff6dc'); }
+    box(ctx, x, y, w, h);
+    // green felt under the cards
+    const fy = y + 13, fh = this.mode === 'jokers' || this.mode === 'check' ? 41 : 21;
+    ctx.fillStyle = '#1d3a2e'; ctx.fillRect(x + 5, fy, w - 10, fh);
+    ctx.fillStyle = '#2f5d4a'; ctx.fillRect(x + 6, fy + 1, w - 12, fh - 2);
+    ctx.fillStyle = '#386b55'; for (let i = 0; i < 18; i++) ctx.fillRect(x + 7 + ((hash(i, 7) * (w - 15)) | 0), fy + 2 + ((hash(i, 9) * (fh - 4)) | 0), 1, 1);
+    // heading
+    const head = this.mode === 'jokers' ? (this.placed.length ? FU.joker2 : FU.joker1) : this.mode === 'check' ? FU.check
+      : this.mode === 'card' ? (this.warn > 0 ? FU.seen : FU.which) : FU.reading;
+    text(ctx, head, x + 8, y + 4, this.warn > 0 ? C.red : UI.accent);
+    if (this.mode === 'card') {
+      // what they've picked so far, then three dots for the three cards
+      const s = this.sel, lab = (s.v ? VALUE_LABEL[s.v] : '') + (s.s ? SUIT_CH[s.s] : '');
+      if (lab) text(ctx, lab, x + w - 34 - textWidth(lab), y + 4, s.s === 'H' || s.s === 'D' ? C.red : UI.text);
+      for (let i = 0; i < this.order.length; i++) { ctx.fillStyle = i < this.k ? C.gold : i === this.k ? UI.accent : UI.paperD; ctx.fillRect(x + w - 25 + i * 5, y + 6, 3, 3); }
+    }
+    if (this.mode === 'jokers' && this.placed.length) {
+      const b = this.undoChip(g), p = this.chip(b, false, false);
+      textCenter(ctx, 'UNDO', b.x + b.w / 2, b.y + 1 + p, UI.text);
+    }
+    // the row: a soft shadow, then the card, idling up and down a little
+    const pointed = this.mode === 'card' ? this.order[this.k] : -1;
+    this.row.forEach((it, i) => {
+      const bob = Math.round(Math.sin(t * 2.2 + i * 0.8) * 0.6), cx = Math.round(it.x), cy = Math.round(ry - it.lift + bob);
+      ctx.fillStyle = 'rgba(8,20,14,0.45)'; ctx.fillRect(cx + 1, ry + 2, MINI_W, MINI_H - 1);
+      const lit = (this.hi && this.hi.includes(i)) || i === pointed, named = this.mode === 'card' && this.order.indexOf(i) >= 0 && this.order.indexOf(i) < this.k;
+      if ((lit && Math.floor(t * 3) % 3) || named) { ctx.fillStyle = named ? C.goldD : C.gold; ctx.fillRect(cx - 1, cy - 1, MINI_W + 2, MINI_H + 2); }
+      const s = 1 + it.pop * 0.3, cw = Math.round(MINI_W * s), ch = Math.round(MINI_H * s);
+      ctx.drawImage(miniCard(it.face), Math.round(cx + MINI_W / 2 - cw / 2), Math.round(cy + MINI_H / 2 - ch / 2), cw, ch);
+    });
+    if (this.mode === 'jokers') {
+      // the joker in hand, floating over the gap
+      const hx = Math.round(this.hx), hy = y + 15 + Math.round(Math.sin(t * 3));
+      ctx.drawImage(miniCard('joker'), hx - (MINI_W >> 1), hy);
+      if (Math.floor(t * 4) % 2) text(ctx, '▼', hx - 2, ry - 6, C.gold);
+    }
+    if (this.mode === 'check') for (const b of this.checkChips(g)) {
+      const p = this.chip(b, false, this.pad && this.cur === b.c);
+      textCenter(ctx, b.label, b.x + b.w / 2, b.y + 2 + p, b.c ? UI.accent : UI.text);
+    }
+    if (this.mode === 'card') for (const b of this.chips(g)) {
+      const s = this.sel, ready = !!(s.v && s.s), on = b.ok ? false : b.s ? s.s === b.s : s.v === b.v;
+      const p = this.chip(b, on, this.pad && this.cur.r === b.r && this.cur.c === b.c, b.ok && !ready);
+      if (b.ok) textCenter(ctx, 'OK', b.x + b.w / 2, b.y + 1 + p, ready ? '#2e7a3a' : UI.dim);
+      else textCenter(ctx, b.s ? SUIT_CH[b.s] : VALUE_LABEL[b.v], b.x + b.w / 2, b.y + 1 + p, b.s === 'H' || b.s === 'D' ? C.red : UI.text);
+    }
+  },
+};
+
 // ---------------------------------------------------------------- script helpers
 const wait = s => { const until = Play.time + s; return () => Play.time >= until; };
 function* talk(lines, low = false, pos = null, name = null) { say(lines, { low, pos: pos || 'auto', name }); yield () => !D.active; }
@@ -1358,6 +1607,7 @@ function* talk(lines, low = false, pos = null, name = null) { say(lines, { low, 
 const henWizard = () => !!(Play.npcs && Play.npc('wizard').chicken);
 const wz = l => (henWizard() ? squawk(fill(l)) : l);
 const ask = (q = SCRIPT.ask) => ({ ask: wz(q), yes: [], no: () => [...SCRIPT.askNo.map(wz), ask(SCRIPT.askAgain)] });
+const askFaceUp = (q = SCRIPT.askFaceUp) => ({ ask: wz(q), yes: [], no: () => [...SCRIPT.askNoFaceUp.map(wz), askFaceUp(SCRIPT.askFaceUpAgain)] });
 const askWord = (q = SCRIPT.askWord) => ({ ask: wz(q), yes: [], no: () => [...SCRIPT.askNoWord.map(wz), askWord(SCRIPT.askAgain)] });
 // The thing the wizard reveals: the armed word on a scroll, or the armed card.
 const armedReveal = () => (G.armed.word ? { word: G.armed.word } : armedCard());
@@ -1425,6 +1675,58 @@ function* hermitScene() {
     yield () => !h.moving;
   }
   h.dir = 'right';
+}
+
+// Fortune mode: the fortune teller stops you as you come out of the house and reads
+// your cards. Her reading tells the game the card the wizard reveals at the end.
+function* walkTo(n, isGoal) {
+  for (let i = 0; i < 12 && !isGoal(n.x, n.y); i++) {
+    const d = this.bfsDir(n, isGoal);
+    if (!d) break;
+    this.move(n, d, NPC_SPEED * 1.3); n.t = 0;
+    yield () => !n.moving;
+  }
+}
+const shuffled = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+function* fortuneScene() {
+  G.flags.fortune = 1; this.reading = true;
+  const f = this.npc('seer'), p = this.p, F = FORTUNE, who = 'FORTUNE TELLER';
+  const say2 = lines => talk(lines, false, 'bottom', who);
+  const until = (q, no, again) => ({ ask: q, yes: [], no: () => [...no, until(again, no, again)] });
+  yield wait(0.4);
+  parts.push({ k: 'say', text: '!', x: f.px + 8, y: f.py - 9, vy: -10, life: 0.9, world: true });
+  Audio.sfx('select');
+  yield wait(0.6);
+  yield* walkTo.call(this, f, (x, y) => Math.abs(x - p.x) + Math.abs(y - p.y) === 1);
+  const dx = p.x - f.x, dy = p.y - f.y;
+  f.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+  p.dir = OPP[f.dir];
+  yield* say2([...F.hello, until(F.askDeck, F.noDeck, F.askDeckAgain), ...F.setup]);
+  let pq, target;
+  for (;;) {
+    yield* say2([...F.deal, until(F.askDealt, F.notDealt, F.askDealtAgain), ...F.cut, until(F.askCut, F.notCut, F.askCutAgain), ...F.row]);
+    Table.open(); Audio.sfx('twinkle');
+    yield () => Table.mode === 'show';
+    pq = Table.jokers(); target = fortuneTarget(pq[0], pq[1]);
+    if (target >= 0) break;
+    Table.show(pq);
+    yield* say2(F.redo);
+    Table.close();
+  }
+  yield* say2([...jokerReading(pq[0], pq[1]), ...F.point]);
+  // point at their card and two others, in a random order
+  const others = shuffled([0, 1, 2, 3, 4, 5, 6].filter(i => !pq.includes(i) && i !== target)).slice(0, 2);
+  const order = shuffled([target, ...others]);
+  Table.askCards(order);
+  yield () => Table.mode === 'show';
+  const cards = Table.entered, mine = cards[order.indexOf(target)];
+  G.armed.v = mine.v; G.armed.s = mine.s;
+  yield* say2([...cardReading(cards), F.close[0]]);
+  Table.close();
+  yield* say2(F.close.slice(1));
+  this.reading = false;
+  yield* walkTo.call(this, f, (x, y) => x === f.home.x && y === f.home.y);
+  f.dir = 'left';
 }
 
 // The bridge guard gets off the bridge, shoving whoever is in his way.
@@ -1636,8 +1938,12 @@ function* wizardScene() {
   const wiz = this.npc('wizard');
   this.p.dir = 'up';
   yield wait(0.3);
-  const word = G.armed.word;
-  yield* talk([...SCRIPT.wizard1.map(wz), word ? askWord() : ask(), ...(word ? SCRIPT.wizard2Word : SCRIPT.wizard2).map(wz)], true, null, 'WIZARD');
+  const word = G.armed.word, fortune = G.armed.fortune;
+  // fortune mode: the face-up card in their own shuffled deck
+  const middle = word ? [askWord(), ...SCRIPT.wizard2Word.map(wz)]
+    : fortune ? [...SCRIPT.wizardDeck.map(wz), askFaceUp(), ...SCRIPT.wizard2Fortune.map(wz)]
+    : [ask(), ...SCRIPT.wizard2.map(wz)];
+  yield* talk([...SCRIPT.wizard1.map(wz), ...middle], true, null, 'WIZARD');
   // the wind returns
   Audio.stopMusic();
   wiz.frame = 1;
@@ -1663,7 +1969,7 @@ function* wizardScene() {
   for (let i = 0; i < 30; i++) parts.push({ k: 'wind', x: cx - Math.random() * 60, y: cy + Math.random() * VH, vx: 200 + Math.random() * 100, vy: 0, len: 8 + (Math.random() * 10 | 0), life: 1.5, world: true });
   yield () => !this.card.waitA && this.card.t > 1.2;
   const said = this.card.word || cardName(this.card.v, this.card.s);
-  yield* talk(henWizard() ? [`BUK BUK... ${said}!`, wz('FAREWELL, {N}.')] : SCRIPT.wizard3, true, 'bottom', 'WIZARD');
+  yield* talk(henWizard() ? [`BUK BUK... ${said}!`, wz('FAREWELL, {N}.')] : fortune ? SCRIPT.wizard3Fortune : SCRIPT.wizard3, true, 'bottom', 'WIZARD');
   yield wait(0.3);
   fadeTo(() => setScene(End), 0.6);
 }
@@ -1692,6 +1998,7 @@ const End = {
     box(ctx, Math.round(cx - 66), by, 132, 28);
     textCenter(ctx, 'THANKS FOR PLAYING,', cx, by + 7, UI.text);
     textCenter(ctx, G.name + '!', cx, by + 17, UI.accent);
+    if (G.flags.chickens) tinyText(ctx, 'AWARD - ' + AWARD.chickens.slice(1).join(' '), cx, by + 34, '#ffe9a0');
     drawVignette();
   },
   onA() { if (this.t > 3) fadeTo(() => setScene(Title), 0.5); },
@@ -1727,7 +2034,7 @@ function frame(now) {
 const dbg = new URLSearchParams(location.search).get('scene');
 if (dbg) {
   G.name = 'KEN'; G.hero = makeHero(G.name, +(new URLSearchParams(location.search).get('cls') || 0));
-  if (!G.armed.v && !G.armed.word) G.armed = { v: 7, s: 'D' };
+  if (!G.armed.v && !G.armed.word && !G.armed.fortune) G.armed = { v: 7, s: 'D' };
   if (dbg === 'end') setScene(End);
   else if (dbg === 'name') setScene(NameEntry);
   else if (dbg === 'hero' || dbg === 'class') setScene(ClassScene);
@@ -1739,5 +2046,5 @@ if (dbg) {
   }
 } else setScene(Title);
 requestAnimationFrame(frame);
-window.__G = G; window.__D = D; window.__SKY = SKY; window.__audio = Audio.audioState; window.__ac = Audio.audioCtx;
+window.__G = G; window.__D = D; window.__Table = Table; window.__Play = Play; window.__SKY = SKY; window.__audio = Audio.audioState; window.__ac = Audio.audioCtx;
 window.__sceneName = () => (G.scene === Title ? 'title' : G.scene === NameEntry ? 'name' : G.scene === ClassScene ? 'class' : G.scene === Play ? 'play' : 'end');

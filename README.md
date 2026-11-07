@@ -98,7 +98,44 @@ longer phrases wrap onto up to four lines. The cheat sheet shows `WORD: HELLO`.
 
 **Card or word?** Anything starting with a number is a **card** (`/7D`, `/12h`,
 `/1s90x`, or the same after `?=`). Anything made only of letters (plus `+ - _`) is a
-**word** (`/jraap`, or `?=jraap`). There are no exceptions.
+**word** (`/jraap`, or `?=jraap`). The one exception is `/!card`, the fortune teller below.
+
+### Fortune teller: a self-working card trick (`/!card`)
+
+Send the spectator to **`play.oddpaq.com/!card`** (or `?=!card`). You never touch the
+phone and arm nothing: the game learns the card itself. The address bar is reset to the
+plain site, and title-screen taps are ignored. The cheat sheet shows `FORTUNE TELLER (URL)`.
+Every other address works exactly as before.
+
+The spectator needs a real deck with both jokers. As they step out of the house, a
+fortune teller (purple hood) stops them and talks them through it:
+
+1. Lay the two jokers face up, side by side. Take any five cards; put the rest aside.
+2. Shuffle the five face down. Peek at the top card and remember it.
+3. Deal the five face down onto the jokers, alternating, starting with either joker.
+4. Put either pile on the other, then cut as many times as they like (cuts only).
+5. Deal the packet into a row from the top, left to right, without turning any over.
+6. On her table, show where the two jokers fell (tap a gap, or D-pad and A; B undoes).
+   She gives a "reading" of the jokers.
+7. She points at three face-down cards, one at a time. They turn each over and enter
+   it with the value and suit chips. She gives a reading of the colours and suits.
+8. She tells them to turn their card face up, put the jokers away and shuffle their
+   card back into the deck, still face up, with every other card face down.
+
+At the castle the wizard has them spread the deck, asks if they see one card face up,
+and reveals it.
+
+**How it works.** The peeked card is dealt first, so it lands directly on the joker that
+gets three cards. Stacking and cutting only rotate the seven-card cycle, so it stays
+just above that joker. In the dealt row (top card on the left):
+
+- **three cards between the jokers:** the card just left of the right-hand joker;
+- **two cards between them:** the card just left of the left-hand joker, or the last
+  card of the row if that joker comes first.
+
+Their card is always one of the three she points at, in a random order with two others,
+so the game knows which entry is theirs. Any other joker spacing means the deal went
+wrong: she says the jokers are quarrelling and has them deal again with a new card.
 
 ### The reveal
 
@@ -157,7 +194,7 @@ rusty key.
 It always lands on open ground you can reach (never in the water, and never behind the
 frog), and nobody wanders onto it. Walk into the frog and it hops out of your way; in a
 dead end by the lake it hops back past you instead. Pick it up, then press A at the blue door: "LOCKED." / "...WAIT. THE KEY!" and it opens. Inside are three witches, stuck in for three days since their own frog swallowed the
-door key and escaped out the window. Each tells her part of the story when you talk to
+door key and escaped out the window. Their hearth burns with a cold green fire. Each tells her part of the story when you talk to
 her, and lets slip a hint about a sister you haven't spoken to yet; talk to all three (any order). The third one tosses you a can of **Crimson Cow** (silver and blue): you
 hold it up, drink it (it does nothing, but you feel energised), and when you step back
 outside you've grown a pair of wings: "HUH. I GUESS CRIMSON COW GIVES YOU FEATHERS."
@@ -176,6 +213,12 @@ outside you've grown a pair of wings: "HUH. I GUESS CRIMSON COW GIVES YOU FEATHE
 - By the fisher: you cast, get a bite and reel in a red fish ("MAYBE A SNAPPER OR
   SOMETHING"). The fisher can't believe it, cooks it on a little fire, tells you it's a
   BIG RED HERRING and hands it back. You eat it: "WOW! A BIG RED HERRING. WHAT A GREAT USE OF MY TIME!" "RED HERRING" is always drawn slightly bold. It only bites once.
+
+### Award: Look At All Those Chickens
+
+Turn every person in the land into a chicken with the chicken staff at the same time
+(17 people, 18 in fortune mode; the witches count, the wizard and the animals don't).
+A banner slides in, and the end screen remembers it.
 
 ### Along the way
 

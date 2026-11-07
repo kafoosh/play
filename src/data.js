@@ -179,6 +179,7 @@ export const LOOKS = {
   bard: P({ hair: '#b8903a', tunic: '#5a3a7a', cloak: '#2e4a3a', acc: 'cap', cap: '#2e5a3a' }),
   sleeper: P({ hair: '#5a3a22', tunic: '#7a5232', sleep: true, skin: '#d8a882' }),
   hermit: P({ hair: '#8a8a90', tunic: '#4a4652', acc: 'hood', hood: '#5a5660', skin: '#d8a882' }),
+  seer: P({ hair: '#6a2a6a', tunic: '#3a2a6a', cloak: '#2a1a4a', acc: 'hood', hood: '#7a2a6a', long: true, skin: '#c89a76' }),
   witch1: P({ hair: '#2a2a32', tunic: '#3a2a4a', cloak: '#1e1a26', long: true, skin: '#c8d0a8' }),
   witch2: P({ hair: '#c85a2a', tunic: '#2e3a2e', cloak: '#1e261e', long: true }),
   witch3: P({ hair: '#d8d4ca', tunic: '#4a2a3a', cloak: '#2a1a24', beard: false, skin: '#d8a882' }),
@@ -249,6 +250,11 @@ export const NPCS = [
     talk: ['THE WIZARD IS WAITING FOR YOU, {N}.', 'A WORD OF ADVICE. DON\'T THINK TOO LOUD IN THERE.'],
     again: ['GO ON IN.'] },
 
+  // fortune mode only (play.oddpaq.com/!card): she stops you as you leave the house
+  { id: 'seer', name: 'FORTUNE TELLER', map: 'world', x: 17, y: 40, look: 'seer', dir: 'left', fortuneOnly: true,
+    talk: ['THE CARDS HAVE SPOKEN, DEAR.', 'KEEP YOUR DECK SAFE. THE WIZARD IS WAITING, NORTH OVER THE BRIDGE.'],
+    again: ['GO ON. THE WIZARD WILL WANT TO SEE YOUR DECK.'] },
+
   { id: 'wizard', name: 'WIZARD', map: 'castle', x: 4, y: 3, look: 'wizard', dir: 'down', tall: true },
 ];
 
@@ -270,6 +276,13 @@ export const SCRIPT = {
   askNoWord: ['THEN THINK OF ONE NOW. ANY WORD AT ALL.', 'TAKE YOUR TIME. I AM VERY OLD. I CAN WAIT.'],
   wizard2Word: ['GOOD. DON\'T SAY IT. SPELL IT IN YOUR HEAD.', 'NOW... LET THE WIND IN.'],
   wizard3: ['THE WIND IS NEVER WRONG.', 'FAREWELL, {N}.'],
+  // fortune mode: the face-up card in their shuffled deck
+  wizardDeck: ['YOU BROUGHT YOUR DECK. GOOD.', 'SPREAD IT OUT ON THE TABLE.'],
+  askFaceUp: 'DO YOU SEE ONE CARD FACING UP?',
+  askNoFaceUp: ['SPREAD THEM WIDER. LOOK CLOSELY.', 'SHE TOLD YOU TO TURN ONE OVER.'],
+  askFaceUpAgain: 'SEE IT NOW?',
+  wizard2Fortune: ['GOOD. THAT CARD IS YOURS.', 'DON\'T SAY IT. JUST PICTURE IT.', 'NOW... LET THE WIND IN.'],
+  wizard3Fortune: ['THE CARD FACING THE SKY.', 'THE WIND IS NEVER WRONG.', 'FAREWELL, {N}.'],
 };
 
 export const VALUE_NAMES = [null, 'ACE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN', 'JACK', 'QUEEN', 'KING'];
@@ -425,6 +438,117 @@ export const FISH = {
 };
 
 // Said once, the next time you talk to someone you hit.
+// Awards: [heading, line 1, line 2] for the banner.
+export const AWARD = {
+  chickens: ['AWARD!', 'LOOK AT ALL', 'THOSE CHICKENS'],
+};
 export const GRUDGE = ['THAT HURT, YOU KNOW.', 'STILL SORE FROM THAT.', 'I HAVE NOT FORGOTTEN.'];
 export const SKINS = ['#e8c09a', '#d8a882', '#b07a52', '#7e5234'];
 export const HAIRS = ['#2e2018', '#6a4422', '#b8903a', '#8a3a22', '#c8c4ba', '#1e2028', '#4a3022'];
+
+// ---------------------------------------------------------------- the fortune teller
+// Fortune mode (play.oddpaq.com/!card): a self-working trick. The spectator lays two
+// jokers face up, shuffles five cards face down, peeks at the top one and deals the
+// five alternately onto the jokers. That puts their card directly on top of the joker
+// that gets three cards. One pile goes on the other and they cut as often as they like:
+// cuts only turn the cycle, so their card stays just above that joker. Dealt into a row
+// from the top (left to right), the jokers show where it is:
+//   three cards between the jokers: the card just left of the right-hand joker;
+//   two cards between them: the card just left of the left-hand joker (if that joker is
+//   first in the row, the last card of the row).
+// Any other spacing means the deal went wrong.
+export function fortuneTarget(p, q, n = 7) {
+  if (p > q) [p, q] = [q, p];
+  const between = q - p - 1, big = (n - 1) >> 1; // 5 cards: gaps of 3 and 2
+  if (between === big) return q - 1;
+  if (between === n - 2 - big) return p === 0 ? n - 1 : p - 1;
+  return -1;
+}
+
+export const FORTUNE = {
+  hello: ['{N}! OVER HERE, DEAR.', 'THE WIND HAS GONE QUIET, BUT THE CARDS STILL TALK.', 'LET ME READ YOUR FORTUNE BEFORE YOU HEAD NORTH.'],
+  askDeck: 'DO YOU HAVE A DECK OF CARDS WITH YOU?',
+  noDeck: ['THEN FETCH ONE. A REAL ONE, WITH BOTH JOKERS.', 'I WILL WAIT. I AM VERY GOOD AT WAITING.'],
+  askDeckAgain: 'GOT ONE NOW?',
+  setup: ['TAKE OUT THE TWO JOKERS. LAY THEM ON THE TABLE, FACE UP, SIDE BY SIDE.', 'NOW TAKE ANY FIVE CARDS FROM THE DECK. PUT THE REST ASIDE.'],
+  deal: [
+    'SHUFFLE YOUR FIVE CARDS, FACE DOWN.',
+    'NOW PEEK AT THE TOP CARD. REMEMBER IT. DON\'T TELL ME.',
+    'THAT CARD IS YOURS.',
+    'DEAL ALL FIVE FACE DOWN ONTO THE JOKERS, ONE AT A TIME.',
+    'ONE ON THIS JOKER, ONE ON THAT, BACK AND FORTH. START WITH EITHER ONE.',
+  ],
+  askDealt: 'DEALT ALL FIVE?',
+  notDealt: ['TAKE YOUR TIME. BACK AND FORTH, ONE CARD AT A TIME.'],
+  askDealtAgain: 'DONE?',
+  cut: ['GOOD. NOW PUT ONE PILE ON TOP OF THE OTHER. EITHER ONE.', 'CUT THE CARDS: TAKE SOME OFF THE TOP AND PUT THEM UNDERNEATH.', 'CUT AS MANY TIMES AS YOU LIKE.'],
+  askCut: 'HAPPY WITH YOUR CUTS?',
+  notCut: ['THEN CUT AGAIN. NO SHUFFLING NOW. ONLY CUTS.'],
+  askCutAgain: 'HAPPY NOW?',
+  row: ['NOW DEAL THEM INTO A ROW, FROM THE TOP, LEFT TO RIGHT.', 'DON\'T TURN ANY OVER. THE JOKERS STAY FACE UP.', 'SHOW ME WHERE THE JOKERS FELL.'],
+  redo: ['HMM. THE JOKERS ARE QUARRELLING.', 'SOMETHING WENT ASTRAY IN THE DEAL. LET US TRY AGAIN.', 'LAY THE JOKERS FACE UP AGAIN. GATHER THE OTHER FIVE.', 'FORGET YOUR OLD CARD. YOU WILL PICK A NEW ONE.'],
+  point: ['NOW, THE CARDS THEMSELVES.', 'I WILL POINT AT A FEW. TURN EACH ONE OVER AND TELL ME WHAT IT IS.'],
+  close: [
+    'THE CARDS HAVE SPOKEN.',
+    'NOW. THE CARD YOU PEEKED AT, RIGHT AT THE START. FIND IT AND TURN IT FACE UP.',
+    'PUT THE JOKERS AWAY. SHUFFLE YOUR CARD BACK INTO THE DECK, STILL FACE UP.',
+    'EVERY OTHER CARD FACE DOWN.',
+    'KEEP THE DECK WITH YOU. THE WIZARD WILL WANT TO SEE IT.',
+    'OFF YOU GO, {N}. NORTH, OVER THE BRIDGE.',
+  ],
+  // what the panel asks while you show her the cards
+  ui: {
+    joker1: 'WHERE\'S A JOKER?', joker2: 'AND THE OTHER?', check: 'IS THIS YOUR ROW?',
+    which: 'WHAT IS THIS CARD?', seen: 'SEEN THAT ONE!', reading: 'YOUR FORTUNE',
+  },
+};
+
+// A reading of where the jokers fell (p, q: positions in the row of 7, left = 0).
+const pickOf = rand => a => a[Math.floor(rand() * a.length) % a.length];
+export function jokerReading(p, q, rand = Math.random) {
+  if (p > q) [p, q] = [q, p];
+  const pick = pickOf(rand), out = [pick(['AH. LOOK WHERE THE JOKERS FELL.', 'THE JOKERS... YES. I SEE.'])];
+  if (q - p - 1 >= 3) out.push(pick([
+    'THEY STAND APART, LIKE OLD FRIENDS WHO FELL OUT. SOMEONE ON YOUR ROAD HOLDS A GRUDGE. BE GENTLE.',
+    'THEY KEEP THEIR DISTANCE. A PROMISE, KEPT AT ARM\'S LENGTH. SOMEONE IN THE CASTLE KEEPS HIS.',
+  ]));
+  else out.push(pick([
+    'THEY SIT CLOSE, WHISPERING. TWO TRICKSTERS, ONE SECRET. SOMETHING LOCKED WANTS OPENING.',
+    'SO CLOSE TOGETHER. A DOOR AND ITS KEY, KEPT APART TOO LONG.',
+  ]));
+  if (p === 0 || q === 6) out.push('ONE OF THEM SITS RIGHT AT THE EDGE. SOMETHING WAITS AT THE EDGE OF THE WATER. SMALL. GREEN.');
+  else if (p + q < 6) out.push('THEY LEAN WEST, TOWARD THE OLD TOWER. THE RUINS STILL REMEMBER THE WIND.');
+  else if (p + q > 6) out.push('THEY LEAN EAST, TOWARD THE LAKE. A FISHER WILL BE GLAD TO SEE YOU.');
+  else out.push('THEY KEEP THE MIDDLE, LIKE THE ROAD NORTH. STAY ON THE PATH.');
+  return out;
+}
+
+// A reading of the cards she pointed at, by colour, suit and value. Never names a card.
+export function cardReading(cards, rand = Math.random) {
+  const pick = pickOf(rand), out = [];
+  const reds = cards.filter(c => c.s === 'H' || c.s === 'D').length, n = cards.length;
+  out.push(reds === n ? 'ALL RED. SOMETHING RED WILL TRY TO DISTRACT YOU TODAY.'
+    : reds === 0 ? 'ALL DARK. THE WOODS ARE DARK, BUT YOUR PATH IS NOT.'
+    : reds * 2 > n ? 'MORE RED THAN BLACK. A WARM HEART, AND A WARM HEARTH.'
+    : 'MORE BLACK THAN RED. A QUIET NIGHT. A STILL ONE.');
+  const faces = cards.filter(c => c.v >= 11).length, vals = cards.map(c => c.v);
+  const pair = vals.some((v, i) => vals.indexOf(v) !== i), sum = vals.reduce((a, b) => a + b, 0);
+  if (cards.every(c => c.s === cards[0].s)) out.push('ALL ONE SUIT! RARE. THE STARS ARE LINED UP FOR YOU.');
+  else if (pair) out.push('TWO ALIKE. SISTERS, PERHAPS. LOCKED AWAY TOGETHER.');
+  else if (faces >= 2) out.push('SO MANY FACES. YOU WILL MEET MANY ON THE ROAD. NOT ALL OF THEM PEOPLE.');
+  else if (faces === 1) out.push('A ROYAL FACE. SOMEONE IN A TALL HAT IS EXPECTING YOU.');
+  else if (vals.includes(1)) out.push('AN ACE. A BEGINNING. THE FIRST BREATH OF A NEW WIND.');
+  else if (sum <= 12) out.push('SMALL CARDS. SMALL THINGS WILL MATTER. EVEN A FROG.');
+  else out.push('GOOD STRONG NUMBERS. YOU WILL NOT TIRE ON THE ROAD.');
+  // the suit that shows most (the first one shown if they're all different)
+  const count = s => cards.filter(c => c.s === s).length;
+  const top = cards.map(c => c.s).reduce((a, s) => (count(s) > count(a) ? s : a));
+  out.push({
+    H: 'HEARTS. SOMEONE AT HOME LOVES YOU. FOUR SHORT LEGS. ONE LONG BODY.',
+    C: 'CLUBS. LEAVES AND BRANCHES. THE TREES LEAN NORTH FOR A REASON.',
+    S: 'SPADES. DIGGING. SOMEONE HAS PILED UP WORMS IN THE RUINS.',
+    D: 'DIAMONDS. A PRIZE AWAITS. OR A RED HERRING.',
+  }[top]);
+  out.push(pick(['THE WIND IS SHY TODAY. BUT IT IS LISTENING.', 'THE WIND IS QUIET. BUT IT HEARS EVERYTHING.']));
+  return out;
+}
