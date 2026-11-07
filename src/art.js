@@ -397,20 +397,23 @@ function personRows(look, dir, frame) {
     if (face === 'down') { set(rows, 11, 0, 'f'); set(rows, 12, 0, 'f'); set(rows, 12, 1, 'f'); }
     if (face === 'side') { set(rows, 4, 0, 'f'); set(rows, 3, 0, 'f'); set(rows, 3, 1, 'f'); }
   }
-  // a knitted beanie worn far back: a small dome with a ribbed band (and a little gold
-  // badge on the front), hair showing in front
+  // a knitted beanie pulled down to the brow: it covers the hair on top and the forehead,
+  // with a ribbed band just above the eyes (and a little gold badge on the front). Seen
+  // from the side it slouches toward the back. The long hair still shows below it.
   if (look.acc === 'beanie') {
-    if (face === 'side') { // sits toward the back of the head; hair at the front
+    const rib = (m, i) => (i % 2 ? 'C' : 'c');
+    if (face === 'side') {
       rows[0] = '.....oooo.......';
-      rows[1] = '.....occcho.....';
-      rows[2] = rows[2].replace(/[hH]/g, (m, i) => (i <= 8 ? (i % 2 ? 'C' : 'c') : m));
-      if (look.badge) set(rows, 8, 2, 'y');
+      rows[1] = '....occcoo......';
     } else {
       rows[0] = '......oooo......';
       rows[1] = '.....occcco.....';
-      rows[2] = rows[2].replace(/[hH]/g, (m, i) => (i % 2 ? 'C' : 'c'));
-      if (look.badge && face === 'down') set(rows, 9, 2, 'y');
     }
+    rows[2] = rows[2].replace(/[hH]/g, 'c');
+    rows[3] = rows[3].replace(/[hH]/g, 'c');
+    rows[4] = rows[4].replace(/[hH]/g, rib);
+    if (look.badge && face === 'down') set(rows, 9, 4, 'y');
+    if (look.badge && face === 'side') set(rows, 10, 4, 'y');
   }
   // a goatee: a small dark moustache over a grey chin tuft, kept on the chin
   if (look.goatee) {
