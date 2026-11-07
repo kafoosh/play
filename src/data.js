@@ -179,7 +179,8 @@ export const LOOKS = {
   bard: P({ hair: '#b8903a', tunic: '#5a3a7a', cloak: '#2e4a3a', acc: 'cap', cap: '#2e5a3a' }),
   sleeper: P({ hair: '#5a3a22', tunic: '#7a5232', sleep: true, skin: '#d8a882' }),
   hermit: P({ hair: '#8a8a90', tunic: '#4a4652', acc: 'hood', hood: '#5a5660', skin: '#d8a882' }),
-  seer: P({ hair: '#6a2a6a', tunic: '#3a2a6a', cloak: '#2a1a4a', acc: 'hood', hood: '#7a2a6a', long: true, skin: '#c89a76' }),
+  // the fortune teller, after the magician Dani DaOrtiz: beanie, long dark hair, full dark beard, all in black
+  seer: P({ hair: '#3a2a22', tunic: '#34323a', cloak: '#222026', long: true, beard: true, beardColor: '#3e2c22', skin: '#d8a882', boots: '#18161c', acc: 'beanie', cap: '#b8342e' }),
   witch1: P({ hair: '#2a2a32', tunic: '#3a2a4a', cloak: '#1e1a26', long: true, skin: '#c8d0a8' }),
   witch2: P({ hair: '#c85a2a', tunic: '#2e3a2e', cloak: '#1e261e', long: true }),
   witch3: P({ hair: '#d8d4ca', tunic: '#4a2a3a', cloak: '#2a1a24', beard: false, skin: '#d8a882' }),
@@ -514,6 +515,7 @@ export const FORTUNE = {
     'PUT THE REST OF THE CARDS BACK IN YOUR DECK. KEEP YOUR OWN CARD FACE UP IN THE MIDDLE!',
     'OFF YOU GO, {N}. NORTH, OVER THE BRIDGE.',
     'REMEMBER YOUR CARD!',
+    'IT\'S YOUR LIFE!',
   ],
   // headings on her table while you name the cards: one for each card she points at
   ui: { which: ['PAST: WHAT\'S THIS?', 'PRESENT: AND THIS?', 'FUTURE: LAST ONE!'], seen: 'SEEN THAT ONE!', reading: 'YOUR FORTUNE' },
