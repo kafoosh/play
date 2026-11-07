@@ -493,7 +493,7 @@ export const FORTUNE = {
     'REMEMBER YOUR CARD!',
   ],
   // headings on her table while you name the cards
-  ui: { which: 'WHAT IS THIS CARD?', seen: 'SEEN THAT ONE!', reading: 'YOUR FORTUNE' },
+  ui: { which: 'WHAT IS IT?', seen: 'SEEN THAT ONE!', reading: 'YOUR FORTUNE' },
 };
 
 // A reading of where the jokers fell (p, q: positions in the spread, left = 0).

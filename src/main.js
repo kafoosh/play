@@ -1389,7 +1389,9 @@ const Play = {
 // the jokers fell (the cards part to show where a joker would go), then names the cards
 // she points at with value and suit chips. Card faces are never drawn. Taps, or the
 // D-pad with A (B undoes).
-const CARD_STEP = MINI_W + 2;
+// The row is drawn as a left-to-right hand spread: each card overlaps the one to its
+// left and lies on top of it, the way their own spread should look.
+const CARD_STEP = 7;
 const VCHIPS = [[1, 2, 3, 4, 5, 6, 7], [8, 9, 10, 11, 12, 13]];
 const FU = FORTUNE.ui;
 const SUIT_CH = { C: '♣', H: '♥', S: '♠', D: '♦' };
@@ -1412,19 +1414,21 @@ const Table = {
   show(hi) { this.mode = 'show'; this.hi = hi || null; },
   geom() {
     const w = dialogW(), x = dialogX();
-    const h = this.mode === 'card' ? 78 : this.mode === 'show' ? 38 : 50;
+    const h = this.mode === 'card' ? 82 : this.mode === 'show' ? 42 : 50;
     const bottom = D.active ? UIB - 46 - 16 : UIB - 4;
     return { x, y: Math.max(16, bottom - h), w, h };
   },
-  rowY(g) { return g.y + (this.mode === 'jokers' || this.mode === 'check' ? 27 : 18); },
-  // where each card sits; in the joker step the cards part at the chosen gap
-  layout(g, split = this.mode === 'jokers' ? 6 : 0) {
-    const n = this.row.length, total = n * CARD_STEP - 2 + split, x0 = Math.round(g.x + g.w / 2 - total / 2);
+  rowY(g) { return g.y + (this.mode === 'jokers' || this.mode === 'check' ? 27 : 19); },
+  // where each card sits; in the joker step the spread opens at the chosen gap
+  layout(g, split = this.mode === 'jokers' ? 9 : 0) {
+    const n = this.row.length, total = (n - 1) * CARD_STEP + MINI_W + split, x0 = Math.round(g.x + g.w / 2 - total / 2);
     return this.row.map((_, i) => x0 + i * CARD_STEP + (i >= this.gap ? split : 0));
   },
   gapX(g) {
     const xs = this.layout(g);
-    return this.gap < xs.length ? xs[this.gap] - 4 : xs[xs.length - 1] + MINI_W + 3;
+    if (this.gap === 0) return xs[0] - 4;
+    if (this.gap >= xs.length) return xs[xs.length - 1] + MINI_W + 3;
+    return Math.round((xs[this.gap - 1] + MINI_W + xs[this.gap]) / 2); // middle of the opening
   },
   update(dt) {
     if (!this.on) return;
@@ -1432,7 +1436,7 @@ const Table = {
     const g = this.geom(), xs = this.layout(g), pointed = this.mode === 'card' ? this.order[this.k] : -1;
     this.row.forEach((it, i) => {
       it.x = it.x === null ? xs[i] : it.x + (xs[i] - it.x) * Math.min(1, dt * 16);
-      it.lift += ((i === pointed ? 3 : 0) - it.lift) * Math.min(1, dt * 18);
+      it.lift += ((i === pointed ? 5 : 0) - it.lift) * Math.min(1, dt * 18);
       it.pop = Math.max(0, it.pop - dt * 5);
     });
     if (this.mode === 'jokers') { const hx = this.gapX(g); this.hx = this.hx === null ? hx : this.hx + (hx - this.hx) * Math.min(1, dt * 18); }
@@ -1480,11 +1484,11 @@ const Table = {
     const out = [];
     VCHIPS.forEach((vals, r) => {
       const w = 16, tw = vals.length * (w + 2) - 2, x0 = Math.round(g.x + g.w / 2 - tw / 2);
-      vals.forEach((v, c) => out.push({ r, c, x: x0 + c * (w + 2), y: g.y + 38 + r * 12, w, h: 10, v }));
+      vals.forEach((v, c) => out.push({ r, c, x: x0 + c * (w + 2), y: g.y + 42 + r * 12, w, h: 10, v }));
     });
     const tw = 4 * 18 + 26 + 4 * 2, x0 = Math.round(g.x + g.w / 2 - tw / 2);
-    CHASED.forEach((s, c) => out.push({ r: 2, c, x: x0 + c * 20, y: g.y + 63, w: 18, h: 10, s }));
-    out.push({ r: 2, c: 4, x: x0 + 4 * 20, y: g.y + 63, w: 26, h: 10, ok: true });
+    CHASED.forEach((s, c) => out.push({ r: 2, c, x: x0 + c * 20, y: g.y + 67, w: 18, h: 10, s }));
+    out.push({ r: 2, c: 4, x: x0 + 4 * 20, y: g.y + 67, w: 26, h: 10, ok: true });
     return out;
   },
   checkChips(g) {
@@ -1525,7 +1529,7 @@ const Table = {
       const xs = this.layout(g, 0);
       let best = 0, bd = 1e9;
       for (let i = 0; i <= xs.length; i++) {
-        const bx = i < xs.length ? xs[i] - 1 : xs[xs.length - 1] + MINI_W + 1, dd = Math.abs(x - bx);
+        const bx = i < xs.length ? xs[i] : xs[xs.length - 1] + MINI_W + 1, dd = Math.abs(x - bx);
         if (dd < bd) { bd = dd; best = i; }
       }
       this.gap = best; this.hx = this.gapX(g); this.place(best);
@@ -1551,7 +1555,7 @@ const Table = {
     box(ctx, x, y, w, h);
     // green felt under the cards
     const jk = this.mode === 'jokers' || this.mode === 'check'; // no heading in the joker step
-    const fy = y + (jk ? 5 : 13), fh = jk ? 40 : 21;
+    const fy = y + (jk ? 5 : 13), fh = jk ? 40 : 25;
     ctx.fillStyle = '#1d3a2e'; ctx.fillRect(x + 5, fy, w - 10, fh);
     ctx.fillStyle = '#2f5d4a'; ctx.fillRect(x + 6, fy + 1, w - 12, fh - 2);
     ctx.fillStyle = '#386b55'; for (let i = 0; i < 18; i++) ctx.fillRect(x + 7 + ((hash(i, 7) * (w - 15)) | 0), fy + 2 + ((hash(i, 9) * (fh - 4)) | 0), 1, 1);
@@ -1563,13 +1567,16 @@ const Table = {
       if (lab) text(ctx, lab, x + w - 34 - textWidth(lab), y + 4, s.s === 'H' || s.s === 'D' ? C.red : UI.text);
       for (let i = 0; i < this.order.length; i++) { ctx.fillStyle = i < this.k ? C.gold : i === this.k ? UI.accent : UI.paperD; ctx.fillRect(x + w - 25 + i * 5, y + 6, 3, 3); }
     }
-    // the row: a soft shadow, then the card, idling up and down a little
+    // the spread: a soft shadow, then the card, all on one straight line
     const pointed = this.mode === 'card' ? this.order[this.k] : -1;
     this.row.forEach((it, i) => {
-      const bob = Math.round(Math.sin(t * 2.2 + i * 0.8) * 0.6), cx = Math.round(it.x), cy = Math.round(ry - it.lift + bob);
+      const cx = Math.round(it.x), cy = Math.round(ry - it.lift);
       ctx.fillStyle = 'rgba(8,20,14,0.45)'; ctx.fillRect(cx + 1, ry + 2, MINI_W, MINI_H - 1);
-      const lit = (this.hi && this.hi.includes(i)) || i === pointed, named = this.mode === 'card' && this.order.indexOf(i) >= 0 && this.order.indexOf(i) < this.k;
-      if ((lit && Math.floor(t * 3) % 3) || named) { ctx.fillStyle = named ? C.goldD : C.gold; ctx.fillRect(cx - 1, cy - 1, MINI_W + 2, MINI_H + 2); }
+      // gold marks under the cards she's read; a blinking pointer under the one she points at
+      const named = this.mode === 'card' ? this.order.indexOf(i) >= 0 && this.order.indexOf(i) < this.k : !!(this.hi && this.hi.includes(i));
+      const mx = cx + 2, my = ry + MINI_H + 2;
+      if (named) { ctx.fillStyle = C.gold; ctx.fillRect(mx, my, 3, 2); }
+      if (i === pointed && Math.floor(t * 3) % 3) { ctx.fillStyle = C.gold; ctx.fillRect(mx + 1, my, 1, 1); ctx.fillRect(mx, my + 1, 3, 1); ctx.fillRect(mx - 1, my + 2, 5, 1); }
       const s = 1 + it.pop * 0.3, cw = Math.round(MINI_W * s), ch = Math.round(MINI_H * s);
       ctx.drawImage(miniCard(it.face), Math.round(cx + MINI_W / 2 - cw / 2), Math.round(cy + MINI_H / 2 - ch / 2), cw, ch);
     });

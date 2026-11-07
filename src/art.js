@@ -1092,8 +1092,8 @@ export function flame(x, ox, oy, t, big, green = false) {
 }
 
 // ---------------------------------------------------------------- table cards
-// Small cards for the fortune teller's table: a black back with twelve gold dots, and a
-// joker (a little jester on cream). The table never shows card faces.
+// Small cards for the fortune teller's table: a black back (thin cream rim) with twelve
+// gold dots, and a joker (a little jester on cream). The table never shows card faces.
 export const MINI_W = 11, MINI_H = 16;
 const JESTER = [
   'g.......g',
@@ -1119,9 +1119,11 @@ export function miniCard(face) {
     x.fillStyle = '#fffdf8'; x.fillRect(1, 1, MINI_W - 2, MINI_H - 2);
     grid(x, JESTER, 1, 4, JESTER_PAL);
   } else {
-    x.fillStyle = '#141414'; x.fillRect(1, 1, MINI_W - 2, MINI_H - 2);
+    // a thin cream rim, so overlapping backs in a spread stay apart
+    x.fillStyle = '#e9dcc0'; x.fillRect(1, 1, MINI_W - 2, MINI_H - 2);
+    x.fillStyle = '#141414'; x.fillRect(2, 2, MINI_W - 4, MINI_H - 4);
     x.fillStyle = '#ebb23c';
-    for (let j = 0; j < 4; j++) for (let i = 0; i < 3; i++) x.fillRect(2 + i * 3, 3 + j * 3, 1, 1);
+    for (let j = 0; j < 4; j++) for (let i = 0; i < 3; i++) x.fillRect(3 + i * 2, 3 + j * 3, 1, 1);
   }
   miniCache.set(face, c);
   return c;
