@@ -98,7 +98,8 @@ longer phrases wrap onto up to four lines. The cheat sheet shows `WORD: HELLO`.
 
 **Card or word?** Anything starting with a number is a **card** (`/7D`, `/12h`,
 `/1s90x`, or the same after `?=`). Anything made only of letters (plus `+ - _`) is a
-**word** (`/jraap`, or `?=jraap`). The one exception is `/!card`, the fortune teller below.
+**word** (`/jraap`, or `?=jraap`). The two exceptions are `/!card`, the fortune teller,
+and `/!book`, the apprentice's book test, both below.
 
 ### Fortune teller: a self-working card trick (`/!card`)
 
@@ -148,6 +149,43 @@ nearest one (a tie is decided at random). So their card is always one of the thr
 the game knows which entry is theirs. Their card can be any of the five face-down
 cards, depending on where the jokers fell. Any other joker spacing means the deal went
 wrong: he says the jokers are arguing and has them deal again with a new card.
+
+### The apprentice's book: a self-working book test (`/!book`)
+
+Send the spectator to **`play.oddpaq.com/!book`** (or `?=!book`). Nothing to arm, no
+deck needed. The address bar is reset to the plain site, title-screen taps are ignored,
+and the cheat sheet shows `BOOK TEST (URL)`.
+
+1. As they step out of the house, the **wizard's apprentice** (blue robe, starry hat)
+   lends them his master's old book: three short pages about the winds, the Tower of
+   Winds and the Still Night. "PICK A WORD THAT GRABS YOU. STARE AT IT TILL IT STICKS.
+   THEN CLOSE THE BOOK." The page corners turn the pages (or left/right on the D-pad);
+   the red **CLOSE** ribbon under the book closes it (on a keyboard: down, then A).
+2. The apprentice tries to read their mind: two letters ("I'M GETTING... AN R!" and
+   "DOES THE WORD YOU'RE THINKING OF HAVE AN R IN IT?"). Then the magic fizzles out and
+   he goes off to practise.
+3. The **bridge guard** asks for the password, gives up, and asks one letter instead.
+4. The **hermit** collects words. He likes words with a certain letter ("LANTERN.
+   LICHEN. LOVELY.") and asks if theirs has one. Usually one question, sometimes two.
+5. The wizard names the word on his scroll.
+
+**How it works.** Every word in the book worth choosing has five letters or more; every
+shorter word is filler (THE, AND, ONCE, ONLY...), so "a word that grabs you" means one of
+30 words. The page showing when they close the book is almost always their word's page,
+and every page's words can be told apart in four letter questions. The game keeps every
+word in the book in play, though, and puts the page first: each question also rules out
+words on the other pages where it can. So:
+
+- **closed on their word's page:** 4 questions in all for 30 of the 34 cases, 5 for the
+  rest (PLAYED, RAISED, WINDS on page II, STIRRED on page III);
+- **closed on another page:** the answers soon rule that page out and the hermit keeps
+  going until one word is left: 5-7 questions, and the word is still right.
+
+The hermit always asks at least one (a letter of their word, if it's already known), so
+the questions never visibly stop short. If the guard was never asked (knocked aside, or a
+chicken), the hermit asks his letter too; if letters are still left at the castle, the
+wizard asks them ("THE WIND IS FAINT TODAY. HELP IT ALONG."). If an answer was wrong and
+no word fits, the wizard names the closest one.
 
 ### Award: Look At All Those Chickens
 

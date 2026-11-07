@@ -182,6 +182,8 @@ export const LOOKS = {
   // the fortune teller, after the magician Dani DaOrtiz: red beanie worn far back, glasses,
   // long dark hair, dark moustache and grey goatee, all in black
   seer: P({ hair: '#3a2a22', tunic: '#34323a', cloak: '#222026', long: true, goatee: true, glasses: true, beardColor: '#a8a29a', skin: '#e0b48e', boots: '#18161c', acc: 'beanie', cap: '#a02c32', badge: true }),
+  // the wizard's apprentice (book mode): young, sandy hair, a blue robe and a starry hat
+  apprentice: P({ hair: '#b8903a', tunic: '#34488a', cloak: '#26305e', skin: '#e8c09a', boots: '#2a2240' }),
   witch1: P({ hair: '#2a2a32', tunic: '#3a2a4a', cloak: '#1e1a26', long: true, skin: '#c8d0a8' }),
   witch2: P({ hair: '#c85a2a', tunic: '#2e3a2e', cloak: '#1e261e', long: true }),
   witch3: P({ hair: '#d8d4ca', tunic: '#4a2a3a', cloak: '#2a1a24', beard: false, skin: '#d8a882' }),
@@ -256,6 +258,10 @@ export const NPCS = [
   { id: 'seer', name: 'FORTUNE TELLER', map: 'world', x: 17, y: 40, look: 'seer', dir: 'left', fortuneOnly: true,
     // after the reading: one of these each time you talk to him, in turn
     cycle: ['ONLY ONE LUCKY CARD PER CUSTOMER.', 'STILL HERE? THE WIZARD WON\'T WAIT FOREVER.', 'IS YOUR LUCKY CARD STILL FACE UP?', 'NORTH! OVER THE BRIDGE! SHOO!', 'IT\'S YOUR LIFE! I DON\'T CARE!'] },
+
+  // book mode only (play.oddpaq.com/!book): he stops you as you leave the house
+  { id: 'apprentice', name: 'APPRENTICE', map: 'world', x: 17, y: 40, look: 'apprentice', dir: 'left', bookOnly: true, hat: 'apprentice',
+    cycle: ['STILL HERE? THE CASTLE\'S NORTH.', 'SHH. I\'M PRACTISING.', 'YOU DIDN\'T TELL HIM ABOUT THE BOOK, RIGHT?'] },
 
   { id: 'wizard', name: 'WIZARD', map: 'castle', x: 4, y: 3, look: 'wizard', dir: 'down', tall: true },
 ];
@@ -559,4 +565,136 @@ export function cardReading(cards) {
       : sum <= 15 ? 'SMALL CARDS. SMALL THINGS MATTER TODAY. EVEN FROGS.'
       : 'A GOOD MIX. A GOOD DAY FOR A LONG WALK.',
   ];
+}
+
+// ---------------------------------------------------------------- the apprentice's book
+// Book mode (play.oddpaq.com/!book): a self-working book test. The wizard's apprentice
+// hands over the master's old book: three short pages. The spectator stares at one
+// interesting word until it sticks, then closes the book, which tells the game the page
+// they were on. Every word worth choosing has five letters or more; every shorter word
+// is filler (the tests check this). Then the apprentice, the bridge guard and the hermit
+// each ask a letter or two ("DOES THE WORD YOU'RE THINKING OF HAVE AN R IN IT?"), and the
+// wizard names the word.
+export const TOME = [
+  { title: 'I. OF THE WINDS', text: 'ONCE THE WINDS WANDERED ALL THE KINGDOM. THE NORTHERN WINDS BROUGHT SNOWFALL. THE SOUTHERN WINDS BROUGHT BIRDSONG. AND THE FORESTS WHISPERED.' },
+  { title: 'II. OF THE TOWER', text: 'THE VILLAGERS RAISED A TOWER OF WHITE STONE, AND THE WINDS SLEPT IN ITS SPIRE. MINSTRELS PLAYED FOR THEM. AND A YOUNG WIZARD LISTENED.' },
+  { title: 'III. OF THE STILL NIGHT', text: 'THEN, THE STILL NIGHT. NOT A FEATHER STIRRED. THE TOWER CRUMBLED. THE WINDS VANISHED. BUT THE WIZARD ONLY SMILED. HE HAD HEARD IT ALL.' },
+];
+// The words on each page that someone might pick: five letters or more, title included.
+export const TOME_WORDS = TOME.map(p => [...new Set(`${p.title} ${p.text}`.match(/[A-Z]+/g).filter(w => w.length >= 5))]);
+const ALL_WORDS = [...new Set(TOME_WORDS.flat())];
+
+// The letters the questions may use: the ones the hermit has favourite words for. None of
+// his words are in the book.
+export const FAV = {
+  A: ['ACORN', 'ASH'], B: ['BEETLE', 'BRAMBLE'], C: ['CANDLE', 'CROW'], D: ['DEW', 'DUSK'], E: ['EMBER', 'EEL'],
+  F: ['FERN', 'FOG'], G: ['GOAT', 'GRUEL'], H: ['HUSH', 'HONEY'], I: ['INK', 'IVY'], K: ['KETTLE', 'KNOT'],
+  L: ['LANTERN', 'LICHEN'], M: ['MOSS', 'MUD'], N: ['NETTLE', 'NUT'], O: ['OAK', 'OWL'], P: ['PEBBLE', 'PIPE'],
+  R: ['RAIN', 'ROOT'], S: ['SNAIL', 'SOUP'], T: ['TOAD', 'TWIG'], U: ['GRUB', 'MUSHROOM'], V: ['VINE', 'VOLE'],
+  W: ['WILLOW', 'WOOL'], Y: ['YEW', 'YARROW'],
+};
+const QL = Object.keys(FAV);
+// "AN R", "A D": the article goes by how the letter's name sounds.
+export const withArticle = L => ('AEFHILMNORSX'.includes(L) ? 'AN ' : 'A ') + L;
+export const letterQuestion = L => `DOES THE WORD YOU'RE THINKING OF HAVE ${withArticle(L)} IN IT?`;
+
+// Which word, from the yes/no answers. Every word in the book stays in play, but the page
+// the book was closed on comes first: its words are found within four questions. Each
+// question also splits off words from the other pages where it can, and when a word from
+// another page still fits, one more question rules it out. So if they closed the book on
+// the wrong page, the answers soon rule out that page and the questions go on until one
+// word is left.
+//   bookNext(page, answers) -> the next letter to ask, or null once one word (or none) fits
+//   bookWord(page, answers) -> the word
+// answers: [[letter, yes], ...] in the order asked.
+const bits = n => { let c = 0; while (n) { n &= n - 1; c++; } return c; };
+const MASK = Object.fromEntries(QL.map(L => [L, ALL_WORDS.reduce((m, w, i) => (w.includes(L) ? m | (1 << i) : m), 0)]));
+const PAGE_MASK = TOME_WORDS.map(ws => ws.reduce((m, w) => m | (1 << ALL_WORDS.indexOf(w)), 0));
+const FULL = (1 << ALL_WORDS.length) - 1;
+const OFF_WEIGHT = 0.2, INF = 1e9, memo = new Map();
+function plan(on, off, budget) {
+  const n = bits(on) + bits(off), non = bits(on);
+  if (n <= 1) return [0, null];
+  if (non > 1 && budget <= 0) return [INF, null];
+  const key = `${on},${off},${budget}`;
+  if (memo.has(key)) return memo.get(key);
+  let best = [INF, null];
+  for (const L of QL) {
+    const m = MASK[L], yo = on & m, no = on & ~m, yf = off & m, nf = off & ~m;
+    if (!(yo | yf) || !(no | nf)) continue;
+    const nb = on ? budget - 1 : budget;
+    if (non > 1 && Math.max(bits(yo), bits(no)) > 2 ** nb) continue;
+    const a = plan(yo, yf, yo ? nb : 99)[0];
+    if (a >= INF) continue;
+    const b = plan(no, nf, no ? nb : 99)[0];
+    if (b >= INF) continue;
+    const cost = non + OFF_WEIGHT * bits(off) + a + b;
+    if (cost < best[0]) best = [cost, L];
+  }
+  memo.set(key, best);
+  return best;
+}
+function narrow(page, answers) {
+  let on = PAGE_MASK[page] || 0, off = FULL & ~on, budget = 4;
+  for (const [L, yes] of answers) {
+    if (on) budget--;
+    const m = MASK[L] || 0, keep = yes ? m : ~m;
+    on &= keep; off &= keep;
+  }
+  return { on, off, budget };
+}
+export function bookNext(page, answers) {
+  const { on, off, budget } = narrow(page, answers);
+  if (bits(on) + bits(off) <= 1) return null;
+  return plan(on, off, on ? budget : 99)[1];
+}
+export function bookWord(page, answers) {
+  const { on, off } = narrow(page, answers), left = on | off;
+  if (left) return ALL_WORDS[Math.log2(left & -left)];
+  // Nothing fits (a wrong answer, or a word not in the book): the closest word. Fewest
+  // wrong answers first, then a word on the page they closed the book on, then the one
+  // whose first wrong answer came latest.
+  const misses = w => answers.map(([L, yes], i) => (w.includes(L) !== yes ? i : -1)).filter(i => i >= 0);
+  const score = w => { const m = misses(w); return [m.length, TOME_WORDS[page] && TOME_WORDS[page].includes(w) ? 0 : 1, -(m[0] ?? 99)]; };
+  return ALL_WORDS.slice().sort((a, b) => { const x = score(a), y = score(b); return x[0] - y[0] || x[1] - y[1] || x[2] - y[2]; })[0];
+}
+// A question whose answer doesn't matter, so the hermit always asks at least one: a letter
+// of the word they're (almost certainly) thinking of, so the honest answer is YES.
+export function bookFiller(page, answers) {
+  const w = bookWord(page, answers), asked = new Set(answers.map(a => a[0]));
+  return [...w].find(L => FAV[L] && !asked.has(L)) || QL.find(L => !asked.has(L));
+}
+
+// Book mode lines. {L} is the letter ("R"), {AL} the letter with its article ("AN R").
+export const BOOK = {
+  // the apprentice stops you as you leave the house
+  hello: ['HEY! {N}! WAIT UP!', 'I\'M THE WIZARD\'S APPRENTICE. WELL. TRAINEE.', 'I NEED SOMEONE TO PRACTISE ON. YOU\'LL DO.'],
+  give: ['HERE. THE MASTER\'S OLD BOOK. DON\'T TELL HIM.', 'READ IT. PICK A WORD THAT GRABS YOU.', 'STARE AT IT TILL IT STICKS. THEN CLOSE THE BOOK.'],
+  closed: ['GOT ONE? DON\'T SAY IT!', 'OK. HERE GOES...'],
+  // his two goes: the line before the question, then what he says to YES and to NO
+  tries: [
+    { pre: 'I\'M GETTING... {AL}!', yes: 'IT WORKED! IT ACTUALLY WORKED!', no: 'OH. THAT WAS A WARM-UP.' },
+    { pre: 'AGAIN... {AL}?', yes: 'I\'M A NATURAL!', no: 'HUH. THEY\'RE SHY TODAY.' },
+  ],
+  fizzle: ['ONE MORE. I CAN FEEL IT...', '...NOPE. GONE.'],
+  bye: ['HOW DOES THE MASTER DO THIS?', 'I NEED MORE PRACTICE. I\'LL TAKE THE BOOK BACK.', 'KEEP YOUR WORD IN MIND. THE MASTER\'S NORTH, OVER THE BRIDGE.'],
+  // the bridge guard, the first time you talk to him
+  guard: ['HALT! WHO GOES THERE?', '...{N}? THE WIZARD SAID YOU\'D COME.', 'RULES ARE RULES. WHAT\'S THE PASSWORD?', '...YOU DON\'T KNOW IT. NOBODY DOES.', 'FINE. EASIER QUESTION.'],
+  guardYes: ['CLOSE ENOUGH. PASS.'],
+  guardNo: ['NO? ...WHATEVER. PASS.'],
+  // the hermit in the woods: one question, more if he needs them
+  hermit: ['WAIT, TRAVELLER.', 'OFF TO SEE THE WIZARD?'],
+  hermitFirst: ['I COLLECT WORDS. THE BEST ONES HAVE {AL}.', '{W1}. {W2}. LOVELY.'],
+  hermitMore: [['ONE MORE. I\'M FUSSY.'], ['A TRICKY ONE. I LIKE THAT.']],
+  hermitFond: ['I\'M FOND OF {AL} TOO. {W1}. {W2}.'],
+  hermitYes: ['HA! GOOD WORD.', 'OHH. NICE.', 'I KNEW IT.'],
+  hermitNo: ['SHAME. IT\'LL DO.', 'HM. PITY.', 'NEVER MIND.'],
+  hermitBye: ['HOLD ON TO THAT WORD. GO ON.'],
+  // only if questions are still left at the castle (the hermit was a chicken, say)
+  wizardHelp: ['THE WIND IS FAINT TODAY. HELP IT ALONG.'],
+};
+// Fill in a book line for letter L.
+export function bookLine(s, L) {
+  const [w1, w2] = FAV[L] || ['', ''];
+  return s.replace(/\{AL\}/g, withArticle(L)).replace(/\{L\}/g, L).replace(/\{W1\}/g, w1).replace(/\{W2\}/g, w2);
 }
