@@ -62,7 +62,7 @@ test('npcs stand on walkable tiles, one per tile', () => {
 test('all text can be drawn by the pixel font and fits the box', () => {
   const all = [];
   for (const m of Object.values(MAPS)) for (const v of Object.values(m.looks)) all.push(...v);
-  for (const n of NPCS) all.push(...(n.talk || []), ...(n.again || []));
+  for (const n of NPCS) all.push(...(n.talk || []), ...(n.again || []), ...(n.cycle || []));
   for (const v of Object.values(SCRIPT)) all.push(...[].concat(v));
   for (const c of CLASSES) all.push(c.name, c.weapon);
   all.push(...GRUDGE, ...EGG.hello, ...EGG.got, ...EGG.restored);
@@ -70,7 +70,7 @@ test('all text can be drawn by the pixel font and fits the box', () => {
   const flat = v => (typeof v === 'string' ? [v] : Array.isArray(v) ? v.flatMap(flat) : Object.values(v).flatMap(flat));
   for (const v of Object.values(QUEST)) all.push(...flat(v));
   for (const v of Object.values(FISH)) all.push(...v);
-  for (const n of NPCS) for (const l of n.talk || []) all.push(squawk(l));
+  for (const n of NPCS) for (const l of [...(n.talk || []), ...(n.cycle || [])]) all.push(squawk(l));
   for (const s of all) {
     const t = s.replace(/\{N\}/g, 'ABCDEFGH');
     for (const ch of t.replace(/\n/g, '')) assert.ok(GLYPH_SET.has(ch), `missing glyph "${ch}" in: ${s}`);

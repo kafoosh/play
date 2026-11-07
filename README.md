@@ -116,13 +116,13 @@ fortune teller (after the magician Dani DaOrtiz: red beanie, glasses, long dark 
 4. Put either pile on the other. Then spread the cards, split them anywhere and put
    either half on top of the other, as many times as they like.
 5. Spread the packet between their hands.
-6. On her table, show where the two jokers lie: move the arrow (D-pad, or tap a gap),
-   A puts a joker there, B takes one back. UNDO or YES once both are down. She gives a
+6. On his table, show where the two jokers lie: move the arrow (D-pad, or tap a gap),
+   A puts a joker there, B takes one back. UNDO or YES once both are down. He gives a
    "reading" of the jokers.
 7. "EENY... MEENY... MINY... ONE FROM THE PAST, ONE FROM THE PRESENT, ONE FOR THE
-   FUTURE." She turns three of the face-down cards, left to right. They flip each one she points at and enter it
-   with the value and suit chips. She gives a reading of the colours and suits.
-8. She tells them to remember their card, put the rest back in the deck and keep their
+   FUTURE." He turns three of the face-down cards, left to right. They flip each one he points at and enter it
+   with the value and suit chips. He gives a reading of the colours and suits.
+8. He tells them to remember their card, put the rest back in the deck and keep their
    own card face up in the middle.
 
 On the way, the hermit in the woods asks if they have a lucky card, and tells them to
@@ -142,12 +142,12 @@ spread (read left to right) their card sits just to the right of that joker:
 This assumes the usual left-to-right spread. A spread the other way round still looks
 valid but points at the wrong end of the gap.
 
-Her three picks are the leftmost, middle and rightmost of the five face-down cards, so
+His three picks are the leftmost, middle and rightmost of the five face-down cards, so
 they're spread evenly. If their card isn't one of those, it takes the place of the
 nearest one (a tie is decided at random). So their card is always one of the three, and
 the game knows which entry is theirs. Their card can be any of the five face-down
 cards, depending on where the jokers fell. Any other joker spacing means the deal went
-wrong: she says the jokers are arguing and has them deal again with a new card.
+wrong: he says the jokers are arguing and has them deal again with a new card.
 
 ### Award: Look At All Those Chickens
 

@@ -18,7 +18,7 @@ const G = {
   name: '', hero: null, flags: {}, time: 0, fade: null, scene: null,
 };
 if (window.__force) { G.armed = { ...window.__force }; G.locked = true; }
-// "/!card": the fortune teller's self-working trick. The card comes from her reading.
+// "/!card": the fortune teller's self-working trick. The card comes from his reading.
 if (window.__fortune) { G.armed = { v: null, s: null, fortune: true }; G.locked = true; }
 if (window.__forceWord) { const w = decodeWord(window.__forceWord); if (w) { G.armed = { v: null, s: null, word: w }; G.locked = true; } }
 const armedCard = () => ({ v: G.armed.v || 1, s: G.armed.s || 'S' });
@@ -1062,7 +1062,7 @@ const Play = {
   talkTo(n) {
     if (n.id === 'wizard') { if (!G.flags.met) this.run(wizardScene); return; }
     if (!n.sleep && n.look.kind !== 'frog') n.dir = OPP[this.p.dir];
-    let lines = n.talked && n.again ? n.again : n.talk, after = null;
+    let lines = n.cycle ? [n.cycle[n.talked % n.cycle.length]] : n.talked && n.again ? n.again : n.talk, after = null;
     const W = ['circe', 'bess', 'pennatella'];
     if (W.includes(n.id) && !G.flags.potion && !n.chicken) {
       if (!n.told) {
@@ -1099,7 +1099,7 @@ const Play = {
   draw() {
     const m = this.map, p = this.p, mw = m.w * 16, mh = m.h * 16;
     // keep the hero out from under the controls; during the fortune reading, also out from
-    // under her table and the text box (the camera may look past the bottom of the map)
+    // under his table and the text box (the camera may look past the bottom of the map)
     const want = this.reading ? Math.max(24, Math.min(UIB, (Table.on ? Table.geom().y : UIB - 46) - 16)) : UIB;
     this.vh = this.vh ? this.vh + (want - this.vh) * 0.12 : want;
     const viewH = Math.round(this.vh);
@@ -1398,7 +1398,7 @@ const Play = {
 // ================================================================ the fortune teller's table
 // A compact panel like a text box with a strip of green felt. The spectator shows where
 // the jokers fell (the cards part to show where a joker would go), then names the cards
-// she points at with value and suit chips. Card faces are never drawn. Taps, or the
+// he points at with value and suit chips. Card faces are never drawn. Taps, or the
 // D-pad with A (B undoes).
 // The row is drawn as a left-to-right hand spread: each card overlaps the one to its
 // left and lies on top of it, the way their own spread should look.
@@ -1582,7 +1582,7 @@ const Table = {
     this.row.forEach((it, i) => {
       const cx = Math.round(it.x), cy = Math.round(ry - it.lift);
       ctx.fillStyle = 'rgba(8,20,14,0.45)'; ctx.fillRect(cx + 1, ry + 2, MINI_W, MINI_H - 1);
-      // gold marks under the cards she's read; a blinking pointer under the one she points at
+      // gold marks under the cards he's read; a blinking pointer under the one he points at
       const named = this.mode === 'card' ? this.order.indexOf(i) >= 0 && this.order.indexOf(i) < this.k : !!(this.hi && this.hi.includes(i));
       const mx = cx + 2, my = ry + MINI_H + 2;
       if (named) { ctx.fillStyle = C.gold; ctx.fillRect(mx, my, 3, 2); }
@@ -1688,7 +1688,7 @@ function* hermitScene() {
 }
 
 // Fortune mode: the fortune teller stops you as you come out of the house and reads
-// your cards. Her reading tells the game the card the wizard reveals at the end.
+// your cards. His reading tells the game the card the wizard reveals at the end.
 function* walkTo(n, isGoal) {
   for (let i = 0; i < 12 && !isGoal(n.x, n.y); i++) {
     const d = this.bfsDir(n, isGoal);

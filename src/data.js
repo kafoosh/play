@@ -189,7 +189,7 @@ export const LOOKS = {
 };
 for (const k in LOOKS) LOOKS[k].key = k;
 
-// talk: first chat. again: later chats (falls back to talk).
+// talk: first chat. again: later chats (falls back to talk). cycle: one line per chat, in turn.
 export const NPCS = [
   { id: 'dog', name: 'DOG', map: 'home', x: 6, y: 3, look: 'dog', wander: 2, slow: true,
     talk: ['WOOF.'], again: ['THE DOG STARES AT THE DOOR.', 'WOOF.'] },
@@ -252,10 +252,10 @@ export const NPCS = [
     talk: ['THE WIZARD IS WAITING FOR YOU, {N}.', 'A WORD OF ADVICE. DON\'T THINK TOO LOUD IN THERE.'],
     again: ['GO ON IN.'] },
 
-  // fortune mode only (play.oddpaq.com/!card): she stops you as you leave the house
+  // fortune mode only (play.oddpaq.com/!card): he stops you as you leave the house
   { id: 'seer', name: 'FORTUNE TELLER', map: 'world', x: 17, y: 40, look: 'seer', dir: 'left', fortuneOnly: true,
-    talk: ['THE CARDS HAVE SPOKEN, DEAR.', 'KEEP YOUR CARDS SAFE. THE WIZARD IS WAITING, NORTH OVER THE BRIDGE.'],
-    again: ['GO ON! IS YOUR DECK IN A BOX?'] },
+    // after the reading: one of these each time you talk to him, in turn
+    cycle: ['ONLY ONE LUCKY CARD PER CUSTOMER.', 'STILL HERE? THE WIZARD WON\'T WAIT FOREVER.', 'IS YOUR LUCKY CARD STILL FACE UP?', 'NORTH! OVER THE BRIDGE! SHOO!', 'IT\'S YOUR LIFE! I DON\'T CARE!'] },
 
   { id: 'wizard', name: 'WIZARD', map: 'castle', x: 4, y: 3, look: 'wizard', dir: 'down', tall: true },
 ];
@@ -466,7 +466,7 @@ export function fortuneTarget(p, q, n = 7) {
   return -1;
 }
 
-// The three cards she turns, left to right: past, present and future. She takes the
+// The three cards he turns, left to right: past, present and future. He takes the
 // leftmost, middle and rightmost of the five face-down cards, so they're spread evenly.
 // If their card isn't one of those, it takes the place of the nearest one (by position
 // in the spread; a tie is decided at random). Returns spread positions, left to right.
@@ -523,7 +523,7 @@ export const FORTUNE = {
     'OFF YOU GO, {N}. NORTH, OVER THE BRIDGE.',
     'IT\'S YOUR LIFE!',
   ],
-  // headings on her table while you name the cards: one for each card she points at
+  // headings on his table while you name the cards: one for each card he points at
   ui: { which: ['PAST: WHAT\'S THIS?', 'PRESENT: AND THIS?', 'FUTURE: LAST ONE!'], seen: 'SEEN THAT ONE!', reading: 'YOUR FORTUNE' },
 };
 
@@ -542,9 +542,9 @@ export function jokerReading(p, q, rand = Math.random) {
   return [pickOf(rand)(lines)];
 }
 
-// A reading of the cards she pointed at, in two lines about the mix as a whole: the
+// A reading of the cards he pointed at, in two lines about the mix as a whole: the
 // colours, then the suits (all one, all different) or how big the cards run. Nothing
-// that sounds like she knows which cards they are.
+// that sounds like he knows which cards they are.
 export function cardReading(cards) {
   const reds = cards.filter(c => c.s === 'H' || c.s === 'D').length, n = cards.length;
   const suits = new Set(cards.map(c => c.s)).size, sum = cards.reduce((a, c) => a + c.v, 0);
