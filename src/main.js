@@ -1087,9 +1087,14 @@ const Play = {
     else if (n.dazed && n.look.kind === 'person' && !n.sleep) { lines = [...EGG.restored, ...lines]; n.dazed = false; }
     else if (n.hurt && !n.grudged && n.look.kind === 'person' && !n.sleep) { lines = [GRUDGE[(n.hurt - 1) % GRUDGE.length], ...lines]; n.grudged = true; }
     n.talked++;
+    // the fortune teller stands near the bottom edge of the map: keep his text box at the
+    // bottom and lift the camera, as during his reading, so the hero stays in view above it
+    const low = n.id === 'seer';
+    if (low) this.reading = true;
     say(lines, {
-      name: n.name,
+      name: n.name, pos: low ? 'bottom' : 'auto',
       onEnd: () => {
+        if (low) this.reading = false;
         if (n.id === 'guard' && (!G.flags.guard || this.guardBlocking(n))) this.run(guardStepAside);
         if (n.id === 'frog' && !n.chicken) this.dropKey(n, this.p.dir);
         if (after) after();
