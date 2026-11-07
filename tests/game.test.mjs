@@ -335,9 +335,13 @@ test('book: every line can be drawn and fits the box', () => {
   }
 });
 
-test('book: both buttons fit side by side on the narrowest screen', () => {
-  const bw = l => l.length * 6 - 1 + 10;
-  assert.ok(bw('TURN PAGE') + 8 + bw('CLOSE BOOK') + 4 <= 152, 'with room for the gold edge');
+test('book: the book and its arrow fit on the narrowest screen', () => {
+  const w = 160 - 24, chars = Math.floor((w - 14) / 6); // as Tome.geom() works it out
+  for (const p of TOME) {
+    assert.ok(p.title.length * 6 - 1 <= w - 4, `title too wide: ${p.title}`);
+    assert.ok(wrap(p.text, chars).length <= 9, `page too long at ${chars} letters a line: ${p.title}`);
+  }
+  assert.ok(4 + w + 4 + 2 + 7 + 2 <= 160 - 4, 'cover, book, arrow and its bob, with room to spare');
 });
 
 test('apprentice stands by the house in book mode only', () => {
