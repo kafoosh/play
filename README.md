@@ -160,13 +160,14 @@ and the cheat sheet shows `BOOK TEST (URL)`.
    lends them his master's old book. It holds three short pages about the winds, the
    Tower of Winds and the Still Night. "FLIP THROUGH. PICK A WORD THAT GRABS YOU. STARE AT IT
    TILL IT STICKS. THEN CLOSE THE BOOK ON THAT PAGE."
-   - **The book:** two buttons under it, **TURN PAGE** and **CLOSE BOOK**. TURN PAGE
-     runs round the three pages: after page III comes page I again.
-   - **Taps:** tap the buttons (a tap on the page turns it too).
-   - **D-pad:** left and right move between the buttons and A presses one. The cursor
-     starts on TURN PAGE, so A on its own only ever turns the page.
-   - **Reopening:** the apprentice then asks "GOT A WORD? AND YOU CLOSED IT ON ITS
-     PAGE?". NO opens the book again where they left it, as often as they like. The
+   - **Turning:** an arrow beside the book turns to the next page. It runs round the
+     three pages (after III comes I again), and bobs while it waits. A or RIGHT turns
+     the page; on a touch screen, tap the arrow (or the page).
+   - **Closing:** **CLOSE BOOK** sits under the book. With the buttons, press DOWN to
+     reach it, then A (UP goes back to the arrow), so a mashed A never closes the book.
+     On a touch screen, tap it.
+   - **Reopening:** the apprentice then asks "GOT YOUR WORD?". NO opens the book again
+     where they left it, as often as they like. The
      guessing only starts after a YES.
 2. The apprentice tries to read their mind: two letters ("I'M GETTING... AN R!" and
    "DOES THE WORD YOU'RE THINKING OF HAVE AN R IN IT?"). Then the magic fizzles out and

@@ -4,7 +4,12 @@
   --glass-edge: rgba(255, 250, 235, 0.55);
   --glass-hi: rgba(255, 250, 235, 0.38);
   --shadow: rgba(30, 15, 40, 0.35);
+  /* the size of the touch controls: smaller on narrow phones so the D-pad, B and A sit
+     side by side without touching (they need about 360px across at full size) */
+  --k: 1;
 }
+@media (max-width: 359px) { :root { --k: 0.82; } }
+@media (max-width: 299px) { :root { --k: 0.7; } }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -43,6 +48,8 @@ html, body {
   touch-action: none;
   display: none;
   filter: drop-shadow(0 2px 3px var(--shadow));
+  transform: scale(var(--k));
+  transform-origin: left bottom;
 }
 #dpad .bar, #dpad .hub {
   position: absolute;
@@ -90,13 +97,15 @@ html, body {
   cursor: pointer;
   touch-action: none;
   display: none;
+  transform: scale(var(--k));
+  transform-origin: right bottom;
 }
-#btnA.down { background: rgba(240, 96, 90, 0.6); transform: scale(0.94); }
+#btnA.down { background: rgba(240, 96, 90, 0.6); transform: scale(calc(var(--k) * 0.94)); }
 
 /* ---------- B button (weapon): same size as A, down and to the left of it */
 #btnB {
   position: absolute;
-  right: calc(max(22px, env(safe-area-inset-right)) + 84px);
+  right: calc(max(22px, env(safe-area-inset-right)) + 84px * var(--k));
   bottom: max(18px, env(safe-area-inset-bottom));
   width: 72px;
   height: 72px;
@@ -112,8 +121,10 @@ html, body {
   cursor: pointer;
   touch-action: none;
   display: none;
+  transform: scale(var(--k));
+  transform-origin: right bottom;
 }
-#btnB.down { background: rgba(120, 140, 220, 0.6); transform: scale(0.94); }
+#btnB.down { background: rgba(120, 140, 220, 0.6); transform: scale(calc(var(--k) * 0.94)); }
 
 body.playing #dpad, body.playing #btnA, body.playing #btnB { display: block; }
 

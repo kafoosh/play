@@ -1633,24 +1633,24 @@ const Table = {
 };
 
 // ================================================================ the apprentice's book
-// Book mode: the master's old book fills the play area. Under it are two buttons, TURN
-// PAGE and CLOSE BOOK. TURN PAGE runs round the three pages (after the last comes the
-// first again). Taps
-// work on the buttons (a tap on the page turns it too). With the D-pad, left and right
-// move between the buttons and A presses one; the cursor starts on TURN PAGE, so A on
-// its own only ever turns the page. The page showing when the book closes is the page
-// their word is on.
+// Book mode: the master's old book fills the play area. A single arrow beside the book
+// turns to the next page; it runs round the three pages (after III comes I again). It
+// is picked to start with and bobs while it waits, so A (or RIGHT) turns the page.
+// CLOSE BOOK sits under the book and takes a deliberate DOWN to reach (then A; UP goes
+// back to the arrow), so a mashed A never closes the book. On a touch screen, tap the
+// arrow (or the page) to turn, and CLOSE BOOK to close. The page showing when the book
+// closes is the page their word is on.
 const Tome = {
-  on: false, closed: false, page: 0, t: 0, turnT: 0, cur: 0, pad: false,
+  on: false, closed: false, page: 0, t: 0, turnT: 0, cur: 0, idle: 0,
   open(page = 0) {
-    Object.assign(this, { on: true, closed: false, page, t: 0, turnT: 0, cur: 0, pad: false });
+    Object.assign(this, { on: true, closed: false, page, t: 0, turnT: 0, cur: 0, idle: 0 });
     // work out the first questions while they read, so nothing stalls later
     TOME.forEach((_, p) => setTimeout(() => bookNext(p, []), 300 + p * 150));
   },
   input() { return this.on && !D.active; },
   turn() {
     if (this.t < 0.3) return; // still mashing A from the conversation before
-    this.page = (this.page + 1) % TOME.length; this.turnT = 1; Audio.sfx('move');
+    this.page = (this.page + 1) % TOME.length; this.turnT = 1; this.idle = 0; Audio.sfx('move');
   },
   shut() {
     if (this.t < 0.6) return; // a stray tap as it opens doesn't count
@@ -1659,31 +1659,34 @@ const Tome = {
     Audio.sfx('door');
   },
   geom() {
-    const w = Math.min(UIX1 - UIX0 - 8, 158), x = Math.round((UIX0 + UIX1 - w) / 2), chars = Math.floor((w - 14) / 6);
+    // the book, with room on its right for the arrow
+    // cover 4 + book + cover 4 + gap 2 + arrow 7 + bob 2, and a few pixels spare each side
+    const w = Math.min(UIX1 - UIX0 - 24, 158), chars = Math.floor((w - 14) / 6);
+    const x = Math.round((UIX0 + UIX1 - (w + 19)) / 2) + 4;
     const rows = Math.max(...TOME.map(p => wrap(p.text, chars).length));
     const h = 28 + rows * 9 + 8, total = h + 20;
     const room = total <= UIB - 4 ? UIB : VH; // squeezed between the controls: use the whole screen
     const y = Math.max(3, Math.round((room - total) / 2));
-    const bw = [textWidth('TURN PAGE') + 10, textWidth('CLOSE BOOK') + 10], gap = 8, bx = Math.round(x + w / 2 - (bw[0] + gap + bw[1]) / 2);
+    const cw = textWidth('CLOSE BOOK') + 12;
     return {
       x, y, w, h, chars,
-      btns: [{ x: bx, y: y + h + 6, w: bw[0], h: 13, label: 'TURN PAGE' }, { x: bx + bw[0] + gap, y: y + h + 6, w: bw[1], h: 13, label: 'CLOSE BOOK' }],
+      arrow: { x: x + w + 6, y: Math.round(y + h / 2 - 6), w: 7, h: 13 },
+      close: { x: Math.round(x + w / 2 - cw / 2), y: y + h + 6, w: cw, h: 13 },
     };
   },
-  update(dt) { if (this.on) { this.t += dt; this.turnT = Math.max(0, this.turnT - dt * 7); } },
-  press(i) { if (i) this.shut(); else this.turn(); },
+  update(dt) { if (this.on) { this.t += dt; this.idle += dt; this.turnT = Math.max(0, this.turnT - dt * 7); } },
+  pick(c) { if (c !== this.cur) { this.cur = c; this.idle = 0; Audio.sfx('move'); } },
   onDir(d) {
-    this.pad = true;
-    if (d === 'left' || d === 'right') { const c = d === 'right' ? 1 : 0; if (c !== this.cur) { this.cur = c; Audio.sfx('move'); } }
+    if (d === 'down') this.pick(1);
+    else if (d === 'up') this.pick(0);
+    else if (d === 'right' && !this.cur) this.turn();
   },
-  onA() { this.pad = true; this.press(this.cur); },
-  onB() { if (this.cur) { this.cur = 0; Audio.sfx('move'); } },
+  onA() { if (this.cur) this.shut(); else this.turn(); },
+  onB() { this.pick(0); },
   onTap(x, y) {
-    this.pad = false;
-    const g = this.geom(), hit = b => x >= b.x - 2 && x < b.x + b.w + 2 && y >= b.y - 2 && y < b.y + b.h + 2;
-    const i = g.btns.findIndex(hit);
-    if (i >= 0) this.press(i);
-    else if (hit({ x: g.x, y: g.y, w: g.w, h: g.h })) this.turn();
+    const g = this.geom(), hit = (b, m = 2) => x >= b.x - m && x < b.x + b.w + m && y >= b.y - m && y < b.y + b.h + m;
+    if (hit(g.close)) this.shut();
+    else if (hit(g.arrow, 8) || hit({ x: g.x, y: g.y, w: g.w, h: g.h })) { this.cur = 0; this.turn(); }
   },
   draw() {
     if (!this.on) return;
@@ -1696,7 +1699,7 @@ const Tome = {
     ctx.fillStyle = '#d8c49a'; for (let i = 1; i < 3; i++) ctx.fillRect(x + 1 + i, y + h - 2 - i, w - 2 - i * 2, 1);
     ctx.fillStyle = '#efe2bf'; ctx.fillRect(x + 1, y + 1, w - 2, h - 5);
     ctx.fillStyle = '#e0cfa4'; ctx.fillRect(x + 1, y + 1, 2, h - 5); // towards the spine
-    ctx.fillStyle = '#e6d6ae'; for (let i = 0; i < 10; i++) ctx.fillRect(x + 5 + ((hash(i, 31) * (w - 14)) | 0), y + 5 + ((hash(i, 37) * (h - 24)) | 0), 2, 1);
+    ctx.fillStyle = '#e6d6ae'; for (let i = 0; i < 10; i++) ctx.fillRect(x + 5 + ((hash(i, 31) * (w - 14)) | 0), y + 5 + ((hash(i, 37) * (h - 16)) | 0), 2, 1);
     // the text slides in a little as the page turns
     const off = Math.round(this.turnT * 10);
     textCenter(ctx, pg.title, x + w / 2 + off, y + 6, UI.accent);
@@ -1708,18 +1711,24 @@ const Tome = {
       if (i) text(ctx, ln, lx, ly, UI.text);
       else { text(ctx, ln[0], lx, ly, UI.accent); text(ctx, ln.slice(1), lx + 6, ly, UI.text); } // a red capital
     });
-    // a folded corner, bottom right
-    for (let i = 0; i < 7; i++) { ctx.fillStyle = '#c4a674'; ctx.fillRect(x + w - 9 + i, y + h - 12 + i, 7 - i, 1); }
-    // the two buttons: TURN PAGE (parchment) and CLOSE BOOK (red)
-    g.btns.forEach((b, i) => {
-      const on = this.pad && this.cur === i; // the D-pad cursor: a gold edge
-      if (on) { ctx.fillStyle = C.gold; ctx.fillRect(b.x - 2, b.y - 1, b.w + 4, b.h + 3); }
-      ctx.fillStyle = C.ink; ctx.fillRect(b.x - 1, b.y, b.w + 2, b.h + 1);
-      ctx.fillStyle = i ? '#9a2a26' : '#d8c49a'; ctx.fillRect(b.x, b.y, b.w, b.h);
-      ctx.fillStyle = i ? '#b8342e' : '#efe2bf'; ctx.fillRect(b.x, b.y, b.w, 2);
-      textCenter(ctx, b.label, b.x + b.w / 2, b.y + 3, i ? '#fff2d0' : UI.text);
-      if (on && Math.floor(t * 3) % 2) { ctx.fillStyle = C.gold; ctx.fillRect(b.x + 3, b.y + b.h - 2, b.w - 6, 1); }
-    });
+    // the arrow beside the book: gold and bobbing while it's picked and waiting
+    const a = g.arrow, sel = !this.cur;
+    const bob = sel && this.idle > 0.6 ? Math.round(Math.sin(this.idle * 5) + 1) : 0;
+    ctx.fillStyle = C.ink; // a dark outline first, then the arrow on top
+    for (let i = 0; i < 7; i++) ctx.fillRect(a.x + i + bob - 1, a.y + i - 1, 2, 15 - i * 2);
+    ctx.fillRect(a.x + 7 + bob - 1, a.y + 5, 2, 3);
+    for (let i = 0; i < 7; i++) {
+      ctx.fillStyle = sel ? (i < 2 ? '#f4d47a' : C.gold) : '#8a7458';
+      ctx.fillRect(a.x + i + bob, a.y + i, 1, 13 - i * 2);
+    }
+    // CLOSE BOOK, under the book
+    const c = g.close, on = !!this.cur;
+    if (on) { ctx.fillStyle = C.gold; ctx.fillRect(c.x - 2, c.y - 1, c.w + 4, c.h + 3); }
+    ctx.fillStyle = C.ink; ctx.fillRect(c.x - 1, c.y, c.w + 2, c.h + 1);
+    ctx.fillStyle = on ? '#b8342e' : '#7a2422'; ctx.fillRect(c.x, c.y, c.w, c.h);
+    ctx.fillStyle = on ? '#d8504a' : '#9a2a26'; ctx.fillRect(c.x, c.y, c.w, 2);
+    textCenter(ctx, 'CLOSE BOOK', c.x + c.w / 2, c.y + 3, on ? '#fff2d0' : '#d8b8a8');
+    if (on && Math.floor(t * 3) % 2) { ctx.fillStyle = C.gold; ctx.fillRect(c.x + 3, c.y + c.h - 2, c.w - 6, 1); }
   },
 };
 
