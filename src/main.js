@@ -1318,14 +1318,16 @@ const Play = {
     const s = this.swing, p = this.p, x = p.px - cx + 8, y = p.py - cy + 7, k = s.t / 0.25;
     const base = { right: 0, down: Math.PI / 2, left: Math.PI, up: -Math.PI / 2 }[s.dir];
     if (s.id === 'knight') {
-      // the blade sweeps across the front, leaving a fading trail behind it
-      const e = 1 - Math.pow(1 - Math.min(1, k * 1.5), 3), ang = base - 1.3 + 2.6 * e;
+      // the blade sweeps across the front, leaving a fading trail behind it. Facing left or
+      // right it always comes down from above (mirrored when facing left).
+      const sg = s.dir === 'left' ? -1 : 1;
+      const e = 1 - Math.pow(1 - Math.min(1, k * 1.5), 3), cur = -1.3 + 2.6 * e, ang = base + sg * cur;
       ctx.globalCompositeOperation = 'lighter';
-      for (let a = -1.3; a <= ang - base; a += 0.07) {
-        const age = (ang - base - a) / 2.6, al = Math.max(0, 0.75 - age * 1.6) * (1 - Math.max(0, k - 0.6) * 2.5);
+      for (let a = -1.3; a <= cur; a += 0.07) {
+        const age = (cur - a) / 2.6, al = Math.max(0, 0.75 - age * 1.6) * (1 - Math.max(0, k - 0.6) * 2.5);
         if (al <= 0) continue;
         ctx.fillStyle = `rgba(210,225,255,${al.toFixed(2)})`;
-        for (const r of [10, 12, 14]) ctx.fillRect(Math.round(x + Math.cos(base + a) * r), Math.round(y + Math.sin(base + a) * r), 1, 1);
+        for (const r of [10, 12, 14]) ctx.fillRect(Math.round(x + Math.cos(base + sg * a) * r), Math.round(y + Math.sin(base + sg * a) * r), 1, 1);
       }
       ctx.globalCompositeOperation = 'source-over';
       if (k < 0.85) {
