@@ -108,7 +108,7 @@ plain site, and title-screen taps are ignored. The cheat sheet shows `FORTUNE TE
 Every other address works exactly as before.
 
 The spectator needs a real deck with both jokers. As they step out of the house, a
-fortune teller (purple hood) stops them and talks them through it:
+fortune teller (after the magician Dani DaOrtiz: red beanie, long dark hair, beard, all in black) stops them and talks them through it:
 
 1. Lay the two jokers face up, side by side. Take any five cards; put the rest aside.
 2. Shuffle the five face down. Peek at the top card "for good luck" and memorise it.

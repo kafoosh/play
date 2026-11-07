@@ -397,6 +397,13 @@ function personRows(look, dir, frame) {
     if (face === 'down') { set(rows, 11, 0, 'f'); set(rows, 12, 0, 'f'); set(rows, 12, 1, 'f'); }
     if (face === 'side') { set(rows, 4, 0, 'f'); set(rows, 3, 0, 'f'); set(rows, 3, 1, 'f'); }
   }
+  // a knitted beanie: a rounded dome over the hair with a lighter ribbed band
+  if (look.acc === 'beanie') {
+    rows[0] = '......oooo......';
+    rows[1] = '.....occcco.....';
+    rows[2] = rows[2].replace(/[hH]/g, 'c');
+    rows[3] = rows[3].replace(/[hH]/g, (m, i) => (i % 2 ? 'C' : 'c'));
+  }
   if (look.acc === 'helmet') { set(rows, 7, 0, 'r'); set(rows, 8, 0, 'r'); if (face !== 'up') { set(rows, 7, 5, 'o'); set(rows, 8, 5, 'o'); } }
   if (look.acc === 'hood' && face !== 'up') { set(rows, 4, 1, 'o'); set(rows, 11, 1, 'o'); }
   if (look.kid) { rows.splice(12, 1); rows.splice(3, 1); }
