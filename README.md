@@ -160,7 +160,9 @@ and the cheat sheet shows `BOOK TEST (URL)`.
    lends them his master's old book: three short pages about the winds, the Tower of
    Winds and the Still Night. "PICK A WORD THAT GRABS YOU. STARE AT IT TILL IT STICKS.
    THEN CLOSE THE BOOK." The page corners turn the pages (or left/right on the D-pad);
-   the red **CLOSE** ribbon under the book closes it (on a keyboard: down, then A).
+   the red **CLOSE** ribbon under the book closes it. With the buttons, press DOWN to
+   pick CLOSE, then A: A on its own only turns the page, so it can never close the book
+   by accident.
 2. The apprentice tries to read their mind: two letters ("I'M GETTING... AN R!" and
    "DOES THE WORD YOU'RE THINKING OF HAVE AN R IN IT?"). Then the magic fizzles out and
    he goes off to practise.

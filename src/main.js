@@ -1640,7 +1640,7 @@ const Table = {
 const Tome = {
   on: false, closed: false, page: 0, t: 0, turnT: 0, dir: 1, focus: false, pad: false,
   open() {
-    Object.assign(this, { on: true, closed: false, page: 0, t: 0, turnT: 0, focus: false, pad: false });
+    Object.assign(this, { on: true, closed: false, page: 0, t: 0, turnT: 0, focus: false, pad: false, hint: 0 });
     // work out the first questions while they read, so nothing stalls later
     TOME.forEach((_, p) => setTimeout(() => bookNext(p, []), 300 + p * 150));
   },
@@ -1669,18 +1669,19 @@ const Tome = {
       close: { x: Math.round(x + w / 2 - 25), y: y + h + 5, w: 50, h: 13 },
     };
   },
-  update(dt) { if (this.on) { this.t += dt; this.turnT = Math.max(0, this.turnT - dt * 7); } },
+  update(dt) { if (this.on) { this.t += dt; this.turnT = Math.max(0, this.turnT - dt * 7); this.hint = Math.max(0, (this.hint || 0) - dt); } },
   onDir(d) {
     this.pad = true;
     if (d === 'left' || d === 'right') this.turn(d === 'left' ? -1 : 1);
     else if ((d === 'down') !== this.focus) { this.focus = d === 'down'; Audio.sfx('move'); }
   },
-  // A reads on; on the last page it picks CLOSE, and a second A closes the book
+  // A reads on. It only closes the book once DOWN has picked CLOSE, so a stray A never
+  // does; on the last page, A just points at CLOSE (and DOWN).
   onA() {
     if (this.t < 0.4) return; // still mashing A from the conversation before
     if (this.focus) this.shut();
     else if (this.page < this.last()) this.turn(1);
-    else { this.focus = true; this.pad = true; Audio.sfx('move'); }
+    else { this.hint = 1.2; this.pad = true; Audio.sfx('bump'); }
   },
   onB() { if (this.focus) { this.focus = false; Audio.sfx('move'); } else this.turn(-1); },
   onTap(x, y) {
@@ -1731,6 +1732,7 @@ const Tome = {
       ctx.fillStyle = C.gold; ctx.fillRect(c.x - 2, c.y - 1, c.w + 4, c.h + 3);
       if (Math.floor(t * 3) % 3) text(ctx, '▶', c.x - 9, c.y + 3, C.gold);
     }
+    if (!on && this.hint > 0 && Math.floor(t * 6) % 2) text(ctx, '▼', c.x + c.w / 2 - 2, c.y - 8, C.gold); // press DOWN
     ctx.fillStyle = C.ink; ctx.fillRect(c.x - 1, c.y, c.w + 2, c.h + 1);
     ctx.fillStyle = on ? '#c83a32' : '#9a2a26'; ctx.fillRect(c.x, c.y, c.w, c.h);
     ctx.fillStyle = on ? '#e8584a' : '#b8342e'; ctx.fillRect(c.x, c.y, c.w, 2);
