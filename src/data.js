@@ -533,7 +533,7 @@ export function jokerReading(p, q, rand = Math.random) {
     ? ['FAR APART... LIKE THIS VALLEY AND THE WIND SINCE THE STILL NIGHT.', 'FAR APART. LIKE A GUARD AND HIS BRIDGE. HE\'LL BE BACK ON IT SOON.']
     : ['SIDE BY SIDE... A LOCKED DOOR. A LOST KEY. A FROG?', 'CLOSE TOGETHER. THREE SISTERS, ONE HOUSE, NO KEY.'];
   if (p === 0 || q === 6) lines.push('ONE SITS AT THE EDGE, LIKE THE FISHER BY HIS STILL LAKE.');
-  else if (p + q < 6) lines.push('THEY LEAN WEST, TO THE VILLAGE. SOMEONE THERE ONLY SELLS FAN BACKS.');
+  else if (p + q < 6) lines.push('THEY LEAN WEST, TO THE VILLAGE!');
   else if (p + q > 6) lines.push('THEY LEAN EAST, TO THE LAKE. NOTHING BITES THERE ANY MORE.');
   else lines.push('RIGHT IN THE MIDDLE, LIKE THE ROAD NORTH. THE WIZARD WAITS.');
   return [pickOf(rand)(lines)];
