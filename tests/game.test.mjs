@@ -1,7 +1,7 @@
 // Run with: node --test tests/
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MAPS, NPCS, LOOKS, SCRIPT, parseForce, cardName, VALUE_GRID, encodeWord, decodeWord, CLASSES, OUCH, GRUDGE, EGG, squawk, KONAMI, QUEST, FISH, FORTUNE, AWARD, fortuneTarget, jokerReading, cardReading } from '../src/data.js';
+import { MAPS, NPCS, LOOKS, SCRIPT, parseForce, cardName, VALUE_GRID, encodeWord, decodeWord, CLASSES, OUCH, GRUDGE, EGG, squawk, KONAMI, QUEST, FISH, FORTUNE, AWARD, fortuneTarget, fortunePicks, jokerReading, cardReading } from '../src/data.js';
 import { GLYPH_SET, GLYPH5_SET, wrap } from '../src/art.js';
 import { SONGS } from '../src/audio.js';
 
@@ -214,5 +214,21 @@ test('award banner text fits', () => {
     for (const l of v) { assert.ok(l.length <= 18, l); for (const ch of l) assert.ok(GLYPH_SET.has(ch), l); }
     assert.ok(('AWARD - ' + v.slice(1).join(' ')).length <= 36);
     for (const ch of v.slice(1).join(' ')) assert.ok(GLYPH5_SET.has(ch), `tiny font: ${ch}`);
+  }
+});
+
+test('fortune: past, present and future always include their card', () => {
+  for (let p = 0; p < 7; p++) for (let q = p + 1; q < 7; q++) {
+    const t = fortuneTarget(p, q);
+    if (t < 0) continue;
+    const cards = [0, 1, 2, 3, 4, 5, 6].filter(i => i !== p && i !== q), seen = new Set();
+    for (const r of [0, 0.3, 0.6, 0.99]) {
+      const picks = fortunePicks(p, q, () => r);
+      assert.ok(picks.includes(t), `their card at ${t} for jokers ${p},${q}`);
+      assert.deepEqual(picks, picks.slice().sort((a, b) => a - b), 'left to right');
+      assert.ok(cards.slice(0, 2).includes(picks[0]) && picks[1] === cards[2] && cards.slice(3).includes(picks[2]), 'one from each part');
+      seen.add(picks.join());
+    }
+    assert.equal(seen.size, 2, 'the other picks vary');
   }
 });

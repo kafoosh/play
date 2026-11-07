@@ -118,9 +118,9 @@ fortune teller (purple hood) stops them and talks them through it:
 6. On her table, show where the two jokers lie: move the arrow (D-pad, or tap a gap),
    A puts a joker there, B takes one back. UNDO or YES once both are down. She gives a
    "reading" of the jokers.
-7. They lay the spread down as it is. She points at three face-down cards, one at a
-   time; they flip each one and enter it with the value and suit chips. She gives a
-   reading of the colours and suits.
+7. She reads the spread as past (left), present (middle) and future (right) and turns
+   one card from each, "EENY... MEENY... MINY...". They flip each one she points at and
+   enter it with the value and suit chips. She gives a reading of the colours and suits.
 8. She tells them to remember their card, put the rest back in the deck and keep their
    own card face up in the middle.
 
@@ -139,8 +139,10 @@ spread (read left to right) their card sits just to the right of that joker:
 This assumes the usual left-to-right spread. A spread the other way round still looks
 valid but points at the wrong end of the gap.
 
-Their card is always one of the three she points at, in a random order with two others,
-so the game knows which entry is theirs. Any other joker spacing means the deal went
+Her three picks come from the five face-down cards, read left to right: one of the two
+on the left (past), the middle one (present) and one of the two on the right (future).
+Their card is always the pick from its own part, and the other two parts get a random
+card, so the game knows which entry is theirs. Any other joker spacing means the deal went
 wrong: she says the jokers are arguing and has them deal again with a new card.
 
 ### Award: Look At All Those Chickens

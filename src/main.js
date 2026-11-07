@@ -1,5 +1,5 @@
 import { C, UI, text, textCenter, textWidth, tinyText, hatSprite, wingSprite, keySprite, potionSprite, fishSprite, dogBellySprite, luteSprite, fanSprite, wrap, box, blob, glow, glyphDots, drawCard, cardBack, makeScroll, miniCard, MINI_W, MINI_H, charSprite, drawTile, drawOver, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
-import { MAPS, LOOKS, NPCS, SCRIPT, cardName, decodeWord, VALUE_GRID, CHASED, CLASSES, SKINS, HAIRS, OUCH, GRUDGE, KONAMI, EGG, squawk, QUEST, FISH, AWARD, FORTUNE, fortuneTarget, jokerReading, cardReading } from './data.js';
+import { MAPS, LOOKS, NPCS, SCRIPT, cardName, decodeWord, VALUE_GRID, CHASED, CLASSES, SKINS, HAIRS, OUCH, GRUDGE, KONAMI, EGG, squawk, QUEST, FISH, AWARD, FORTUNE, fortuneTarget, fortunePicks, jokerReading, cardReading } from './data.js';
 import * as Audio from './audio.js';
 
 // The game draws at a low resolution that follows the screen's shape: VW x VH game pixels.
@@ -1685,7 +1685,6 @@ function* walkTo(n, isGoal) {
     yield () => !n.moving;
   }
 }
-const shuffled = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 function* fortuneScene() {
   G.flags.fortune = 1; this.reading = true;
   const f = this.npc('seer'), p = this.p, F = FORTUNE, who = 'FORTUNE TELLER';
@@ -1712,9 +1711,8 @@ function* fortuneScene() {
     Table.close();
   }
   yield* say2([...jokerReading(pq[0], pq[1]), ...F.point]);
-  // point at their card and two others, in a random order
-  const others = shuffled([0, 1, 2, 3, 4, 5, 6].filter(i => !pq.includes(i) && i !== target)).slice(0, 2);
-  const order = shuffled([target, ...others]);
+  // past, present and future, left to right; their card is one of them
+  const order = fortunePicks(pq[0], pq[1]);
   Table.askCards(order);
   yield () => Table.mode === 'show';
   const cards = Table.entered, mine = cards[order.indexOf(target)];
