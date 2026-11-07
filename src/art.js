@@ -417,6 +417,8 @@ function personRows(look, dir, frame) {
     if (face === 'down') { set(rows, 7, 7, 'h'); set(rows, 8, 7, 'h'); set(rows, 7, 8, 'W'); set(rows, 8, 8, 'W'); }
     else if (face === 'side') { set(rows, 11, 7, 'h'); set(rows, 10, 8, 'W'); }
   }
+  // slim: no chest bump in the side view (on a near-black shirt it reads as a stray dot)
+  if (look.slim && face === 'side') rows[10] = rows[10].replace(/to\.\.\.$/, 'o....');
   // glasses: dark frames with light lenses over the eyes
   if (look.glasses) {
     if (face === 'down') { for (const i of [5, 7, 8, 10]) set(rows, i, 6, 'g'); set(rows, 6, 6, 'L'); set(rows, 9, 6, 'L'); }
