@@ -226,9 +226,11 @@ test('fortune: past, present and future always include their card', () => {
       const picks = fortunePicks(p, q, () => r);
       assert.ok(picks.includes(t), `their card at ${t} for jokers ${p},${q}`);
       assert.deepEqual(picks, picks.slice().sort((a, b) => a - b), 'left to right');
-      assert.ok(cards.slice(0, 2).includes(picks[0]) && picks[1] === cards[2] && cards.slice(3).includes(picks[2]), 'one from each part');
+      assert.equal(new Set(picks).size, 3);
+      assert.ok(picks.every(i => cards.includes(i)), 'face-down cards only');
+      assert.equal(picks[2], cards[4], 'the future is the card right at the end');
       seen.add(picks.join());
     }
-    assert.equal(seen.size, 2, 'the other picks vary');
+    assert.ok(seen.size >= 2, 'the other picks vary');
   }
 });

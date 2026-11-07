@@ -460,16 +460,17 @@ export function fortuneTarget(p, q, n = 7) {
   return -1;
 }
 
-// The three cards she turns: past, present and future, left to right. The five face-down
-// cards in the spread are read as past (the two on the left), present (the middle one)
-// and future (the two on the right). Their card is always the one from its own part; the
-// other two parts get a card picked at random. Returns spread positions, left to right.
+// The three cards she turns, left to right: one from the past, one from the present, and
+// the future, "right at the end" (the last face-down card in the spread). Their card is
+// always one of the three: past and present are their card plus one other picked at
+// random, or two random ones if their card is the one at the end. Returns positions.
 export function fortunePicks(p, q, rand = Math.random) {
   const target = fortuneTarget(p, q), cards = [0, 1, 2, 3, 4, 5, 6].filter(i => i !== p && i !== q);
-  const r = cards.indexOf(target), any = a => a[Math.floor(rand() * a.length) % a.length];
-  const past = r < 2 ? target : any(cards.slice(0, 2));
-  const future = r > 2 ? target : any(cards.slice(3));
-  return [past, cards[2], future];
+  const any = a => a[Math.floor(rand() * a.length) % a.length];
+  const end = cards[4], rest = cards.slice(0, 4);
+  const first = target === end ? any(rest) : target;
+  const second = any(rest.filter(i => i !== first));
+  return [Math.min(first, second), Math.max(first, second), end];
 }
 
 export const FORTUNE = {
@@ -498,8 +499,8 @@ export const FORTUNE = {
   redo: ['HMM? THE JOKERS ARE ARGUING.', 'THE DEAL WENT WRONG SOMEWHERE. ONCE MORE!', 'PUT THE JOKERS FACE UP AGAIN AND GATHER THE OTHER FIVE.', 'FORGET YOUR OLD CARD. YOU\'LL GET A NEW ONE.'],
   point: [
     'NOW THE CARDS. I JUST NEED 3 TO KNOW YOUR FUTURE.',
-    'THE LEFT END IS YOUR PAST. THE MIDDLE IS YOUR PRESENT. THE RIGHT END IS YOUR FUTURE.',
-    'I\'LL PICK ONE OF EACH. EENY... MEENY... MINY...',
+    'EENY... MEENY... MINY...',
+    'ONE FROM THE PAST, ONE FROM YOUR PRESENT, AND ONE RIGHT AT THE END FOR THE FUTURE.',
   ],
   close: [
     'YOUR FORTUNE HAS SPOKEN.',
