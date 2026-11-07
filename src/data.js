@@ -181,7 +181,7 @@ export const LOOKS = {
   hermit: P({ hair: '#8a8a90', tunic: '#4a4652', acc: 'hood', hood: '#5a5660', skin: '#d8a882' }),
   // the fortune teller, after the magician Dani DaOrtiz: red beanie worn far back, glasses,
   // long dark hair, dark moustache and grey goatee, all in black
-  seer: P({ hair: '#3a2a22', tunic: '#34323a', cloak: '#222026', long: true, goatee: true, glasses: true, beardColor: '#a8a29a', skin: '#e0b48e', boots: '#18161c', acc: 'beanie', cap: '#a02c32', badge: true, slim: true }),
+  seer: P({ hair: '#3a2a22', tunic: '#34323a', cloak: '#222026', long: true, goatee: true, glasses: true, beardColor: '#a8a29a', skin: '#e0b48e', boots: '#18161c', acc: 'beanie', cap: '#a02c32', badge: true }),
   witch1: P({ hair: '#2a2a32', tunic: '#3a2a4a', cloak: '#1e1a26', long: true, skin: '#c8d0a8' }),
   witch2: P({ hair: '#c85a2a', tunic: '#2e3a2e', cloak: '#1e261e', long: true }),
   witch3: P({ hair: '#d8d4ca', tunic: '#4a2a3a', cloak: '#2a1a24', beard: false, skin: '#d8a882' }),
