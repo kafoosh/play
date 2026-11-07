@@ -538,7 +538,7 @@ export function jokerReading(p, q, rand = Math.random) {
   if (p === 0 || q === 6) lines.push('ONE AT THE EDGE. YOUR LUCK WAITS BY THE WATER. BRING A WORM.');
   else if (p + q < 6) lines.push('THEY LEAN WEST. YOUR LUCK BEGINS IN THE VILLAGE!');
   else if (p + q > 6) lines.push('THEY LEAN EAST. THE LAKE HOLDS A PRIZE FOR YOU. A RED ONE.');
-  else lines.push('DEAD CENTRE. YOUR ROAD RUNS NORTH, TO THE ONE WHO LISTENS.');
+  else lines.push('AH! PERFECTLY EVEN. YOUR ROAD RUNS NORTH, TO THE ONE WHO LISTENS.');
   return [pickOf(rand)(lines)];
 }
 
