@@ -1700,7 +1700,7 @@ function* fortuneScene() {
   G.flags.fortune = 1; this.reading = true;
   const f = this.npc('seer'), p = this.p, F = FORTUNE, who = 'FORTUNE TELLER';
   const say2 = lines => talk(lines, false, 'bottom', who);
-  const until = (q, no, again) => ({ ask: q, yes: [], no: () => [...no, until(again, no, again)] });
+  const until = (q, no, again, yes = []) => ({ ask: q, yes, no: () => [...no, until(again, no, again, yes)] });
   yield wait(0.4);
   parts.push({ k: 'say', text: '!', x: f.px + 8, y: f.py - 9, vy: -10, life: 0.9, world: true });
   Audio.sfx('select');
@@ -1712,7 +1712,7 @@ function* fortuneScene() {
   yield* say2([...F.hello, until(F.askDeck, F.noDeck, F.askDeckAgain), ...F.setup]);
   let pq, target;
   for (;;) {
-    yield* say2([...F.deal, until(F.askDealt, F.notDealt, F.askDealtAgain), ...F.cut, until(F.askCut, F.notCut, F.askCutAgain), ...F.row]);
+    yield* say2([...F.deal, until(F.askDealt, F.notDealt, F.askDealtAgain), ...F.cut, until(F.askCut, F.notCut, F.askCutAgain, F.cutDone), ...F.row]);
     Table.open(); Audio.sfx('twinkle');
     yield () => Table.mode === 'show';
     pq = Table.jokers(); target = fortuneTarget(pq[0], pq[1]);
