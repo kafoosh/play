@@ -14,12 +14,14 @@
       var card = /^(1[0-3]|[1-9])([chsd])/i, base = location.pathname, m = null;
       var segs = location.pathname.split('/');
       // "/!card" (or "?=!card"): the fortune teller's self-working reading.
-      var bang = /^!card$/i;
+      // "/!book" (or "?=!book"): the apprentice's self-working book test.
+      var bang = /^!(card|book)$/i;
+      var arm = function (s) { if (/book/i.test(s)) window.__book = true; else window.__fortune = true; };
       for (var j = 1; j < segs.length; j++) {
         var sj = segs[j];
         try { sj = decodeURIComponent(sj); } catch (e) {}
         if (bang.test(sj)) {
-          window.__fortune = true;
+          arm(sj);
           base = segs.slice(0, j).join('/') + '/';
           var bf = document.createElement('base'); bf.href = base; document.head.appendChild(bf);
           try { history.replaceState(null, '', base); } catch (e) {}
@@ -29,7 +31,7 @@
       var qf = location.search.replace(/^\?=?/, '');
       try { qf = decodeURIComponent(qf); } catch (e) {}
       if (bang.test(qf)) {
-        window.__fortune = true;
+        arm(qf);
         try { history.replaceState(null, '', location.pathname); } catch (e) {}
         return;
       }

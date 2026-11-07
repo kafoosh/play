@@ -1,5 +1,5 @@
 import { C, UI, text, textCenter, textWidth, tinyText, hatSprite, wingSprite, keySprite, potionSprite, fishSprite, dogBellySprite, luteSprite, fanSprite, wrap, box, blob, glow, glyphDots, drawCard, cardBack, makeScroll, miniCard, MINI_W, MINI_H, charSprite, drawTile, drawOver, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
-import { MAPS, LOOKS, NPCS, SCRIPT, cardName, decodeWord, VALUE_GRID, CHASED, CLASSES, SKINS, HAIRS, OUCH, GRUDGE, KONAMI, EGG, squawk, QUEST, FISH, AWARD, FORTUNE, fortuneTarget, fortunePicks, jokerReading, cardReading } from './data.js';
+import { MAPS, LOOKS, NPCS, SCRIPT, cardName, decodeWord, VALUE_GRID, CHASED, CLASSES, SKINS, HAIRS, OUCH, GRUDGE, KONAMI, EGG, squawk, QUEST, FISH, AWARD, FORTUNE, fortuneTarget, fortunePicks, jokerReading, cardReading, TOME, BOOK, bookNext, bookWord, bookLine, letterQuestion } from './data.js';
 import * as Audio from './audio.js';
 
 // The game draws at a low resolution that follows the screen's shape: VW x VH game pixels.
@@ -16,10 +16,13 @@ ctx.imageSmoothingEnabled = false;
 const G = {
   armed: { v: null, s: null }, locked: false, // locked = card came from the URL
   name: '', hero: null, flags: {}, time: 0, fade: null, scene: null,
+  book: { page: 0, answers: [] }, // book mode: the page the book was closed on, and the yes/no answers
 };
 if (window.__force) { G.armed = { ...window.__force }; G.locked = true; }
 // "/!card": the fortune teller's self-working trick. The card comes from his reading.
 if (window.__fortune) { G.armed = { v: null, s: null, fortune: true }; G.locked = true; }
+// "/!book": the apprentice's book test. The word comes from the letter questions.
+if (window.__book) { G.armed = { v: null, s: null, book: true, word: null }; G.locked = true; }
 if (window.__forceWord) { const w = decodeWord(window.__forceWord); if (w) { G.armed = { v: null, s: null, word: w }; G.locked = true; } }
 const armedCard = () => ({ v: G.armed.v || 1, s: G.armed.s || 'S' });
 const fill = s => s.replace(/\{N\}/g, G.name || 'HERO');
@@ -536,7 +539,7 @@ function drawCheat() {
   });
   const a = G.armed;
   const lab = a.v || a.s ? `${a.v ? a.v : '?'}${a.s ? { C: '♣', H: '♥', S: '♠', D: '♦' }[a.s] : '?'}` : '--';
-  textCenter(ctx, a.fortune ? 'FORTUNE TELLER (URL)' : a.word ? 'WORD: ' + a.word.slice(0, 16) : 'ARMED: ' + lab + (G.locked ? ' (URL)' : ''), 80, 116, UI.accent);
+  textCenter(ctx, a.fortune ? 'FORTUNE TELLER (URL)' : a.book ? 'BOOK TEST (URL)' : a.word ? 'WORD: ' + a.word.slice(0, 16) : 'ARMED: ' + lab + (G.locked ? ' (URL)' : ''), 80, 116, UI.accent);
   textCenter(ctx, 'TAP TO CLOSE', 80, 126, UI.dim);
   ctx.restore();
 }
@@ -701,7 +704,8 @@ const SPEED = 5, NPC_SPEED = 2.6;
 const Play = {
   start() {
     G.flags = {};
-    this.npcs = NPCS.filter(n => !n.fortuneOnly || G.armed.fortune).map(n => ({
+    G.book = { page: 0, answers: [] };
+    this.npcs = NPCS.filter(n => (!n.fortuneOnly || G.armed.fortune) && (!n.bookOnly || G.armed.book)).map(n => ({
       ...n, look: LOOKS[n.look], dir: n.dir || 'down', px: n.x * 16, py: n.y * 16, home: { x: n.x, y: n.y },
       moving: false, t: 0, timer: 1 + Math.random() * 2, frame: 0, anim: Math.random() * 3, talked: 0,
     }));
@@ -725,6 +729,7 @@ const Play = {
     Audio.music(this.map.def.music);
     if (mapName === 'world' && G.flags.wingsDue && !G.flags.wings) this.run(wingsScene);
     if (mapName === 'world' && G.armed.fortune && !G.flags.fortune) this.run(fortuneScene);
+    if (mapName === 'world' && G.armed.book && !G.flags.book) this.run(bookScene);
   },
   run(gen) { this.script = gen.call(this); this.waitFn = null; },
   npcsHere() { return this.npcs.filter(n => n.map === this.map.name); },
@@ -873,6 +878,7 @@ const Play = {
     // effects
     this.fx.flash = Math.max(0, this.fx.flash - dt * 1.4);
     Table.update(dt);
+    Tome.update(dt);
     if (this.card) this.card.t += dt;
     if (this.award) this.award.t += dt;
     updateParts(dt);
@@ -881,6 +887,7 @@ const Play = {
   // far weapons aim themselves at the nearest person roughly in front of you.
   onB() {
     this.secret('B');
+    if (Tome.input()) { Tome.onB(); return; }
     if (Table.input() && !D.active) { Table.onB(); return; }
     if (D.active) { dialogBack(); return; }
     if (this.script || G.fade || this.cool > 0 || this.card) return;
@@ -1014,6 +1021,7 @@ const Play = {
   },
   onDir(d) {
     this.secret(d);
+    if (Tome.input()) { Tome.onDir(d); return; }
     if (Table.input() && !D.active) { Table.onDir(d); return; }
     if (D.active) dialogDir(d);
     else if (!this.script && !this.p.moving) this.p.dir = d; // a quick tap still turns you
@@ -1030,6 +1038,7 @@ const Play = {
   onA() {
     if (this.secret('A')) return;
     if (this.card && this.card.waitA) { this.card.waitA = false; return; }
+    if (Tome.input()) { Tome.onA(); return; }
     if (Table.input() && !D.active) { Table.onA(); return; }
     if (D.active) { dialogA(); return; }
     if (this.script || this.p.moving) return;
@@ -1056,6 +1065,7 @@ const Play = {
   },
   onTap(x, y) {
     if (this.card && this.card.waitA) { this.card.waitA = false; return; }
+    if (Tome.input()) { Tome.onTap(x, y); return; }
     if (Table.input() && !D.active) { Table.onTap(x, y); return; }
     if (D.active) dialogTap(x, y, this.dialogY);
   },
@@ -1078,6 +1088,11 @@ const Play = {
       }
     }
     else if (n.id === 'dog' && n.talked % 3 === 2 && !n.moving) { n.talked++; this.run(function* () { yield* bellyScene.call(this, n); }); return; }
+    else if (n.id === 'guard' && G.armed.book && !G.flags.bookGuard && !n.chicken && !n.awake && nextLetter()) {
+      // book mode: his password check is one of the letter questions (if one is still needed)
+      G.flags.bookGuard = 1;
+      lines = [...BOOK.guard, letterAsk(nextLetter(), BOOK.guardYes, BOOK.guardNo)];
+    }
     else if (n.id === 'bard' && !n.chicken && !n.awake) {
       if (!G.flags.rod) { lines = FISH.bard; after = () => this.run(rodScene); }
       else lines = G.flags.fished ? FISH.bardDone : FISH.bardAgain;
@@ -1089,7 +1104,7 @@ const Play = {
     n.talked++;
     // the fortune teller stands near the bottom edge of the map: keep his text box at the
     // bottom and lift the camera, as during his reading, so the hero stays in view above it
-    const low = n.id === 'seer';
+    const low = n.id === 'seer' || n.id === 'apprentice';
     if (low) this.reading = true;
     say(lines, {
       name: n.name, pos: low ? 'bottom' : 'auto',
@@ -1219,6 +1234,7 @@ const Play = {
     if (this.visitor) this.drawVisitor(cx, cy);
     Table.draw();
     drawParts(cx, cy);
+    Tome.draw();
     if (this.card) this.drawReveal();
     if (this.fx.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${Math.min(1, this.fx.flash)})`; ctx.fillRect(0, 0, VW, VH); }
     this.dialogY = dialogBoxY(p.py - cy);
@@ -1616,6 +1632,113 @@ const Table = {
   },
 };
 
+// ================================================================ the apprentice's book
+// Book mode: the master's old book fills the play area, one page at a time. The page is
+// turned with the folded corners at the bottom of the page (or left and right on the
+// D-pad). CLOSE is a red ribbon under the book, well away from the corners: the page
+// showing when the book is closed is the page their word is on.
+const Tome = {
+  on: false, closed: false, page: 0, t: 0, turnT: 0, dir: 1, focus: false, pad: false,
+  open() {
+    Object.assign(this, { on: true, closed: false, page: 0, t: 0, turnT: 0, focus: false, pad: false });
+    // work out the first questions while they read, so nothing stalls later
+    TOME.forEach((_, p) => setTimeout(() => bookNext(p, []), 300 + p * 150));
+  },
+  input() { return this.on && !D.active; },
+  last() { return TOME.length - 1; },
+  turn(d) {
+    const p = this.page + d;
+    if (p < 0 || p > this.last()) { Audio.sfx('bump'); return; }
+    this.page = p; this.dir = d; this.turnT = 1; this.focus = false; Audio.sfx('move');
+  },
+  shut() {
+    if (this.t < 0.6) return; // a stray tap (or a mashed A) as it opens doesn't count
+    this.on = false; this.closed = true;
+    G.book = { page: this.page, answers: [] };
+    Audio.sfx('door');
+  },
+  geom() {
+    const w = Math.min(UIX1 - UIX0 - 8, 158), x = Math.round((UIX0 + UIX1 - w) / 2), chars = Math.floor((w - 14) / 6);
+    const rows = Math.max(...TOME.map(p => wrap(p.text, chars).length));
+    const h = 28 + rows * 9 + 18, total = h + 18;
+    const room = total <= UIB - 4 ? UIB : VH; // squeezed between the controls: use the whole screen
+    const y = Math.max(2, Math.round((room - total) / 2));
+    return {
+      x, y, w, h, chars,
+      prev: { x: x + 3, y: y + h - 20, w: 30, h: 18 }, next: { x: x + w - 33, y: y + h - 20, w: 30, h: 18 },
+      close: { x: Math.round(x + w / 2 - 25), y: y + h + 5, w: 50, h: 13 },
+    };
+  },
+  update(dt) { if (this.on) { this.t += dt; this.turnT = Math.max(0, this.turnT - dt * 7); } },
+  onDir(d) {
+    this.pad = true;
+    if (d === 'left' || d === 'right') this.turn(d === 'left' ? -1 : 1);
+    else if ((d === 'down') !== this.focus) { this.focus = d === 'down'; Audio.sfx('move'); }
+  },
+  // A reads on; on the last page it picks CLOSE, and a second A closes the book
+  onA() {
+    if (this.t < 0.4) return; // still mashing A from the conversation before
+    if (this.focus) this.shut();
+    else if (this.page < this.last()) this.turn(1);
+    else { this.focus = true; this.pad = true; Audio.sfx('move'); }
+  },
+  onB() { if (this.focus) { this.focus = false; Audio.sfx('move'); } else this.turn(-1); },
+  onTap(x, y) {
+    this.pad = false;
+    const g = this.geom(), hit = b => x >= b.x - 2 && x < b.x + b.w + 2 && y >= b.y - 2 && y < b.y + b.h + 2;
+    if (hit(g.close)) this.shut();
+    else if (hit(g.prev) && this.page > 0) this.turn(-1);
+    else if (hit(g.next) && this.page < this.last()) this.turn(1);
+  },
+  draw() {
+    if (!this.on) return;
+    const g = this.geom(), { x, y, w, h } = g, pg = TOME[this.page], t = this.t;
+    ctx.fillStyle = 'rgba(10,6,20,0.62)'; ctx.fillRect(0, 0, VW, VH);
+    // leather cover, then the page
+    ctx.fillStyle = '#1c0e0a'; ctx.fillRect(x - 3, y - 2, w + 6, h + 4); ctx.fillRect(x - 4, y - 1, w + 8, h + 2);
+    ctx.fillStyle = '#5a2a1c'; ctx.fillRect(x - 2, y - 1, w + 4, h + 2);
+    ctx.fillStyle = '#c8a878'; ctx.fillRect(x + 1, y + 2, w - 2, h - 3); // page edges below
+    ctx.fillStyle = '#efe2bf'; ctx.fillRect(x + 1, y + 1, w - 2, h - 4);
+    ctx.fillStyle = '#e0cfa4'; ctx.fillRect(x + 1, y + 1, 2, h - 4); // towards the spine
+    ctx.fillStyle = '#e6d6ae'; for (let i = 0; i < 10; i++) ctx.fillRect(x + 5 + ((hash(i, 31) * (w - 14)) | 0), y + 5 + ((hash(i, 37) * (h - 14)) | 0), 2, 1);
+    // the text slides in a little as the page turns
+    const off = Math.round(this.turnT * 10 * this.dir);
+    textCenter(ctx, pg.title, x + w / 2 + off, y + 6, UI.accent);
+    const mx = Math.round(x + w / 2) + off; // a small rule under the title
+    ctx.fillStyle = UI.paperD; ctx.fillRect(mx - 16, y + 17, 33, 1);
+    ctx.fillStyle = UI.accent; ctx.fillRect(mx - 1, y + 16, 3, 3); ctx.fillStyle = '#efe2bf'; ctx.fillRect(mx, y + 17, 1, 1);
+    wrap(pg.text, g.chars).forEach((ln, i) => {
+      const lx = x + 7 + off, ly = y + 24 + i * 9;
+      if (i) text(ctx, ln, lx, ly, UI.text);
+      else { text(ctx, ln[0], lx, ly, UI.accent); text(ctx, ln.slice(1), lx + 6, ly, UI.text); } // a red capital
+    });
+    // folded corners to turn the page
+    const corner = (b, right) => {
+      const cx = right ? x + w - 2 : x + 1, by = y + h - 4;
+      for (let i = 0; i < 9; i++) {
+        ctx.fillStyle = '#c4a674'; ctx.fillRect(right ? cx - 9 + i : cx, by - 9 + i, right ? 9 - i : 9 - i, 1);
+        ctx.fillStyle = '#8a6a44'; ctx.fillRect(right ? cx - 9 + i : cx + 8 - i, by - 9 + i, 1, 1);
+      }
+      const bob = Math.floor(t * 3) % 2 && !this.pad ? 1 : 0;
+      text(ctx, right ? '▶' : '◀', right ? cx - 20 + bob : cx + 13 - bob, by - 8, UI.accent);
+    };
+    if (this.page > 0) corner(g.prev, false);
+    if (this.page < this.last()) corner(g.next, true);
+    textCenter(ctx, `${this.page + 1}/${TOME.length}`, x + w / 2, y + h - 12, UI.dim);
+    // the ribbon: CLOSE
+    const c = g.close, on = this.focus;
+    if (on) { // picked with the D-pad: a gold edge and a pointer
+      ctx.fillStyle = C.gold; ctx.fillRect(c.x - 2, c.y - 1, c.w + 4, c.h + 3);
+      if (Math.floor(t * 3) % 3) text(ctx, '▶', c.x - 9, c.y + 3, C.gold);
+    }
+    ctx.fillStyle = C.ink; ctx.fillRect(c.x - 1, c.y, c.w + 2, c.h + 1);
+    ctx.fillStyle = on ? '#c83a32' : '#9a2a26'; ctx.fillRect(c.x, c.y, c.w, c.h);
+    ctx.fillStyle = on ? '#e8584a' : '#b8342e'; ctx.fillRect(c.x, c.y, c.w, 2);
+    ctx.fillStyle = C.ink; for (const ex of [c.x, c.x + c.w - 3]) for (let i = 0; i < 3; i++) ctx.fillRect(ex + (ex === c.x ? 0 : 2 - i), c.y + c.h - 3 + i, i + 1, 1); // notched ends
+    textCenter(ctx, 'CLOSE', c.x + c.w / 2, c.y + 3, '#fff2d0');
+  },
+};
+
 // ---------------------------------------------------------------- script helpers
 const wait = s => { const until = Play.time + s; return () => Play.time >= until; };
 function* talk(lines, low = false, pos = null, name = null) { say(lines, { low, pos: pos || 'auto', name }); yield () => !D.active; }
@@ -1625,6 +1748,16 @@ const henWizard = () => !!(Play.npcs && Play.npc('wizard').chicken);
 const wz = l => (henWizard() ? squawk(fill(l)) : l);
 const ask = (q = SCRIPT.ask) => ({ ask: wz(q), yes: [], no: () => [...SCRIPT.askNo.map(wz), ask(SCRIPT.askAgain)] });
 const askWord = (q = SCRIPT.askWord) => ({ ask: wz(q), yes: [], no: () => [...SCRIPT.askNoWord.map(wz), askWord(SCRIPT.askAgain)] });
+// Book mode: one letter question. Its answer is kept as answer number k, so going back
+// with B and answering again replaces it, and the questions after it are worked out anew.
+// `then` gives what comes after the answer (made when it's reached, from the answers so far).
+function letterAsk(L, yes, no, then = () => []) {
+  const k = G.book.answers.length;
+  const go = v => () => { G.book.answers.length = k; G.book.answers.push([L, v]); return [...(v ? yes : no), ...then()]; };
+  return { ask: letterQuestion(L), yes: go(true), no: go(false) };
+}
+// The next letter to ask, or null once the word is known: no question is ever asked for show.
+const nextLetter = () => bookNext(G.book.page, G.book.answers);
 // The thing the wizard reveals: the armed word on a scroll, or the armed card.
 const armedReveal = () => (G.armed.word ? { word: G.armed.word } : armedCard());
 function revealCanvas(r) {
@@ -1683,7 +1816,8 @@ function* hermitScene() {
   p.dir = OPP[h.dir];
   const word = !!G.armed.word;
   const lucky = !word && G.armed.fortune; // fortune mode: the lucky card from the fortune teller
-  yield* talk([...Q.hello, { ask: word ? Q.askWord : lucky ? Q.askLucky : Q.askCard, yes: lucky ? Q.yesLucky : Q.yes, no: lucky ? Q.noLucky : Q.no }], false, null, 'HERMIT');
+  if (G.armed.book) yield* talk([...BOOK.hermit, ...hermitLetters(0)], false, null, 'HERMIT');
+  else yield* talk([...Q.hello, { ask: word ? Q.askWord : lucky ? Q.askLucky : Q.askCard, yes: lucky ? Q.yesLucky : Q.yes, no: lucky ? Q.noLucky : Q.no }], false, null, 'HERMIT');
   // then she goes back to her spot, off the path
   for (let i = 0; i < 12 && !(h.x === h.home.x && h.y === h.home.y); i++) {
     const d = this.bfsDir(h, (x, y) => x === h.home.x && y === h.home.y);
@@ -1692,6 +1826,53 @@ function* hermitScene() {
     yield () => !h.moving;
   }
   h.dir = 'right';
+}
+
+// Book mode: the hermit's letters, as many as are still needed. If the word is already
+// known, he asks nothing and is just a word collector.
+function hermitLetters(i) {
+  const L = nextLetter();
+  if (!L) return [...(i ? BOOK.hermitBye : BOOK.hermitKnown)];
+  if (i >= 12) return [...BOOK.hermitBye];
+  const pre = i ? [...BOOK.hermitMore[Math.min(i, 2) - 1], ...BOOK.hermitFond] : BOOK.hermitFirst;
+  return [...pre.map(s => bookLine(s, L)), letterAsk(L, [BOOK.hermitYes[i % 3]], [BOOK.hermitNo[i % 3]], () => hermitLetters(i + 1))];
+}
+
+// Book mode: the apprentice stops you as you come out of the house, lends you the
+// master's book, and tries to read your word. He gets two letters, then loses it.
+function* bookScene() {
+  G.flags.book = 1; this.reading = true;
+  const a = this.npc('apprentice'), p = this.p, B = BOOK, T = B.tries;
+  const say2 = lines => talk(lines, false, 'bottom', 'APPRENTICE');
+  yield wait(0.4);
+  parts.push({ k: 'say', text: '!', x: a.px + 8, y: a.py - 9, vy: -10, life: 0.9, world: true });
+  Audio.sfx('select');
+  yield wait(0.6);
+  yield* walkTo.call(this, a, (x, y) => Math.abs(x - p.x) + Math.abs(y - p.y) === 1);
+  const dx = p.x - a.x, dy = p.y - a.y;
+  a.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+  p.dir = OPP[a.dir];
+  yield* say2([...B.hello, ...B.give]);
+  Tome.open(); Audio.sfx('twinkle');
+  yield () => Tome.closed;
+  yield wait(0.4);
+  const L = nextLetter(), second = () => { const l = nextLetter(); return l ? [bookLine(T[1].pre, l), letterAsk(l, [T[1].yes], [T[1].no])] : []; };
+  yield* say2([...B.closed, bookLine(T[0].pre, L), letterAsk(L, [T[0].yes], [T[0].no], second)]);
+  // he reaches for a third letter: the magic gathers round him, then fizzles out
+  yield* say2([B.fizzle[0]]);
+  Audio.sfx('twinkle');
+  const t0 = this.time, ox = a.px + 8, oy = a.py + 2;
+  while (this.time - t0 < 1.1) {
+    if (Math.random() < 0.6) { const an = Math.random() * Math.PI * 2, r = 18 + Math.random() * 10; parts.push({ k: 'spark', x: ox + Math.cos(an) * r, y: oy + Math.sin(an) * r, vx: -Math.cos(an) * r * 1.4, vy: -Math.sin(an) * r * 1.4, life: 0.6, col: C.cyan, world: true }); }
+    yield null;
+  }
+  Audio.sfx('fizzle');
+  for (let i = 0; i < 10; i++) parts.push({ k: 'spark', x: ox - 4 + Math.random() * 8, y: oy - 8, vx: (Math.random() - 0.5) * 14, vy: 6 + Math.random() * 10, life: 0.7, col: '#8a8a90', world: true });
+  yield wait(0.6);
+  yield* say2([B.fizzle[1], ...B.bye]);
+  this.reading = false;
+  yield* walkTo.call(this, a, (x, y) => x === a.home.x && y === a.home.y);
+  a.dir = 'left';
 }
 
 // Fortune mode: the fortune teller stops you as you come out of the house and reads
@@ -1953,8 +2134,12 @@ function* wizardScene() {
   const wiz = this.npc('wizard');
   this.p.dir = 'up';
   yield wait(0.3);
-  const word = G.armed.word;
-  yield* talk([...SCRIPT.wizard1.map(wz), word ? askWord() : ask(), ...(word ? SCRIPT.wizard2Word : SCRIPT.wizard2).map(wz)], true, null, 'WIZARD');
+  const word = G.armed.word || G.armed.book, w2 = (word ? SCRIPT.wizard2Word : SCRIPT.wizard2).map(wz);
+  // book mode: any letters nobody asked on the way (the hermit was a chicken, say), he asks
+  const more = () => { const L = bookNext(G.book.page, G.book.answers); return L ? [letterAsk(L, [], [], more)] : []; };
+  const help = G.armed.book && bookNext(G.book.page, G.book.answers) ? [...BOOK.wizardHelp.map(wz), ...more()] : [];
+  yield* talk([...SCRIPT.wizard1.map(wz), word ? askWord() : ask(), ...w2.slice(0, -1), ...help, ...w2.slice(-1)], true, null, 'WIZARD');
+  if (G.armed.book) G.armed.word = bookWord(G.book.page, G.book.answers);
   // the wind returns
   Audio.stopMusic();
   wiz.frame = 1;
@@ -2064,7 +2249,8 @@ function frame(now) {
 const dbg = new URLSearchParams(location.search).get('scene');
 if (dbg) {
   G.name = 'KEN'; G.hero = makeHero(G.name, +(new URLSearchParams(location.search).get('cls') || 0));
-  if (!G.armed.v && !G.armed.word && !G.armed.fortune) G.armed = { v: 7, s: 'D' };
+  if (!G.armed.v && !G.armed.word && !G.armed.fortune && !G.armed.book) G.armed = { v: 7, s: 'D' };
+  if (G.armed.book && dbg === 'end') G.armed.word = bookWord(0, []);
   if (dbg === 'end') setScene(End);
   else if (dbg === 'name') setScene(NameEntry);
   else if (dbg === 'hero' || dbg === 'class') setScene(ClassScene);
@@ -2076,5 +2262,5 @@ if (dbg) {
   }
 } else setScene(Title);
 requestAnimationFrame(frame);
-window.__G = G; window.__D = D; window.__Table = Table; window.__Play = Play; window.__SKY = SKY; window.__audio = Audio.audioState; window.__ac = Audio.audioCtx;
+window.__G = G; window.__D = D; window.__Table = Table; window.__Tome = Tome; window.__Play = Play; window.__SKY = SKY; window.__audio = Audio.audioState; window.__ac = Audio.audioCtx;
 window.__sceneName = () => (G.scene === Title ? 'title' : G.scene === NameEntry ? 'name' : G.scene === ClassScene ? 'class' : G.scene === Play ? 'play' : 'end');
