@@ -217,20 +217,30 @@ test('award banner text fits', () => {
   }
 });
 
-test('fortune: past, present and future always include their card', () => {
+test('fortune: past, present and future are spread out and include their card', () => {
   for (let p = 0; p < 7; p++) for (let q = p + 1; q < 7; q++) {
     const t = fortuneTarget(p, q);
     if (t < 0) continue;
-    const cards = [0, 1, 2, 3, 4, 5, 6].filter(i => i !== p && i !== q), seen = new Set();
-    for (const r of [0, 0.3, 0.6, 0.99]) {
+    const cards = [0, 1, 2, 3, 4, 5, 6].filter(i => i !== p && i !== q), base = [cards[0], cards[2], cards[4]];
+    for (const r of [0, 0.99]) {
       const picks = fortunePicks(p, q, () => r);
       assert.ok(picks.includes(t), `their card at ${t} for jokers ${p},${q}`);
       assert.deepEqual(picks, picks.slice().sort((a, b) => a - b), 'left to right');
       assert.equal(new Set(picks).size, 3);
-      assert.ok(picks.every(i => cards.includes(i)), 'face-down cards only');
-      assert.equal(picks[2], cards[4], 'the future is the card right at the end');
-      seen.add(picks.join());
+      // leftmost, middle and rightmost, with their card in place of the nearest one
+      const swapped = base.filter(i => !picks.includes(i));
+      if (base.includes(t)) assert.deepEqual(picks, base);
+      else {
+        assert.equal(swapped.length, 1);
+        const dist = Math.abs(swapped[0] - t);
+        assert.ok(base.every(i => Math.abs(i - t) >= dist), 'nearest one replaced');
+      }
     }
-    assert.ok(seen.size >= 2, 'the other picks vary');
   }
+});
+
+test('fortune: one line for the jokers, two for the cards', () => {
+  for (let p = 0; p < 7; p++) for (let q = p + 1; q < 7; q++) if (fortuneTarget(p, q) >= 0)
+    for (const r of [0, 0.5, 0.99]) assert.equal(jokerReading(p, q, () => r).length, 1);
+  assert.equal(cardReading([{ v: 2, s: 'H' }, { v: 9, s: 'C' }, { v: 5, s: 'S' }]).length, 2);
 });
