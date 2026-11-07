@@ -264,7 +264,7 @@ test('book: every short word is filler, every word worth picking has five letter
   for (const p of TOME) for (const w of `${p.title} ${p.text}`.match(/[A-Z]+/g)) {
     if (w.length < 5) assert.ok(FILLER.has(w), `"${w}" is short but might get picked`);
   }
-  assert.ok(ALL_TOME.length <= 30, 'small enough to be told apart (and to fit the bit masks)');
+  assert.ok(ALL_TOME.length <= 24, 'a small book: three questions per page');
   assert.ok(!ALL_TOME.includes('WIND') && ALL_TOME.includes('WINDS'));
 });
 
@@ -280,26 +280,24 @@ test('book: the page fits the book screen and every word can be drawn', () => {
   }
 });
 
-test('book: closed on the right page, four questions name the word (a fifth at most)', () => {
-  let four = 0, n = 0;
+test('book: three questions at most name the word', () => {
   TOME_WORDS.forEach((ws, page) => {
+    assert.ok(ws.length <= 8, `page ${page + 1} has ${ws.length} words: three yes/no questions can only tell 8 apart`);
     for (const w of ws) {
       const a = play(page, w);
       assert.equal(bookWord(page, a), w, `page ${page + 1}: ${w}`);
-      assert.ok(a.length <= 5, `${w}: ${a.length} questions`);
-      assert.ok(a.length >= 3, `${w}: the apprentice, the guard and the hermit each ask one`);
-      n++; if (a.length <= 4) four++;
+      assert.ok(a.length <= 3, `${w}: ${a.length} questions`);
+      assert.ok(a.length >= 2, `${w}: the apprentice asks his two`);
     }
   });
-  assert.ok(four >= n - 4, `${four} of ${n} in four questions`);
 });
 
-test('book: closed on the wrong page, the questions still find the word', () => {
+test('book: any answers at all still name a word on the page', () => {
   TOME_WORDS.forEach((ws, page) => {
-    for (const w of ALL_TOME.filter(x => !ws.includes(x))) {
-      const a = play(page, w);
-      assert.equal(bookWord(page, a), w, `closed on page ${page + 1}, word ${w}`);
-      assert.ok(a.length <= 7, `${w}: ${a.length} questions`);
+    for (let bitsYes = 0; bitsYes < 8; bitsYes++) {
+      const a = [];
+      for (let L, i = 0; (L = bookNext(page, a)); i++) a.push([L, !!(bitsYes >> i & 1)]);
+      assert.ok(ws.includes(bookWord(page, a)), `page ${page + 1}, answers ${JSON.stringify(a)}`);
     }
   });
 });
@@ -325,6 +323,7 @@ test('book: every line can be drawn and fits the box', () => {
     all.push(letterQuestion(L));
     for (const s of flat(BOOK)) all.push(bookLine(s, L));
     assert.ok(wrap(BOOK.askClosed, 23).length <= 3, 'the YES/NO question fits one box');
+    assert.ok(wrap(bookLine(BOOK.askFizzled, L), 23).length <= 3, 'his second question fits one box');
     assert.ok(wrap(letterQuestion(L), 23).length <= 3, 'the question fits one box');
   }
   for (const s of all) {
