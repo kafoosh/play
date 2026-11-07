@@ -283,6 +283,20 @@ export function drawCard(x, ox, oy, v, s) {
   suitIcon(x, s, ox + 14, oy + 21, col, 3);
 }
 
+// The back of a big card (same size as drawCard): cream border, black middle, gold dots.
+let backCanvas = null;
+export function cardBack() {
+  if (backCanvas) return backCanvas;
+  const W = 48, H = 64;
+  const [c, x] = makeCanvas(W, H);
+  x.fillStyle = C.ink; x.fillRect(2, 0, W - 4, H); x.fillRect(0, 2, W, H - 4); x.fillRect(1, 1, W - 2, H - 2);
+  x.fillStyle = C.white; x.fillRect(2, 1, W - 4, H - 2); x.fillRect(1, 2, W - 2, H - 4);
+  x.fillStyle = '#141414'; x.fillRect(4, 4, W - 8, H - 8);
+  x.fillStyle = '#ebb23c';
+  for (let j = 0; j < 4; j++) for (let i = 0; i < 3; i++) x.fillRect(12 + i * 11, 12 + j * 12, 2, 2);
+  return (backCanvas = c);
+}
+
 // A parchment scroll with a word on it, for the word reveal. Returns a canvas.
 export function makeScroll(word) {
   const big = word.length <= 10;

@@ -1,4 +1,4 @@
-import { C, UI, text, textCenter, textWidth, tinyText, hatSprite, wingSprite, keySprite, potionSprite, fishSprite, dogBellySprite, luteSprite, fanSprite, wrap, box, blob, glow, glyphDots, drawCard, makeScroll, miniCard, MINI_W, MINI_H, charSprite, drawTile, drawOver, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
+import { C, UI, text, textCenter, textWidth, tinyText, hatSprite, wingSprite, keySprite, potionSprite, fishSprite, dogBellySprite, luteSprite, fanSprite, wrap, box, blob, glow, glyphDots, drawCard, cardBack, makeScroll, miniCard, MINI_W, MINI_H, charSprite, drawTile, drawOver, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
 import { MAPS, LOOKS, NPCS, SCRIPT, cardName, decodeWord, VALUE_GRID, CHASED, CLASSES, SKINS, HAIRS, OUCH, GRUDGE, KONAMI, EGG, squawk, QUEST, FISH, AWARD, FORTUNE, fortuneTarget, jokerReading, cardReading } from './data.js';
 import * as Audio from './audio.js';
 
@@ -1607,7 +1607,6 @@ function* talk(lines, low = false, pos = null, name = null) { say(lines, { low, 
 const henWizard = () => !!(Play.npcs && Play.npc('wizard').chicken);
 const wz = l => (henWizard() ? squawk(fill(l)) : l);
 const ask = (q = SCRIPT.ask) => ({ ask: wz(q), yes: [], no: () => [...SCRIPT.askNo.map(wz), ask(SCRIPT.askAgain)] });
-const askFaceUp = (q = SCRIPT.askFaceUp) => ({ ask: wz(q), yes: [], no: () => [...SCRIPT.askNoFaceUp.map(wz), askFaceUp(SCRIPT.askFaceUpAgain)] });
 const askWord = (q = SCRIPT.askWord) => ({ ask: wz(q), yes: [], no: () => [...SCRIPT.askNoWord.map(wz), askWord(SCRIPT.askAgain)] });
 // The thing the wizard reveals: the armed word on a scroll, or the armed card.
 const armedReveal = () => (G.armed.word ? { word: G.armed.word } : armedCard());
@@ -1941,7 +1940,7 @@ function* wizardScene() {
   const word = G.armed.word, fortune = G.armed.fortune;
   // fortune mode: the face-up card in their own shuffled deck
   const middle = word ? [askWord(), ...SCRIPT.wizard2Word.map(wz)]
-    : fortune ? [...SCRIPT.wizardDeck.map(wz), askFaceUp(), ...SCRIPT.wizard2Fortune.map(wz)]
+    : fortune ? SCRIPT.wizardFortune.map(wz)
     : [ask(), ...SCRIPT.wizard2.map(wz)];
   yield* talk([...SCRIPT.wizard1.map(wz), ...middle], true, null, 'WIZARD');
   // the wind returns
@@ -1978,6 +1977,7 @@ function* wizardScene() {
 const End = {
   enter() {
     this.t = 0; this.cc = revealCanvas(armedReveal());
+    this.spread = !!(G.armed.fortune && !G.armed.word); // fortune mode: their card, face up in a spread deck
     Audio.music('end');
   },
   update(dt) {
@@ -1992,9 +1992,13 @@ const End = {
     drawParts();
     const cx = VW / 2;
     textCenter(ctx, 'THE END', cx, Math.round(VH * 0.08), C.gold, 2, C.ink);
-    const cy = Math.round(VH * 0.42);
-    ctx.drawImage(this.cc, Math.round(cx - this.cc.width / 2), Math.round(cy - this.cc.height / 2) + Math.round(Math.sin(this.t * 1.6)));
-    const by = Math.max(cy + 40, Math.round(VH * 0.68));
+    let cy = Math.round(VH * 0.42), bottom = cy + 32;
+    if (this.spread) {
+      // the spread sits below the title, with room above it for their card to rise
+      const top = Math.max(Math.round(VH * 0.08) + 20, cy - 54);
+      bottom = this.drawSpread(cx, top + 18) + 2;
+    } else ctx.drawImage(this.cc, Math.round(cx - this.cc.width / 2), Math.round(cy - this.cc.height / 2) + Math.round(Math.sin(this.t * 1.6)));
+    const by = Math.max(bottom + 8, Math.round(VH * 0.68));
     box(ctx, Math.round(cx - 66), by, 132, 28);
     textCenter(ctx, 'THANKS FOR PLAYING,', cx, by + 7, UI.text);
     textCenter(ctx, G.name + '!', cx, by + 17, UI.accent);
@@ -2003,6 +2007,17 @@ const End = {
   },
   onA() { if (this.t > 3) fadeTo(() => setScene(Title), 0.5); },
   onTap() { this.onA(); },
+  // A ribbon spread of face-down cards with theirs face up, pushed up out of the middle.
+  drawSpread(cx, top) {
+    const back = cardBack(), W = back.width, H = back.height;
+    const n = Math.max(9, Math.min(17, Math.floor((VW - 16 - W) / 8) + 1)), step = Math.min(10, Math.floor((VW - 16 - W) / (n - 1)));
+    const x0 = Math.round(cx - (W + (n - 1) * step) / 2), y = top, mid = n >> 1;
+    for (let i = 0; i < n; i++) if (i !== mid) ctx.drawImage(back, x0 + i * step, y + (i % 3 === 1 ? 1 : 0));
+    const lift = Math.round(Math.min(1, this.t / 0.8) * 16) + Math.round(Math.sin(this.t * 1.6));
+    ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(glow(34, '#e8b84a'), x0 + mid * step + W / 2 - 34, y - lift + H / 2 - 34); ctx.globalCompositeOperation = 'source-over';
+    ctx.drawImage(this.cc, x0 + mid * step, y - lift);
+    return y + H; // bottom of the spread
+  },
 };
 
 // ================================================================ loop

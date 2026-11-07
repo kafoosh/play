@@ -276,12 +276,14 @@ export const SCRIPT = {
   askNoWord: ['THEN THINK OF ONE NOW. ANY WORD AT ALL.', 'TAKE YOUR TIME. I AM VERY OLD. I CAN WAIT.'],
   wizard2Word: ['GOOD. DON\'T SAY IT. SPELL IT IN YOUR HEAD.', 'NOW... LET THE WIND IN.'],
   wizard3: ['THE WIND IS NEVER WRONG.', 'FAREWELL, {N}.'],
-  // fortune mode: the face-up card in their shuffled deck
-  wizardDeck: ['YOU BROUGHT YOUR DECK. GOOD.', 'SPREAD IT OUT ON THE TABLE.'],
-  askFaceUp: 'DO YOU SEE ONE CARD FACING UP?',
-  askNoFaceUp: ['SPREAD THEM WIDER. LOOK CLOSELY.', 'SHE TOLD YOU TO TURN ONE OVER.'],
-  askFaceUpAgain: 'SEE IT NOW?',
-  wizard2Fortune: ['GOOD. THAT CARD IS YOURS.', 'DON\'T SAY IT. JUST PICTURE IT.', 'NOW... LET THE WIND IN.'],
+  // fortune mode: the face-up card in their shuffled deck. He never asks; he just knows.
+  wizardFortune: [
+    'YOU BROUGHT YOUR DECK. SPREAD IT OUT ON THE TABLE.',
+    'ONE CARD IS LOOKING UP AT THE SKY.',
+    'DON\'T TELL ME WHICH. THE WIND ALREADY KNOWS.',
+    'JUST PICTURE IT.',
+    'NOW... LET THE WIND IN.',
+  ],
   wizard3Fortune: ['THE CARD FACING THE SKY.', 'THE WIND IS NEVER WRONG.', 'FAREWELL, {N}.'],
 };
 

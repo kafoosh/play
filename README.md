@@ -122,8 +122,9 @@ fortune teller (purple hood) stops them and talks them through it:
 8. She tells them to turn their card face up, put the jokers away and shuffle their
    card back into the deck, still face up, with every other card face down.
 
-At the castle the wizard has them spread the deck, asks if they see one card face up,
-and reveals it.
+At the castle the wizard has them spread the deck, says one card is looking up at the
+sky, and names it without asking anything. The end screen shows a face-down spread with
+their card face up, pushed out of the middle.
 
 **How it works.** The peeked card is dealt first, so it lands directly on the joker that
 gets three cards. Stacking and cutting only rotate the seven-card cycle, so it stays
