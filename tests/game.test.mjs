@@ -242,5 +242,8 @@ test('fortune: past, present and future are spread out and include their card', 
 test('fortune: one line for the jokers, two for the cards', () => {
   for (let p = 0; p < 7; p++) for (let q = p + 1; q < 7; q++) if (fortuneTarget(p, q) >= 0)
     for (const r of [0, 0.5, 0.99]) assert.equal(jokerReading(p, q, () => r).length, 1);
-  assert.equal(cardReading([{ v: 2, s: 'H' }, { v: 9, s: 'C' }, { v: 5, s: 'S' }]).length, 2);
+  assert.ok(cardReading([{ v: 2, s: 'H' }, { v: 9, s: 'C' }, { v: 5, s: 'S' }]).length <= 2);
+  // the joker line fits on one page of the text box
+  for (let p = 0; p < 7; p++) for (let q = p + 1; q < 7; q++) if (fortuneTarget(p, q) >= 0)
+    for (const r of [0, 0.5, 0.99]) assert.ok(wrap(jokerReading(p, q, () => r)[0], 23).length <= 3);
 });

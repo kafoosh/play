@@ -485,7 +485,8 @@ export const FORTUNE = {
   deal: [
     'SHUFFLE YOUR FIVE CARDS, FACE DOWN.',
     'NOW PEEK AT THE TOP CARD FOR GOOD LUCK.',
-    'MEMORISE IT!',
+    'THIS IS YOUR CARD! MEMORISE IT!',
+    'IT\'S YOUR GOOD LUCK CARD!',
     'YOU MAY NEED IT IN THE FUTURE.',
     'DEAL THE CARDS ALTERNATELY ON THE JOKERS.',
     'ONE AT A TIME.',
@@ -501,9 +502,10 @@ export const FORTUNE = {
     'DO IT AGAIN! AS MANY TIMES AS YOU LIKE!',
   ],
   askCut: 'HAPPY?',
+  cutDone: ['IT\'S YOUR LIFE! I DON\'T CARE!'],
   notCut: ['THEN DO IT AGAIN!'],
   askCutAgain: 'HAPPY NOW?',
-  row: ['SPREAD THEM BETWEEN YOUR HANDS NOW.', 'SHOW ME WHERE THE JOKERS LIE.'],
+  row: ['SPREAD THEM BETWEEN YOUR HANDS NOW.', 'WHERE DID YOU SHUFFLE THE JOKERS TO?'],
   redo: ['HMM? THE JOKERS ARE ARGUING.', 'THE DEAL WENT WRONG SOMEWHERE. ONCE MORE!', 'PUT THE JOKERS FACE UP AGAIN AND GATHER THE OTHER FIVE.', 'FORGET YOUR OLD CARD. YOU\'LL GET A NEW ONE.'],
   point: [
     'NOW THE CARDS. I JUST NEED 3 TO KNOW YOUR FUTURE.',
@@ -512,55 +514,46 @@ export const FORTUNE = {
   ],
   close: [
     'YOUR FORTUNE HAS SPOKEN.',
-    'REMEMBER YOUR CHOSEN CARD!',
-    'PUT THE REST OF THE CARDS BACK IN YOUR DECK. KEEP YOUR OWN CARD FACE UP IN THE MIDDLE!',
+    'REMEMBER YOUR LUCKY CARD - THE ONE YOU MEMORISED AT THE START!',
+    'SHUFFLE EVERYTHING BACK IN THE DECK. BUT KEEP YOUR LUCKY CARD FACE UP IN THE MIDDLE!',
+    'YOU\'LL NEVER KNOW WHEN YOU NEED IT FOR GOOD LUCK!',
     'OFF YOU GO, {N}. NORTH, OVER THE BRIDGE.',
-    'REMEMBER YOUR CARD!',
     'IT\'S YOUR LIFE!',
   ],
   // headings on her table while you name the cards: one for each card she points at
   ui: { which: ['PAST: WHAT\'S THIS?', 'PRESENT: AND THIS?', 'FUTURE: LAST ONE!'], seen: 'SEEN THAT ONE!', reading: 'YOUR FORTUNE' },
 };
 
-// A reading of where the jokers fell, in one line (p, q: positions in the spread).
+// A reading of where the jokers fell, in one line (p, q: positions in the spread). Each
+// line is a little bit of the world: the Still Night, the locked house, the lake...
 const pickOf = rand => a => a[Math.floor(rand() * a.length) % a.length];
 export function jokerReading(p, q, rand = Math.random) {
   if (p > q) [p, q] = [q, p];
   const lines = q - p - 1 >= 3
-    ? ['FAR APART... A LONG WALK AHEAD. GOOD THING YOU HAVE LEGS.', 'THEY SIT FAR APART. SOMEONE ON YOUR ROAD IS GRUMPY. BE NICE.']
-    : ['SIDE BY SIDE... A LOCKED DOOR. A LOST KEY. A FROG?', 'CLOSE TOGETHER. TWO FRIENDS. OR TWO WITCHES. OR THREE.'];
-  if (p === 0 || q === 6) lines.push('ONE SITS AT THE VERY EDGE. WATCH THE LAKE SHORE.');
-  else if (p + q < 6) lines.push('THEY LEAN WEST. THE OLD TOWER HAS A SECRET OR TWO.');
-  else if (p + q > 6) lines.push('THEY LEAN EAST. THE FISHER COULD USE A FRIEND.');
-  else lines.push('RIGHT IN THE MIDDLE. STAY ON THE ROAD AND YOU\'LL BE FINE.');
+    ? ['FAR APART... LIKE THIS VALLEY AND THE WIND SINCE THE STILL NIGHT.', 'FAR APART. LIKE A GUARD AND HIS BRIDGE. HE\'LL BE BACK ON IT SOON.']
+    : ['SIDE BY SIDE... A LOCKED DOOR. A LOST KEY. A FROG?', 'CLOSE TOGETHER. THREE SISTERS, ONE HOUSE, NO KEY.'];
+  if (p === 0 || q === 6) lines.push('ONE SITS AT THE EDGE, LIKE THE FISHER BY HIS STILL LAKE.');
+  else if (p + q < 6) lines.push('THEY LEAN WEST, TO THE VILLAGE. SOMEONE THERE ONLY SELLS FAN BACKS.');
+  else if (p + q > 6) lines.push('THEY LEAN EAST, TO THE LAKE. NOTHING BITES THERE ANY MORE.');
+  else lines.push('RIGHT IN THE MIDDLE, LIKE THE ROAD NORTH. THE WIZARD WAITS.');
   return [pickOf(rand)(lines)];
 }
 
-// A reading of the cards she pointed at, in two lines: their colours, then the most
-// telling thing about them (one suit, a pair, faces, an ace), else the suit that shows
-// most. Never names a card.
+// A reading of the cards she pointed at, in two lines about the mix as a whole: the
+// colours, then the suits (all one, all different) or how big the cards run. Nothing
+// that sounds like she knows which cards they are.
 export function cardReading(cards) {
-  const out = [];
   const reds = cards.filter(c => c.s === 'H' || c.s === 'D').length, n = cards.length;
-  out.push(reds === n ? 'ALL RED! BEWARE OF RED THINGS. ESPECIALLY FISH.'
-    : reds === 0 ? 'ALL BLACK. DARK WOODS AHEAD. KEEP A LIGHT HANDY.'
-    : reds * 2 > n ? 'MOSTLY RED. A WARM FIRE IS WAITING FOR YOU AT HOME.'
-    : 'MOSTLY BLACK. A QUIET NIGHT. TOO QUIET...');
-  const faces = cards.filter(c => c.v >= 11).length, vals = cards.map(c => c.v);
-  const pair = vals.some((v, i) => vals.indexOf(v) !== i);
-  // the suit that shows most (the first one shown if they're all different)
-  const count = s => cards.filter(c => c.s === s).length;
-  const top = cards.map(c => c.s).reduce((a, s) => (count(s) > count(a) ? s : a));
-  if (cards.every(c => c.s === cards[0].s)) out.push('ALL ONE SUIT! WHAT LUCK! TODAY IS YOUR DAY.');
-  else if (pair) out.push('A PAIR! SISTERS... LOCKED UP TOGETHER?');
-  else if (faces >= 2) out.push('SO MANY FACES! YOU\'LL MEET LOTS OF FOLKS TODAY.');
-  else if (faces === 1) out.push('A ROYAL FACE. SOMEONE IN A TALL HAT IS WAITING FOR YOU.');
-  else if (vals.includes(1)) out.push('AN ACE! A FRESH START. MAYBE EVEN A FRESH BREEZE.');
-  else out.push({
-    H: 'HEARTS. SOMEONE AT HOME LOVES YOU. THEY HAVE FOUR SHORT LEGS.',
-    C: 'CLUBS. TREES. THEY ALL LEAN NORTH. FUNNY, THAT.',
-    S: 'SPADES. DIG AROUND THE OLD RUINS. YOU MIGHT FIND WORMS!',
-    D: 'DIAMONDS. TREASURE! OR A RED HERRING.',
-  }[top]);
-  return out;
+  const suits = new Set(cards.map(c => c.s)).size, sum = cards.reduce((a, c) => a + c.v, 0);
+  return [
+    reds === n ? 'ALL RED! BEWARE OF RED THINGS TODAY. ESPECIALLY FISH.'
+      : reds === 0 ? 'ALL BLACK. DARK WOODS AHEAD. KEEP A LIGHT HANDY.'
+      : reds * 2 > n ? 'MORE RED THAN BLACK. A WARM HEART WAITS AT HOME. IT HAS FOUR SHORT LEGS.'
+      : 'MORE BLACK THAN RED. A QUIET NIGHT. TOO QUIET...',
+    suits === 1 ? 'ALL ONE SUIT! THE STARS LINE UP FOR YOU.'
+      : suits === n ? 'EVERY SUIT DIFFERENT. A DAY FULL OF SURPRISES.'
+      : sum >= 27 ? 'BIG CARDS. BIG THINGS AHEAD.'
+      : sum <= 15 ? 'SMALL CARDS. SMALL THINGS MATTER TODAY. EVEN FROGS.'
+      : 'A GOOD MIX. A GOOD DAY FOR A LONG WALK.',
+  ];
 }
