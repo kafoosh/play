@@ -157,17 +157,18 @@ deck needed. The address bar is reset to the plain site, title-screen taps are i
 and the cheat sheet shows `BOOK TEST (URL)`.
 
 1. As they step out of the house, the **wizard's apprentice** (blue robe, starry hat)
-   lends them his master's old book: three short pages about the winds, the Tower of
-   Winds and the Still Night. "FLIP THROUGH. PICK A WORD THAT GRABS YOU. STARE AT IT
+   lends them his master's old book. It holds three short pages about the winds, the
+   Tower of Winds and the Still Night. "FLIP THROUGH. PICK A WORD THAT GRABS YOU. STARE AT IT
    TILL IT STICKS. THEN CLOSE THE BOOK ON THAT PAGE."
-   - **Reading:** the arrows at the foot of the page turn it back and forth (or left and
-     right on the D-pad; A turns to the next page). Dots show which page is open, and
-     "STARE AT ONE WORD" sits above the book.
-   - **Closing** is its own step: the red ribbon under the book says **CLOSE ON PAGE 2**
-     (whichever page is open). Tap it, or press DOWN to pick it and then A. A on its own
-     never closes the book.
+   - **The book:** two buttons under it, **TURN PAGE** and **CLOSE BOOK**. The book
+     only has three pages, but TURN PAGE runs round them while the page number keeps
+     counting up (it opens somewhere in the middle, say page 113), so it seems like a
+     thick book. The pages have no chapter numbers, so nothing gives the repeat away.
+   - **Taps:** tap the buttons (a tap on the page turns it too).
+   - **D-pad:** left and right move between the buttons and A presses one. The cursor
+     starts on TURN PAGE, so A on its own only ever turns the page.
    - **Reopening:** the apprentice then asks "GOT A WORD? AND YOU CLOSED IT ON ITS
-     PAGE?". NO opens the book again on the same page, as often as they like. The
+     PAGE?". NO opens the book again where they left it, as often as they like. The
      guessing only starts after a YES.
 2. The apprentice tries to read their mind: two letters ("I'M GETTING... AN R!" and
    "DOES THE WORD YOU'RE THINKING OF HAVE AN R IN IT?"). Then the magic fizzles out and

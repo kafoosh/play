@@ -571,14 +571,16 @@ export function cardReading(cards) {
 // Book mode (play.oddpaq.com/!book): a self-working book test. The wizard's apprentice
 // hands over the master's old book: three short pages. The spectator stares at one
 // interesting word until it sticks, then closes the book, which tells the game the page
-// they were on. Every word worth choosing has five letters or more; every shorter word
+// they were on. TURN PAGE runs round the three pages while the page number keeps
+// counting up, so it seems a much bigger book (no chapter numbers, so nothing repeats
+// that would show it). Every word worth choosing has five letters or more; every shorter word
 // is filler (the tests check this). Then the apprentice, the bridge guard and the hermit
 // each ask a letter or two ("DOES THE WORD YOU'RE THINKING OF HAVE AN R IN IT?"), and the
 // wizard names the word.
 export const TOME = [
-  { title: 'I. OF THE WINDS', text: 'ONCE THE WINDS WANDERED ALL THE KINGDOM. THE NORTHERN WINDS BROUGHT SNOWFALL. THE SOUTHERN WINDS BROUGHT BIRDSONG. AND THE FORESTS WHISPERED.' },
-  { title: 'II. OF THE TOWER', text: 'THE VILLAGERS RAISED A TOWER OF WHITE STONE, AND THE WINDS SLEPT IN ITS SPIRE. MINSTRELS PLAYED FOR THEM. AND A YOUNG WIZARD LISTENED.' },
-  { title: 'III. OF THE STILL NIGHT', text: 'THEN, THE STILL NIGHT. NOT A FEATHER STIRRED. THE TOWER CRUMBLED. THE WINDS VANISHED. BUT THE WIZARD ONLY SMILED. HE HAD HEARD IT ALL.' },
+  { title: 'OF THE WINDS', text: 'ONCE THE WINDS WANDERED ALL THE KINGDOM. THE NORTHERN WINDS BROUGHT SNOWFALL. THE SOUTHERN WINDS BROUGHT BIRDSONG. AND THE FORESTS WHISPERED.' },
+  { title: 'OF THE TOWER', text: 'THE VILLAGERS RAISED A TOWER OF WHITE STONE, AND THE WINDS SLEPT IN ITS SPIRE. MINSTRELS PLAYED FOR THEM. AND A YOUNG WIZARD LISTENED.' },
+  { title: 'OF THE STILL NIGHT', text: 'THEN, THE STILL NIGHT. NOT A FEATHER STIRRED. THE TOWER CRUMBLED. THE WINDS VANISHED. BUT THE WIZARD ONLY SMILED. HE HAD HEARD IT ALL.' },
 ];
 // The words on each page that someone might pick: five letters or more, title included.
 export const TOME_WORDS = TOME.map(p => [...new Set(`${p.title} ${p.text}`.match(/[A-Z]+/g).filter(w => w.length >= 5))]);

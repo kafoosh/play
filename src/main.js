@@ -1633,26 +1633,25 @@ const Table = {
 };
 
 // ================================================================ the apprentice's book
-// Book mode: the master's old book fills the play area, one page at a time. Reading comes
-// first: turn the pages back and forth with the arrows at the foot of the page (or left
-// and right on the D-pad; A turns to the next page). Closing is a separate, deliberate
-// step: the red ribbon under the book says CLOSE ON PAGE 2 (whichever page is showing).
-// Tap it, or press DOWN to pick it and then A. A on its own never closes the book. The
-// page showing when it closes is the page their word is on.
+// Book mode: the master's old book fills the play area. Under it are two buttons, TURN
+// PAGE and CLOSE BOOK. The book only has three pages, but TURN PAGE runs round them
+// forever while the page number keeps counting up, so it feels like a thick book. Taps
+// work on the buttons (a tap on the page turns it too). With the D-pad, left and right
+// move between the buttons and A presses one; the cursor starts on TURN PAGE, so A on
+// its own only ever turns the page. The page showing when the book closes is the page
+// their word is on.
 const Tome = {
-  on: false, closed: false, page: 0, t: 0, turnT: 0, dir: 1, focus: false, pad: false, hint: 0,
-  open(page = 0) {
-    Object.assign(this, { on: true, closed: false, page, t: 0, turnT: 0, focus: false, pad: false, hint: 0 });
+  on: false, closed: false, page: 0, num: 1, t: 0, turnT: 0, cur: 0, pad: false,
+  open(page = 0, num = null) {
+    Object.assign(this, { on: true, closed: false, page, t: 0, turnT: 0, cur: 0, pad: false });
+    this.num = num || 30 + Math.floor(Math.random() * 60) * 3 + page; // somewhere in the middle of the book
     // work out the first questions while they read, so nothing stalls later
     TOME.forEach((_, p) => setTimeout(() => bookNext(p, []), 300 + p * 150));
   },
   input() { return this.on && !D.active; },
-  last() { return TOME.length - 1; },
-  label() { return `CLOSE ON PAGE ${this.page + 1}`; },
-  turn(d) {
-    const p = this.page + d;
-    if (p < 0 || p > this.last()) { Audio.sfx('bump'); return; }
-    this.page = p; this.dir = d; this.turnT = 1; this.focus = false; Audio.sfx('move');
+  turn() {
+    if (this.t < 0.3) return; // still mashing A from the conversation before
+    this.page = (this.page + 1) % TOME.length; this.num++; this.turnT = 1; Audio.sfx('move');
   },
   shut() {
     if (this.t < 0.6) return; // a stray tap as it opens doesn't count
@@ -1663,52 +1662,44 @@ const Tome = {
   geom() {
     const w = Math.min(UIX1 - UIX0 - 8, 158), x = Math.round((UIX0 + UIX1 - w) / 2), chars = Math.floor((w - 14) / 6);
     const rows = Math.max(...TOME.map(p => wrap(p.text, chars).length));
-    const h = 28 + rows * 9 + 20, total = 12 + h + 19;
+    const h = 28 + rows * 9 + 16, total = h + 20;
     const room = total <= UIB - 4 ? UIB : VH; // squeezed between the controls: use the whole screen
-    const top = Math.max(2, Math.round((room - total) / 2)), y = top + 12;
-    const cw = textWidth(this.label()) + 16;
+    const y = Math.max(3, Math.round((room - total) / 2));
+    const bw = [textWidth('TURN PAGE') + 10, textWidth('CLOSE BOOK') + 10], gap = 8, bx = Math.round(x + w / 2 - (bw[0] + gap + bw[1]) / 2);
     return {
-      x, y, w, h, chars, top,
-      prev: { x: x + 2, y: y + h - 22, w: 46, h: 20 }, next: { x: x + w - 48, y: y + h - 22, w: 46, h: 20 },
-      close: { x: Math.round(x + w / 2 - cw / 2), y: y + h + 5, w: cw, h: 13 },
+      x, y, w, h, chars,
+      btns: [{ x: bx, y: y + h + 6, w: bw[0], h: 13, label: 'TURN PAGE' }, { x: bx + bw[0] + gap, y: y + h + 6, w: bw[1], h: 13, label: 'CLOSE BOOK' }],
     };
   },
-  update(dt) { if (this.on) { this.t += dt; this.turnT = Math.max(0, this.turnT - dt * 7); this.hint = Math.max(0, this.hint - dt); } },
+  update(dt) { if (this.on) { this.t += dt; this.turnT = Math.max(0, this.turnT - dt * 7); } },
+  press(i) { if (i) this.shut(); else this.turn(); },
   onDir(d) {
     this.pad = true;
-    if (d === 'left' || d === 'right') this.turn(d === 'left' ? -1 : 1);
-    else if ((d === 'down') !== this.focus) { this.focus = d === 'down'; Audio.sfx('move'); }
+    if (d === 'left' || d === 'right') { const c = d === 'right' ? 1 : 0; if (c !== this.cur) { this.cur = c; Audio.sfx('move'); } }
   },
-  // A reads on. It only closes the book once DOWN has picked the ribbon; on the last page
-  // it just points at the ribbon.
-  onA() {
-    if (this.t < 0.4) return; // still mashing A from the conversation before
-    if (this.focus) this.shut();
-    else if (this.page < this.last()) this.turn(1);
-    else { this.hint = 1.2; this.pad = true; Audio.sfx('bump'); }
-  },
-  onB() { if (this.focus) { this.focus = false; Audio.sfx('move'); } else this.turn(-1); },
+  onA() { this.pad = true; this.press(this.cur); },
+  onB() { if (this.cur) { this.cur = 0; Audio.sfx('move'); } },
   onTap(x, y) {
     this.pad = false;
     const g = this.geom(), hit = b => x >= b.x - 2 && x < b.x + b.w + 2 && y >= b.y - 2 && y < b.y + b.h + 2;
-    if (hit(g.close)) this.shut();
-    else if (hit(g.prev)) this.turn(-1);
-    else if (hit(g.next)) this.turn(1);
+    const i = g.btns.findIndex(hit);
+    if (i >= 0) this.press(i);
+    else if (hit({ x: g.x, y: g.y, w: g.w, h: g.h })) this.turn();
   },
   draw() {
     if (!this.on) return;
     const g = this.geom(), { x, y, w, h } = g, pg = TOME[this.page], t = this.t;
     ctx.fillStyle = 'rgba(10,6,20,0.68)'; ctx.fillRect(0, 0, VW, VH);
-    textCenter(ctx, 'STARE AT ONE WORD', x + w / 2, g.top, C.gold, 1, C.ink);
-    // leather cover, then the page
+    // leather cover, a thick stack of pages, then the open page
     ctx.fillStyle = '#1c0e0a'; ctx.fillRect(x - 3, y - 2, w + 6, h + 4); ctx.fillRect(x - 4, y - 1, w + 8, h + 2);
     ctx.fillStyle = '#5a2a1c'; ctx.fillRect(x - 2, y - 1, w + 4, h + 2);
-    ctx.fillStyle = '#c8a878'; ctx.fillRect(x + 1, y + 2, w - 2, h - 3); // page edges below
-    ctx.fillStyle = '#efe2bf'; ctx.fillRect(x + 1, y + 1, w - 2, h - 4);
-    ctx.fillStyle = '#e0cfa4'; ctx.fillRect(x + 1, y + 1, 2, h - 4); // towards the spine
-    ctx.fillStyle = '#e6d6ae'; for (let i = 0; i < 10; i++) ctx.fillRect(x + 5 + ((hash(i, 31) * (w - 14)) | 0), y + 5 + ((hash(i, 37) * (h - 30)) | 0), 2, 1);
+    ctx.fillStyle = '#b89868'; ctx.fillRect(x + 1, y + 2, w - 2, h - 3);
+    ctx.fillStyle = '#d8c49a'; for (let i = 1; i < 3; i++) ctx.fillRect(x + 1 + i, y + h - 2 - i, w - 2 - i * 2, 1);
+    ctx.fillStyle = '#efe2bf'; ctx.fillRect(x + 1, y + 1, w - 2, h - 5);
+    ctx.fillStyle = '#e0cfa4'; ctx.fillRect(x + 1, y + 1, 2, h - 5); // towards the spine
+    ctx.fillStyle = '#e6d6ae'; for (let i = 0; i < 10; i++) ctx.fillRect(x + 5 + ((hash(i, 31) * (w - 14)) | 0), y + 5 + ((hash(i, 37) * (h - 24)) | 0), 2, 1);
     // the text slides in a little as the page turns
-    const off = Math.round(this.turnT * 10 * this.dir);
+    const off = Math.round(this.turnT * 10);
     textCenter(ctx, pg.title, x + w / 2 + off, y + 6, UI.accent);
     const mx = Math.round(x + w / 2) + off; // a small rule under the title
     ctx.fillStyle = UI.paperD; ctx.fillRect(mx - 16, y + 17, 33, 1);
@@ -1718,38 +1709,19 @@ const Tome = {
       if (i) text(ctx, ln, lx, ly, UI.text);
       else { text(ctx, ln[0], lx, ly, UI.accent); text(ctx, ln.slice(1), lx + 6, ly, UI.text); } // a red capital
     });
-    // the foot of the page: turn arrows either side of a dot for each page
-    const fy = y + h - 15;
-    ctx.fillStyle = UI.paperD; ctx.fillRect(x + 6, fy - 4, w - 12, 1);
-    const n = TOME.length, dx0 = Math.round(x + w / 2 - (n * 8 - 3) / 2);
-    for (let i = 0; i < n; i++) {
-      ctx.fillStyle = i === this.page ? UI.accent : UI.dim;
-      if (i === this.page) ctx.fillRect(dx0 + i * 8, fy + 1, 5, 5);
-      else { ctx.fillRect(dx0 + i * 8 + 1, fy + 2, 3, 1); ctx.fillRect(dx0 + i * 8 + 1, fy + 4, 3, 1); ctx.fillRect(dx0 + i * 8 + 1, fy + 2, 1, 3); ctx.fillRect(dx0 + i * 8 + 3, fy + 2, 1, 3); }
-    }
-    const bob = Math.floor(t * 3) % 2 ? 1 : 0;
-    const arrow = (right, can) => {
-      const ax = right ? x + w - 20 : x + 14;
-      if (can) { // a folded corner behind it
-        const cx = right ? x + w - 2 : x + 1, by = y + h - 4;
-        for (let i = 0; i < 7; i++) { ctx.fillStyle = '#c4a674'; ctx.fillRect(right ? cx - 7 + i : cx, by - 7 + i, 7 - i, 1); }
-      }
-      text(ctx, right ? '▶' : '◀', ax + (can ? (right ? bob : -bob) : 0), fy, can ? UI.accent : UI.paperD);
-    };
-    arrow(false, this.page > 0); arrow(true, this.page < this.last());
-    // the ribbon: CLOSE ON PAGE n
-    const c = g.close, on = this.focus;
-    if (on) { // picked with the D-pad: a gold edge and a pointer
-      ctx.fillStyle = C.gold; ctx.fillRect(c.x - 2, c.y - 1, c.w + 4, c.h + 3);
-      if (Math.floor(t * 3) % 3) text(ctx, '▶', c.x - 9, c.y + 3, C.gold);
-    } else if (this.pad) { // D-pad players: DOWN gets you to the ribbon
-      if (this.hint <= 0 || Math.floor(t * 6) % 2) text(ctx, '▼', c.x - 9, c.y + 3, this.hint > 0 ? C.gold : UI.dim);
-    }
-    ctx.fillStyle = C.ink; ctx.fillRect(c.x - 1, c.y, c.w + 2, c.h + 1);
-    ctx.fillStyle = on ? '#c83a32' : '#9a2a26'; ctx.fillRect(c.x, c.y, c.w, c.h);
-    ctx.fillStyle = on ? '#e8584a' : '#b8342e'; ctx.fillRect(c.x, c.y, c.w, 2);
-    ctx.fillStyle = C.ink; for (const ex of [c.x, c.x + c.w - 3]) for (let i = 0; i < 3; i++) ctx.fillRect(ex + (ex === c.x ? 0 : 2 - i), c.y + c.h - 3 + i, i + 1, 1); // notched ends
-    textCenter(ctx, this.label(), c.x + c.w / 2, c.y + 3, '#fff2d0');
+    textCenter(ctx, `- ${this.num} -`, x + w / 2, y + h - 14, UI.dim); // the page number
+    // a folded corner, bottom right
+    for (let i = 0; i < 7; i++) { ctx.fillStyle = '#c4a674'; ctx.fillRect(x + w - 9 + i, y + h - 12 + i, 7 - i, 1); }
+    // the two buttons: TURN PAGE (parchment) and CLOSE BOOK (red)
+    g.btns.forEach((b, i) => {
+      const on = this.pad && this.cur === i; // the D-pad cursor: a gold edge
+      if (on) { ctx.fillStyle = C.gold; ctx.fillRect(b.x - 2, b.y - 1, b.w + 4, b.h + 3); }
+      ctx.fillStyle = C.ink; ctx.fillRect(b.x - 1, b.y, b.w + 2, b.h + 1);
+      ctx.fillStyle = i ? '#9a2a26' : '#d8c49a'; ctx.fillRect(b.x, b.y, b.w, b.h);
+      ctx.fillStyle = i ? '#b8342e' : '#efe2bf'; ctx.fillRect(b.x, b.y, b.w, 2);
+      textCenter(ctx, b.label, b.x + b.w / 2, b.y + 3, i ? '#fff2d0' : UI.text);
+      if (on && Math.floor(t * 3) % 2) { ctx.fillStyle = C.gold; ctx.fillRect(b.x + 3, b.y + b.h - 2, b.w - 6, 1); }
+    });
   },
 };
 
@@ -1868,10 +1840,10 @@ function* bookScene() {
   p.dir = OPP[a.dir];
   yield* say2([...B.hello, ...B.give]);
   // read, close it on the word's page; if they're not happy, back into the book they go
-  for (let page = 0, again = true; again;) {
-    Tome.open(page); Audio.sfx('twinkle');
+  for (let page = 0, num = null, again = true; again;) {
+    Tome.open(page, num); Audio.sfx('twinkle');
     yield () => Tome.closed;
-    page = G.book.page;
+    page = Tome.page; num = Tome.num; // NO opens it again where they left it
     yield wait(0.4);
     yield* say2([{ ask: B.askClosed, yes: () => { again = false; return B.closedYes; }, no: () => { again = true; return B.closedNo; } }]);
   }
