@@ -160,10 +160,8 @@ and the cheat sheet shows `BOOK TEST (URL)`.
    lends them his master's old book. It holds three short pages about the winds, the
    Tower of Winds and the Still Night. "FLIP THROUGH. PICK A WORD THAT GRABS YOU. STARE AT IT
    TILL IT STICKS. THEN CLOSE THE BOOK ON THAT PAGE."
-   - **The book:** two buttons under it, **TURN PAGE** and **CLOSE BOOK**. The book
-     only has three pages, but TURN PAGE runs round them while the page number keeps
-     counting up (it opens somewhere in the middle, say page 113), so it seems like a
-     thick book. The pages have no chapter numbers, so nothing gives the repeat away.
+   - **The book:** two buttons under it, **TURN PAGE** and **CLOSE BOOK**. TURN PAGE
+     runs round the three pages: after page III comes page I again.
    - **Taps:** tap the buttons (a tap on the page turns it too).
    - **D-pad:** left and right move between the buttons and A presses one. The cursor
      starts on TURN PAGE, so A on its own only ever turns the page.

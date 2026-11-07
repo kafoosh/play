@@ -1634,24 +1634,23 @@ const Table = {
 
 // ================================================================ the apprentice's book
 // Book mode: the master's old book fills the play area. Under it are two buttons, TURN
-// PAGE and CLOSE BOOK. The book only has three pages, but TURN PAGE runs round them
-// forever while the page number keeps counting up, so it feels like a thick book. Taps
+// PAGE and CLOSE BOOK. TURN PAGE runs round the three pages (after the last comes the
+// first again). Taps
 // work on the buttons (a tap on the page turns it too). With the D-pad, left and right
 // move between the buttons and A presses one; the cursor starts on TURN PAGE, so A on
 // its own only ever turns the page. The page showing when the book closes is the page
 // their word is on.
 const Tome = {
-  on: false, closed: false, page: 0, num: 1, t: 0, turnT: 0, cur: 0, pad: false,
-  open(page = 0, num = null) {
+  on: false, closed: false, page: 0, t: 0, turnT: 0, cur: 0, pad: false,
+  open(page = 0) {
     Object.assign(this, { on: true, closed: false, page, t: 0, turnT: 0, cur: 0, pad: false });
-    this.num = num || 30 + Math.floor(Math.random() * 60) * 3 + page; // somewhere in the middle of the book
     // work out the first questions while they read, so nothing stalls later
     TOME.forEach((_, p) => setTimeout(() => bookNext(p, []), 300 + p * 150));
   },
   input() { return this.on && !D.active; },
   turn() {
     if (this.t < 0.3) return; // still mashing A from the conversation before
-    this.page = (this.page + 1) % TOME.length; this.num++; this.turnT = 1; Audio.sfx('move');
+    this.page = (this.page + 1) % TOME.length; this.turnT = 1; Audio.sfx('move');
   },
   shut() {
     if (this.t < 0.6) return; // a stray tap as it opens doesn't count
@@ -1662,7 +1661,7 @@ const Tome = {
   geom() {
     const w = Math.min(UIX1 - UIX0 - 8, 158), x = Math.round((UIX0 + UIX1 - w) / 2), chars = Math.floor((w - 14) / 6);
     const rows = Math.max(...TOME.map(p => wrap(p.text, chars).length));
-    const h = 28 + rows * 9 + 16, total = h + 20;
+    const h = 28 + rows * 9 + 8, total = h + 20;
     const room = total <= UIB - 4 ? UIB : VH; // squeezed between the controls: use the whole screen
     const y = Math.max(3, Math.round((room - total) / 2));
     const bw = [textWidth('TURN PAGE') + 10, textWidth('CLOSE BOOK') + 10], gap = 8, bx = Math.round(x + w / 2 - (bw[0] + gap + bw[1]) / 2);
@@ -1690,7 +1689,7 @@ const Tome = {
     if (!this.on) return;
     const g = this.geom(), { x, y, w, h } = g, pg = TOME[this.page], t = this.t;
     ctx.fillStyle = 'rgba(10,6,20,0.68)'; ctx.fillRect(0, 0, VW, VH);
-    // leather cover, a thick stack of pages, then the open page
+    // leather cover, the edges of the pages, then the open page
     ctx.fillStyle = '#1c0e0a'; ctx.fillRect(x - 3, y - 2, w + 6, h + 4); ctx.fillRect(x - 4, y - 1, w + 8, h + 2);
     ctx.fillStyle = '#5a2a1c'; ctx.fillRect(x - 2, y - 1, w + 4, h + 2);
     ctx.fillStyle = '#b89868'; ctx.fillRect(x + 1, y + 2, w - 2, h - 3);
@@ -1709,7 +1708,6 @@ const Tome = {
       if (i) text(ctx, ln, lx, ly, UI.text);
       else { text(ctx, ln[0], lx, ly, UI.accent); text(ctx, ln.slice(1), lx + 6, ly, UI.text); } // a red capital
     });
-    textCenter(ctx, `- ${this.num} -`, x + w / 2, y + h - 14, UI.dim); // the page number
     // a folded corner, bottom right
     for (let i = 0; i < 7; i++) { ctx.fillStyle = '#c4a674'; ctx.fillRect(x + w - 9 + i, y + h - 12 + i, 7 - i, 1); }
     // the two buttons: TURN PAGE (parchment) and CLOSE BOOK (red)
@@ -1840,10 +1838,10 @@ function* bookScene() {
   p.dir = OPP[a.dir];
   yield* say2([...B.hello, ...B.give]);
   // read, close it on the word's page; if they're not happy, back into the book they go
-  for (let page = 0, num = null, again = true; again;) {
-    Tome.open(page, num); Audio.sfx('twinkle');
+  for (let page = 0, again = true; again;) {
+    Tome.open(page); Audio.sfx('twinkle');
     yield () => Tome.closed;
-    page = Tome.page; num = Tome.num; // NO opens it again where they left it
+    page = Tome.page; // NO opens it again where they left it
     yield wait(0.4);
     yield* say2([{ ask: B.askClosed, yes: () => { again = false; return B.closedYes; }, no: () => { again = true; return B.closedNo; } }]);
   }

@@ -335,10 +335,9 @@ test('book: every line can be drawn and fits the box', () => {
   }
 });
 
-test('book: both buttons fit side by side on the narrowest screen, and no chapter numbers', () => {
+test('book: both buttons fit side by side on the narrowest screen', () => {
   const bw = l => l.length * 6 - 1 + 10;
   assert.ok(bw('TURN PAGE') + 8 + bw('CLOSE BOOK') + 4 <= 152, 'with room for the gold edge');
-  for (const p of TOME) assert.ok(!/^[IVX]+\./.test(p.title), `${p.title}: a chapter number would show the pages repeat`);
 });
 
 test('apprentice stands by the house in book mode only', () => {
