@@ -113,7 +113,8 @@ fortune teller (purple hood) stops them and talks them through it:
 1. Lay the two jokers face up, side by side. Take any five cards; put the rest aside.
 2. Shuffle the five face down. Peek at the top card "for good luck" and memorise it.
 3. Deal the five face down onto the jokers, alternating, starting with either joker.
-4. Put either pile on the other, then cut as many times as they like (cuts only).
+4. Put either pile on the other. Then spread the cards, split them anywhere and put
+   either half on top of the other, as many times as they like.
 5. Spread the packet between their hands.
 6. On her table, show where the two jokers lie: move the arrow (D-pad, or tap a gap),
    A puts a joker there, B takes one back. UNDO or YES once both are down. She gives a
