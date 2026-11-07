@@ -366,7 +366,7 @@ const TOP = {
     '...ohhhhssssso..',
     '....ohhhssso....',
     '....okkkttto....',
-    '...okkkktttto...',
+    '...okkkkttto....',
     '...okkkktsto....',
     '...okkkkbbbo....',
     '...okKKKTTTo....',
@@ -397,12 +397,30 @@ function personRows(look, dir, frame) {
     if (face === 'down') { set(rows, 11, 0, 'f'); set(rows, 12, 0, 'f'); set(rows, 12, 1, 'f'); }
     if (face === 'side') { set(rows, 4, 0, 'f'); set(rows, 3, 0, 'f'); set(rows, 3, 1, 'f'); }
   }
-  // a knitted beanie: a rounded dome over the hair with a lighter ribbed band
+  // a knitted beanie worn far back: a small dome with a ribbed band (and a little gold
+  // badge on the front), hair showing in front
   if (look.acc === 'beanie') {
-    rows[0] = '......oooo......';
-    rows[1] = '.....occcco.....';
-    rows[2] = rows[2].replace(/[hH]/g, 'c');
-    rows[3] = rows[3].replace(/[hH]/g, (m, i) => (i % 2 ? 'C' : 'c'));
+    if (face === 'side') { // sits toward the back of the head; hair at the front
+      rows[0] = '.....oooo.......';
+      rows[1] = '.....occcho.....';
+      rows[2] = rows[2].replace(/[hH]/g, (m, i) => (i <= 8 ? (i % 2 ? 'C' : 'c') : m));
+      if (look.badge) set(rows, 8, 2, 'y');
+    } else {
+      rows[0] = '......oooo......';
+      rows[1] = '.....occcco.....';
+      rows[2] = rows[2].replace(/[hH]/g, (m, i) => (i % 2 ? 'C' : 'c'));
+      if (look.badge && face === 'down') set(rows, 9, 2, 'y');
+    }
+  }
+  // a goatee: a small dark moustache over a grey chin tuft, kept on the chin
+  if (look.goatee) {
+    if (face === 'down') { set(rows, 7, 7, 'h'); set(rows, 8, 7, 'h'); set(rows, 7, 8, 'W'); set(rows, 8, 8, 'W'); }
+    else if (face === 'side') { set(rows, 11, 7, 'h'); set(rows, 10, 8, 'W'); }
+  }
+  // glasses: dark frames with light lenses over the eyes
+  if (look.glasses) {
+    if (face === 'down') { for (const i of [5, 7, 8, 10]) set(rows, i, 6, 'g'); set(rows, 6, 6, 'L'); set(rows, 9, 6, 'L'); }
+    else if (face === 'side') { for (const i of [8, 9, 11]) set(rows, i, 6, 'g'); set(rows, 10, 6, 'L'); }
   }
   if (look.acc === 'helmet') { set(rows, 7, 0, 'r'); set(rows, 8, 0, 'r'); if (face !== 'up') { set(rows, 7, 5, 'o'); set(rows, 8, 5, 'o'); } }
   if (look.acc === 'hood' && face !== 'up') { set(rows, 4, 1, 'o'); set(rows, 11, 1, 'o'); }
@@ -418,7 +436,7 @@ function personPal(look) {
     o: C.ink, h: hair, H: shade(hair, 1.25), s: look.skin, e: C.eye,
     t: look.tunic, T: look.tunicD || shade(look.tunic, 0.75), b: look.boots || '#3e2a1a',
     k: cloak, K: shade(cloak, 0.72),
-    W: look.beardColor || '#dcd6c8', r: C.red, c: cap, C: shade(cap, 1.25), f: '#e8e0c8',
+    W: look.beardColor || '#dcd6c8', r: C.red, c: cap, C: shade(cap, 1.25), f: '#e8e0c8', g: '#2e262c', L: '#d8e8f0', y: C.gold,
   };
 }
 
