@@ -658,12 +658,6 @@ export function bookWord(page, answers) {
   const score = w => { const m = misses(w); return [m.length, TOME_WORDS[page] && TOME_WORDS[page].includes(w) ? 0 : 1, -(m[0] ?? 99)]; };
   return ALL_WORDS.slice().sort((a, b) => { const x = score(a), y = score(b); return x[0] - y[0] || x[1] - y[1] || x[2] - y[2]; })[0];
 }
-// A question whose answer doesn't matter, so the hermit always asks at least one: a letter
-// of the word they're (almost certainly) thinking of, so the honest answer is YES.
-export function bookFiller(page, answers) {
-  const w = bookWord(page, answers), asked = new Set(answers.map(a => a[0]));
-  return [...w].find(L => FAV[L] && !asked.has(L)) || QL.find(L => !asked.has(L));
-}
 
 // Book mode lines. {L} is the letter ("R"), {AL} the letter with its article ("AN R").
 export const BOOK = {
@@ -690,6 +684,8 @@ export const BOOK = {
   hermitYes: ['HA! GOOD WORD.', 'OHH. NICE.', 'I KNEW IT.'],
   hermitNo: ['SHAME. IT\'LL DO.', 'HM. PITY.', 'NEVER MIND.'],
   hermitBye: ['HOLD ON TO THAT WORD. GO ON.'],
+  // the word is already known: no questions, he just talks words
+  hermitKnown: ['I COLLECT WORDS, YOU KNOW.', 'FOUND A GOOD ONE TODAY. MOSS.', 'SAY IT SLOWLY. MMMOSS. LOVELY.', 'YOU\'VE GOT ONE TOO. I CAN TELL.', 'HOLD ON TO IT. GO ON.'],
   // only if questions are still left at the castle (the hermit was a chicken, say)
   wizardHelp: ['THE WIND IS FAINT TODAY. HELP IT ALONG.'],
 };

@@ -1,5 +1,5 @@
 import { C, UI, text, textCenter, textWidth, tinyText, hatSprite, wingSprite, keySprite, potionSprite, fishSprite, dogBellySprite, luteSprite, fanSprite, wrap, box, blob, glow, glyphDots, drawCard, cardBack, makeScroll, miniCard, MINI_W, MINI_H, charSprite, drawTile, drawOver, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
-import { MAPS, LOOKS, NPCS, SCRIPT, cardName, decodeWord, VALUE_GRID, CHASED, CLASSES, SKINS, HAIRS, OUCH, GRUDGE, KONAMI, EGG, squawk, QUEST, FISH, AWARD, FORTUNE, fortuneTarget, fortunePicks, jokerReading, cardReading, TOME, BOOK, bookNext, bookWord, bookFiller, bookLine, letterQuestion } from './data.js';
+import { MAPS, LOOKS, NPCS, SCRIPT, cardName, decodeWord, VALUE_GRID, CHASED, CLASSES, SKINS, HAIRS, OUCH, GRUDGE, KONAMI, EGG, squawk, QUEST, FISH, AWARD, FORTUNE, fortuneTarget, fortunePicks, jokerReading, cardReading, TOME, BOOK, bookNext, bookWord, bookLine, letterQuestion } from './data.js';
 import * as Audio from './audio.js';
 
 // The game draws at a low resolution that follows the screen's shape: VW x VH game pixels.
@@ -1088,11 +1088,10 @@ const Play = {
       }
     }
     else if (n.id === 'dog' && n.talked % 3 === 2 && !n.moving) { n.talked++; this.run(function* () { yield* bellyScene.call(this, n); }); return; }
-    else if (n.id === 'guard' && G.armed.book && !G.flags.bookGuard && !n.chicken && !n.awake) {
-      // book mode: his password check is one of the letter questions
+    else if (n.id === 'guard' && G.armed.book && !G.flags.bookGuard && !n.chicken && !n.awake && nextLetter()) {
+      // book mode: his password check is one of the letter questions (if one is still needed)
       G.flags.bookGuard = 1;
-      const L = nextLetter();
-      lines = [...BOOK.guard, letterAsk(L, BOOK.guardYes, BOOK.guardNo)];
+      lines = [...BOOK.guard, letterAsk(nextLetter(), BOOK.guardYes, BOOK.guardNo)];
     }
     else if (n.id === 'bard' && !n.chicken && !n.awake) {
       if (!G.flags.rod) { lines = FISH.bard; after = () => this.run(rodScene); }
@@ -1757,8 +1756,8 @@ function letterAsk(L, yes, no, then = () => []) {
   const go = v => () => { G.book.answers.length = k; G.book.answers.push([L, v]); return [...(v ? yes : no), ...then()]; };
   return { ask: letterQuestion(L), yes: go(true), no: go(false) };
 }
-// The next letter to ask; once the word is known, a letter of it (so the questions don't stop short).
-const nextLetter = () => bookNext(G.book.page, G.book.answers) || bookFiller(G.book.page, G.book.answers);
+// The next letter to ask, or null once the word is known: no question is ever asked for show.
+const nextLetter = () => bookNext(G.book.page, G.book.answers);
 // The thing the wizard reveals: the armed word on a scroll, or the armed card.
 const armedReveal = () => (G.armed.word ? { word: G.armed.word } : armedCard());
 function revealCanvas(r) {
@@ -1829,13 +1828,14 @@ function* hermitScene() {
   h.dir = 'right';
 }
 
-// Book mode: the hermit's letters. He always asks one, then more until the word is known.
+// Book mode: the hermit's letters, as many as are still needed. If the word is already
+// known, he asks nothing and is just a word collector.
 function hermitLetters(i) {
-  const L = bookNext(G.book.page, G.book.answers);
-  if ((!L && i > 0) || i >= 12) return [...BOOK.hermitBye];
-  const l = L || bookFiller(G.book.page, G.book.answers);
+  const L = nextLetter();
+  if (!L) return [...(i ? BOOK.hermitBye : BOOK.hermitKnown)];
+  if (i >= 12) return [...BOOK.hermitBye];
   const pre = i ? [...BOOK.hermitMore[Math.min(i, 2) - 1], ...BOOK.hermitFond] : BOOK.hermitFirst;
-  return [...pre.map(s => bookLine(s, l)), letterAsk(l, [BOOK.hermitYes[i % 3]], [BOOK.hermitNo[i % 3]], () => hermitLetters(i + 1))];
+  return [...pre.map(s => bookLine(s, L)), letterAsk(L, [BOOK.hermitYes[i % 3]], [BOOK.hermitNo[i % 3]], () => hermitLetters(i + 1))];
 }
 
 // Book mode: the apprentice stops you as you come out of the house, lends you the
@@ -1856,7 +1856,7 @@ function* bookScene() {
   Tome.open(); Audio.sfx('twinkle');
   yield () => Tome.closed;
   yield wait(0.4);
-  const L = nextLetter(), second = () => { const l = nextLetter(); return [bookLine(T[1].pre, l), letterAsk(l, [T[1].yes], [T[1].no])]; };
+  const L = nextLetter(), second = () => { const l = nextLetter(); return l ? [bookLine(T[1].pre, l), letterAsk(l, [T[1].yes], [T[1].no])] : []; };
   yield* say2([...B.closed, bookLine(T[0].pre, L), letterAsk(L, [T[0].yes], [T[0].no], second)]);
   // he reaches for a third letter: the magic gathers round him, then fizzles out
   yield* say2([B.fizzle[0]]);

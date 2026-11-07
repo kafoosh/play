@@ -1,7 +1,7 @@
 // Run with: node --test tests/
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MAPS, NPCS, LOOKS, SCRIPT, parseForce, cardName, VALUE_GRID, encodeWord, decodeWord, CLASSES, OUCH, GRUDGE, EGG, squawk, KONAMI, QUEST, FISH, FORTUNE, AWARD, fortuneTarget, fortunePicks, jokerReading, cardReading, TOME, TOME_WORDS, FAV, BOOK, bookNext, bookWord, bookFiller, bookLine, letterQuestion, withArticle } from '../src/data.js';
+import { MAPS, NPCS, LOOKS, SCRIPT, parseForce, cardName, VALUE_GRID, encodeWord, decodeWord, CLASSES, OUCH, GRUDGE, EGG, squawk, KONAMI, QUEST, FISH, FORTUNE, AWARD, fortuneTarget, fortunePicks, jokerReading, cardReading, TOME, TOME_WORDS, FAV, BOOK, bookNext, bookWord, bookLine, letterQuestion, withArticle } from '../src/data.js';
 import { GLYPH_SET, GLYPH5_SET, wrap } from '../src/art.js';
 import { SONGS } from '../src/audio.js';
 
@@ -304,12 +304,11 @@ test('book: closed on the wrong page, the questions still find the word', () => 
   });
 });
 
-test('book: a wrong answer still ends on a word, and the filler is a letter of it', () => {
+test('book: a wrong answer still ends on a word, and no question is asked once it is known', () => {
   for (const w of TOME_WORDS[1]) {
     const a = play(1, w, (L, i) => (i === 2 ? !w.includes(L) : w.includes(L)));
     assert.ok(ALL_TOME.includes(bookWord(1, a)));
-    const right = play(1, w), f = bookFiller(1, right);
-    assert.ok(w.includes(f) && FAV[f] && !right.some(x => x[0] === f), `filler ${f} for ${w}`);
+    assert.equal(bookNext(1, play(1, w)), null);
   }
   assert.ok(ALL_TOME.includes(bookWord(0, [['Z', true], ['Q', true]])), 'nonsense answers still give a word');
 });

@@ -165,8 +165,9 @@ and the cheat sheet shows `BOOK TEST (URL)`.
    "DOES THE WORD YOU'RE THINKING OF HAVE AN R IN IT?"). Then the magic fizzles out and
    he goes off to practise.
 3. The **bridge guard** asks for the password, gives up, and asks one letter instead.
-4. The **hermit** collects words. He likes words with a certain letter ("LANTERN.
-   LICHEN. LOVELY.") and asks if theirs has one. Usually one question, sometimes two.
+4. The **hermit** collects words. If a letter is still needed, he likes words with it
+   ("LANTERN. LICHEN. LOVELY.") and asks if theirs has one. If the word is already
+   known, he asks nothing and just talks about his favourite word (MOSS).
 5. The wizard names the word on his scroll.
 
 **How it works.** Every word in the book worth choosing has five letters or more; every
@@ -181,9 +182,8 @@ words on the other pages where it can. So:
 - **closed on another page:** the answers soon rule that page out and the hermit keeps
   going until one word is left: 5-7 questions, and the word is still right.
 
-The hermit always asks at least one (a letter of their word, if it's already known), so
-the questions never visibly stop short. If the guard was never asked (knocked aside, or a
-chicken), the hermit asks his letter too; if letters are still left at the castle, the
+No question is ever asked for show: once the word is known, nobody asks another. If the
+guard was never asked (knocked aside, or a chicken), the hermit asks his letter too; if letters are still left at the castle, the
 wizard asks them ("THE WIND IS FAINT TODAY. HELP IT ALONG."). If an answer was wrong and
 no word fits, the wizard names the closest one.
 
