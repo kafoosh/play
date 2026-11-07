@@ -162,7 +162,8 @@ test('fortune: the jokers always point at the peeked card', () => {
     const [a, b] = piles.map(pl => pl.slice().reverse()); // top card first
     const stack = onTop ? [...a, ...b] : [...b, ...a];
     for (let cut = 0; cut < 7; cut++) {
-      const row = [...stack.slice(cut), ...stack.slice(0, cut)]; // dealt left to right from the top
+      // spread between the hands: the top card ends up on the right
+      const row = [...stack.slice(cut), ...stack.slice(0, cut)].reverse();
       const [p, q] = row.map((c, i) => (c === 'J' ? i : -1)).filter(i => i >= 0);
       assert.equal(row[fortuneTarget(p, q)], 0, `start ${start} top ${onTop} cut ${cut}`);
       assert.equal(row[fortuneTarget(q, p)], 0, 'order of the two jokers does not matter');
@@ -188,7 +189,7 @@ test('fortune: every line can be drawn and fits the box', () => {
   const suits = ['C', 'H', 'S', 'D'];
   for (let i = 0; i < 400; i++) {
     const cards = [0, 1, 2].map(j => ({ v: 1 + ((i * 7 + j * 5) % 13), s: suits[(i + j * (i % 3 + 1)) % 4] }));
-    all.push(...cardReading(cards, () => (i % 2 ? 0 : 0.99)));
+    all.push(...cardReading(cards));
   }
   for (const s of all) {
     assert.equal(typeof s, 'string');

@@ -1412,11 +1412,11 @@ const Table = {
   show(hi) { this.mode = 'show'; this.hi = hi || null; },
   geom() {
     const w = dialogW(), x = dialogX();
-    const h = this.mode === 'card' ? 78 : this.mode === 'show' ? 38 : 58;
+    const h = this.mode === 'card' ? 78 : this.mode === 'show' ? 38 : 50;
     const bottom = D.active ? UIB - 46 - 16 : UIB - 4;
     return { x, y: Math.max(16, bottom - h), w, h };
   },
-  rowY(g) { return g.y + (this.mode === 'jokers' || this.mode === 'check' ? 36 : 18); },
+  rowY(g) { return g.y + (this.mode === 'jokers' || this.mode === 'check' ? 27 : 18); },
   // where each card sits; in the joker step the cards part at the chosen gap
   layout(g, split = this.mode === 'jokers' ? 6 : 0) {
     const n = this.row.length, total = n * CARD_STEP - 2 + split, x0 = Math.round(g.x + g.w / 2 - total / 2);
@@ -1489,9 +1489,8 @@ const Table = {
   },
   checkChips(g) {
     const cx = Math.round(g.x + g.w / 2);
-    return [{ c: 0, x: cx - 40, y: g.y + 18, w: 36, h: 11, label: 'UNDO' }, { c: 1, x: cx + 4, y: g.y + 18, w: 36, h: 11, label: 'YES' }];
+    return [{ c: 0, x: cx - 40, y: g.y + 9, w: 36, h: 11, label: 'UNDO' }, { c: 1, x: cx + 4, y: g.y + 9, w: 36, h: 11, label: 'YES' }];
   },
-  undoChip(g) { return { x: g.x + g.w - 36, y: g.y + 4, w: 30, h: 10 }; },
   // ---- input
   onDir(d) {
     this.pad = true;
@@ -1521,8 +1520,7 @@ const Table = {
     this.pad = false;
     const g = this.geom(), hit = b => x >= b.x - 1 && x < b.x + b.w + 1 && y >= b.y - 1 && y < b.y + b.h + 1;
     if (this.mode === 'jokers') {
-      if (this.placed.length && hit(this.undoChip(g))) { this.undo(); return; }
-      if (y < g.y + 13 || y > g.y + g.h) return;
+      if (y < g.y || y > g.y + g.h) return;
       // the nearest gap between cards, laid out as if nothing had parted
       const xs = this.layout(g, 0);
       let best = 0, bd = 1e9;
@@ -1552,23 +1550,18 @@ const Table = {
     if (!D.active) { box(ctx, x + 6, y - 13, textWidth('FORTUNE TELLER') + 14, 16, '#9a643e'); text(ctx, 'FORTUNE TELLER', x + 13, y - 9, '#fff6dc'); }
     box(ctx, x, y, w, h);
     // green felt under the cards
-    const fy = y + 13, fh = this.mode === 'jokers' || this.mode === 'check' ? 41 : 21;
+    const jk = this.mode === 'jokers' || this.mode === 'check'; // no heading in the joker step
+    const fy = y + (jk ? 5 : 13), fh = jk ? 40 : 21;
     ctx.fillStyle = '#1d3a2e'; ctx.fillRect(x + 5, fy, w - 10, fh);
     ctx.fillStyle = '#2f5d4a'; ctx.fillRect(x + 6, fy + 1, w - 12, fh - 2);
     ctx.fillStyle = '#386b55'; for (let i = 0; i < 18; i++) ctx.fillRect(x + 7 + ((hash(i, 7) * (w - 15)) | 0), fy + 2 + ((hash(i, 9) * (fh - 4)) | 0), 1, 1);
     // heading
-    const head = this.mode === 'jokers' ? (this.placed.length ? FU.joker2 : FU.joker1) : this.mode === 'check' ? FU.check
-      : this.mode === 'card' ? (this.warn > 0 ? FU.seen : FU.which) : FU.reading;
-    text(ctx, head, x + 8, y + 4, this.warn > 0 ? C.red : UI.accent);
+    if (!jk) text(ctx, this.mode === 'card' ? (this.warn > 0 ? FU.seen : FU.which) : FU.reading, x + 8, y + 4, this.warn > 0 ? C.red : UI.accent);
     if (this.mode === 'card') {
       // what they've picked so far, then three dots for the three cards
       const s = this.sel, lab = (s.v ? VALUE_LABEL[s.v] : '') + (s.s ? SUIT_CH[s.s] : '');
       if (lab) text(ctx, lab, x + w - 34 - textWidth(lab), y + 4, s.s === 'H' || s.s === 'D' ? C.red : UI.text);
       for (let i = 0; i < this.order.length; i++) { ctx.fillStyle = i < this.k ? C.gold : i === this.k ? UI.accent : UI.paperD; ctx.fillRect(x + w - 25 + i * 5, y + 6, 3, 3); }
-    }
-    if (this.mode === 'jokers' && this.placed.length) {
-      const b = this.undoChip(g), p = this.chip(b, false, false);
-      textCenter(ctx, 'UNDO', b.x + b.w / 2, b.y + 1 + p, UI.text);
     }
     // the row: a soft shadow, then the card, idling up and down a little
     const pointed = this.mode === 'card' ? this.order[this.k] : -1;
@@ -1582,7 +1575,7 @@ const Table = {
     });
     if (this.mode === 'jokers') {
       // the joker in hand, floating over the gap
-      const hx = Math.round(this.hx), hy = y + 15 + Math.round(Math.sin(t * 3));
+      const hx = Math.round(this.hx), hy = y + 6 + Math.round(Math.sin(t * 3) * 0.6);
       ctx.drawImage(miniCard('joker'), hx - (MINI_W >> 1), hy);
       if (Math.floor(t * 4) % 2) text(ctx, '▼', hx - 2, ry - 6, C.gold);
     }
@@ -1937,12 +1930,8 @@ function* wizardScene() {
   const wiz = this.npc('wizard');
   this.p.dir = 'up';
   yield wait(0.3);
-  const word = G.armed.word, fortune = G.armed.fortune;
-  // fortune mode: the face-up card in their own shuffled deck
-  const middle = word ? [askWord(), ...SCRIPT.wizard2Word.map(wz)]
-    : fortune ? SCRIPT.wizardFortune.map(wz)
-    : [ask(), ...SCRIPT.wizard2.map(wz)];
-  yield* talk([...SCRIPT.wizard1.map(wz), ...middle], true, null, 'WIZARD');
+  const word = G.armed.word;
+  yield* talk([...SCRIPT.wizard1.map(wz), word ? askWord() : ask(), ...(word ? SCRIPT.wizard2Word : SCRIPT.wizard2).map(wz)], true, null, 'WIZARD');
   // the wind returns
   Audio.stopMusic();
   wiz.frame = 1;
@@ -1968,7 +1957,7 @@ function* wizardScene() {
   for (let i = 0; i < 30; i++) parts.push({ k: 'wind', x: cx - Math.random() * 60, y: cy + Math.random() * VH, vx: 200 + Math.random() * 100, vy: 0, len: 8 + (Math.random() * 10 | 0), life: 1.5, world: true });
   yield () => !this.card.waitA && this.card.t > 1.2;
   const said = this.card.word || cardName(this.card.v, this.card.s);
-  yield* talk(henWizard() ? [`BUK BUK... ${said}!`, wz('FAREWELL, {N}.')] : fortune ? SCRIPT.wizard3Fortune : SCRIPT.wizard3, true, 'bottom', 'WIZARD');
+  yield* talk(henWizard() ? [`BUK BUK... ${said}!`, wz('FAREWELL, {N}.')] : SCRIPT.wizard3, true, 'bottom', 'WIZARD');
   yield wait(0.3);
   fadeTo(() => setScene(End), 0.6);
 }
