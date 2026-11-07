@@ -13,6 +13,26 @@
     (function () {
       var card = /^(1[0-3]|[1-9])([chsd])/i, base = location.pathname, m = null;
       var segs = location.pathname.split('/');
+      // "/!card" (or "?=!card"): the fortune teller's self-working reading.
+      var bang = /^!card$/i;
+      for (var j = 1; j < segs.length; j++) {
+        var sj = segs[j];
+        try { sj = decodeURIComponent(sj); } catch (e) {}
+        if (bang.test(sj)) {
+          window.__fortune = true;
+          base = segs.slice(0, j).join('/') + '/';
+          var bf = document.createElement('base'); bf.href = base; document.head.appendChild(bf);
+          try { history.replaceState(null, '', base); } catch (e) {}
+          return;
+        }
+      }
+      var qf = location.search.replace(/^\?=?/, '');
+      try { qf = decodeURIComponent(qf); } catch (e) {}
+      if (bang.test(qf)) {
+        window.__fortune = true;
+        try { history.replaceState(null, '', location.pathname); } catch (e) {}
+        return;
+      }
       for (var i = 1; i < segs.length && !m; i++) {
         var seg = segs[i];
         try { seg = decodeURIComponent(seg); } catch (e) {}

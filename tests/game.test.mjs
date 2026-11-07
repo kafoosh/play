@@ -1,7 +1,7 @@
 // Run with: node --test tests/
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MAPS, NPCS, LOOKS, SCRIPT, parseForce, cardName, VALUE_GRID, encodeWord, decodeWord, CLASSES, OUCH, GRUDGE, EGG, squawk, KONAMI, QUEST, FISH } from '../src/data.js';
+import { MAPS, NPCS, LOOKS, SCRIPT, parseForce, cardName, VALUE_GRID, encodeWord, decodeWord, CLASSES, OUCH, GRUDGE, EGG, squawk, KONAMI, QUEST, FISH, FORTUNE, AWARD, fortuneTarget, fortunePicks, jokerReading, cardReading } from '../src/data.js';
 import { GLYPH_SET, GLYPH5_SET, wrap } from '../src/art.js';
 import { SONGS } from '../src/audio.js';
 
@@ -150,4 +150,87 @@ test('fishing quest: worm pile, bard and the fisher\'s lake spot can all be reac
     return [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => x + dx >= 23 && MAPS.world.rows[y + dy][x + dx] === '~');
   });
   assert.ok(lakeFacing, 'lake spot by the fisher');
+});
+
+// ---------------------------------------------------------------- the fortune teller
+// Every way to do the trick: deal to either joker first, either pile on top, any cut.
+test('fortune: the jokers always point at the peeked card', () => {
+  let tried = 0;
+  for (const start of [0, 1]) for (const onTop of [0, 1]) {
+    const piles = [['J'], ['J']]; // face-up jokers, then cards dealt on top
+    for (let i = 0; i < 5; i++) piles[(start + i) % 2].push(i); // card 0 is the peeked card
+    const [a, b] = piles.map(pl => pl.slice().reverse()); // top card first
+    const stack = onTop ? [...a, ...b] : [...b, ...a];
+    for (let cut = 0; cut < 7; cut++) {
+      // spread between the hands: the top card ends up on the right
+      const row = [...stack.slice(cut), ...stack.slice(0, cut)].reverse();
+      const [p, q] = row.map((c, i) => (c === 'J' ? i : -1)).filter(i => i >= 0);
+      assert.equal(row[fortuneTarget(p, q)], 0, `start ${start} top ${onTop} cut ${cut}`);
+      assert.equal(row[fortuneTarget(q, p)], 0, 'order of the two jokers does not matter');
+      tried++;
+    }
+  }
+  assert.equal(tried, 28);
+});
+
+test('fortune: any other joker spacing is a bad deal', () => {
+  for (let p = 0; p < 7; p++) for (let q = p + 1; q < 7; q++) {
+    const between = q - p - 1, t = fortuneTarget(p, q);
+    if (between === 2 || between === 3) assert.ok(t >= 0 && t < 7 && t !== p && t !== q);
+    else assert.equal(t, -1, `${p},${q}`);
+  }
+});
+
+test('fortune: every line can be drawn and fits the box', () => {
+  const all = [];
+  for (const [k, v] of Object.entries(FORTUNE)) if (k !== 'ui') all.push(...[].concat(v));
+  for (let p = 0; p < 7; p++) for (let q = p + 1; q < 7; q++) if (fortuneTarget(p, q) >= 0)
+    for (const r of [() => 0, () => 0.99]) all.push(...jokerReading(p, q, r));
+  const suits = ['C', 'H', 'S', 'D'];
+  for (let i = 0; i < 400; i++) {
+    const cards = [0, 1, 2].map(j => ({ v: 1 + ((i * 7 + j * 5) % 13), s: suits[(i + j * (i % 3 + 1)) % 4] }));
+    all.push(...cardReading(cards));
+  }
+  for (const s of all) {
+    assert.equal(typeof s, 'string');
+    for (const ch of s.replace(/\{N\}/g, 'ABCDEFGH')) assert.ok(GLYPH_SET.has(ch), `missing glyph "${ch}" in: ${s}`);
+    for (const line of wrap(s.replace(/\{N\}/g, 'ABCDEFGH'), 23)) assert.ok(line.length <= 23, `too long: ${line}`);
+  }
+  // the table headings share a line with the undo chip or the pick
+  for (const v of Object.values(FORTUNE.ui).flat()) assert.ok(v.length <= 18, `heading too long: ${v}`);
+});
+
+test('fortune teller stands by the house and the path stays open', () => {
+  const seer = NPCS.find(n => n.id === 'seer');
+  assert.ok(seer && seer.fortuneOnly);
+  assert.ok(Math.abs(seer.x - 15) + Math.abs(seer.y - 40) <= 3, 'near the front door');
+  const seen = reach(MAPS.world, [15, 40], [`${seer.x},${seer.y}`]);
+  assert.ok(seen.has('16,4'), 'castle gate still reachable');
+});
+
+test('award banner text fits', () => {
+  for (const v of Object.values(AWARD)) {
+    assert.equal(v.length, 3);
+    for (const l of v) { assert.ok(l.length <= 18, l); for (const ch of l) assert.ok(GLYPH_SET.has(ch), l); }
+    assert.ok(('AWARD - ' + v.slice(1).join(' ')).length <= 36);
+    for (const ch of v.slice(1).join(' ')) assert.ok(GLYPH5_SET.has(ch), `tiny font: ${ch}`);
+  }
+});
+
+test('fortune: past, present and future always include their card', () => {
+  for (let p = 0; p < 7; p++) for (let q = p + 1; q < 7; q++) {
+    const t = fortuneTarget(p, q);
+    if (t < 0) continue;
+    const cards = [0, 1, 2, 3, 4, 5, 6].filter(i => i !== p && i !== q), seen = new Set();
+    for (const r of [0, 0.3, 0.6, 0.99]) {
+      const picks = fortunePicks(p, q, () => r);
+      assert.ok(picks.includes(t), `their card at ${t} for jokers ${p},${q}`);
+      assert.deepEqual(picks, picks.slice().sort((a, b) => a - b), 'left to right');
+      assert.equal(new Set(picks).size, 3);
+      assert.ok(picks.every(i => cards.includes(i)), 'face-down cards only');
+      assert.equal(picks[2], cards[4], 'the future is the card right at the end');
+      seen.add(picks.join());
+    }
+    assert.ok(seen.size >= 2, 'the other picks vary');
+  }
 });

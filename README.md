@@ -98,84 +98,59 @@ longer phrases wrap onto up to four lines. The cheat sheet shows `WORD: HELLO`.
 
 **Card or word?** Anything starting with a number is a **card** (`/7D`, `/12h`,
 `/1s90x`, or the same after `?=`). Anything made only of letters (plus `+ - _`) is a
-**word** (`/jraap`, or `?=jraap`). There are no exceptions.
+**word** (`/jraap`, or `?=jraap`). The one exception is `/!card`, the fortune teller below.
 
-### The reveal
+### Fortune teller: a self-working card trick (`/!card`)
 
-The spectator is guided north by the letter on the table, the signs and most of the
-villagers. In the castle the wizard asks **"ARE YOU THINKING OF A PLAYING CARD?"**
-Answering NO makes him wait and ask again. After YES the wind comes back, the screen
-flashes and the armed card appears with its name, for example **SEVEN OF DIAMONDS**.
-The end screen keeps the card on show.
+Send the spectator to **`play.oddpaq.com/!card`** (or `?=!card`). You never touch the
+phone and arm nothing: the game learns the card itself. The address bar is reset to the
+plain site, and title-screen taps are ignored. The cheat sheet shows `FORTUNE TELLER (URL)`.
+Every other address works exactly as before.
 
-## Look and controls
+The spectator needs a real deck with both jokers. As they step out of the house, a
+fortune teller (purple hood) stops them and talks them through it:
 
-The game fills the whole screen in a medieval fantasy style set at dusk: cobbled roads,
-timber-framed houses with thatch and slate roofs, dark fir woods, a stone castle. Lanterns,
-windows and torches glow, and motes of magic drift in the air. It works in portrait and
-landscape, on phones and on desktop. The pixel size is chosen so the art always stays
-crisp, and at least 10 tiles are visible across the short side.
+1. Lay the two jokers face up, side by side. Take any five cards; put the rest aside.
+2. Shuffle the five face down. Peek at the top card "for good luck" and memorise it.
+3. Deal the five face down onto the jokers, alternating, starting with either joker.
+4. Put either pile on the other, then cut as many times as they like (cuts only).
+5. Spread the packet between their hands.
+6. On her table, show where the two jokers lie: move the arrow (D-pad, or tap a gap),
+   A puts a joker there, B takes one back. UNDO or YES once both are down. She gives a
+   "reading" of the jokers.
+7. "EENY... MEENY... MINY..." She turns one card from the past, one from the present and
+   one right at the end for the future. They flip each one she points at and enter it
+   with the value and suit chips. She gives a reading of the colours and suits.
+8. She tells them to remember their card, put the rest back in the deck and keep their
+   own card face up in the middle.
 
-- **Phone:** from the name screen onwards, a see-through D-pad (bottom left) and
-  **A** (talk / pick) and **B** (weapon / delete / back) buttons (bottom right, same
-  size) float over the game. The name is spelled on a QWERTY keyboard with the D-pad
-  and A, then **NEXT**; the path is chosen with left/right and A. Only the title and
-  ending screens are tap-only. In portrait the camera and text box stay above
-  the controls; in landscape the text box sits between them. Tapping the text box also
-  advances it, and YES/NO can be tapped directly. The ♫ button (top right) mutes.
-- **Keyboard:** WASD or arrows to walk; **P** (or Enter/Space) is A; **O** is B. On a
-  computer the on-screen buttons simply read P and O (instead of A and B), and the
-  opening text says which key talks. On the name screen
-  you can just type, with Backspace and Enter.
+At the castle the wizard does his usual "are you thinking of a card?" and names it.
+The end screen shows a face-down spread with their card face up, outjogged in the middle.
 
-People's names show on a tab above their text box (GUARD, WIZARD and so on).
+**How it works.** The peeked card is dealt first, so it lands directly on the joker that
+gets three cards. Stacking and cutting only rotate the seven-card cycle, so it stays
+just above that joker. A hand spread pushes the top card furthest right, so in the
+spread (read left to right) their card sits just to the right of that joker:
 
-### Heroes and weapons
+- **three cards between the jokers:** the card just right of the left-hand joker;
+- **two cards between them:** the card just right of the right-hand joker, or the
+  first card of the spread if that joker is last.
 
-After the name, the player chooses one of four paths. Hair and skin come from their
-name; the outfit and weapon come from the path.
+This assumes the usual left-to-right spread. A spread the other way round still looks
+valid but points at the wrong end of the gap.
 
-| Path   | Weapon | Range | How it works (B button) |
-|--------|--------|-------|-------------------------|
-| KNIGHT | Sword  | Close | Sweeps the blade in a short arc in front of you. |
-| RANGER | Bow    | Far   | Fires an arrow that aims itself at the nearest person roughly in front of you. |
-| MAGE   | Staff  | Far   | Casts a glowing spark, aimed the same way. |
-| BARD   | Lute   | Close | A loud chord that hits everyone right around you. |
+Her three picks are face-down cards, left to right: the future is always the last one in
+the spread ("right at the end"), and the past and present are their card plus one other
+at random (two at random if their card is the one at the end). Their card is always one
+of the three, so the game knows which entry is theirs. Their card can be any of the five
+face-down cards, depending on where the jokers fell. Any other joker spacing means the deal went
+wrong: she says the jokers are arguing and has them deal again with a new card.
 
-No aiming is needed: face roughly the right way and press B. Nobody gets hurt. People
-and animals blink, hop back a step and a small word floats up ("OW!", "MY BACK!", "BAWK!!").
-The next time you talk to someone you hit, they mention it first. The wizard is not
-impressed.
+### Award: Look At All Those Chickens
 
-### Side quest: the frog, the key and the witches
-
-The blue house in the village is locked. A short trail of wet, water-blue frog prints
-leads away from under its window toward the lake.
-Hit the frog (by the lake) with your weapon, or just talk to it (it
-doesn't show a speech bubble like the others, so it isn't obvious), and it coughs up a
-rusty key.
-It always lands on open ground you can reach (never in the water, and never behind the
-frog), and nobody wanders onto it. Walk into the frog and it hops out of your way; in a
-dead end by the lake it hops back past you instead. Pick it up, then press A at the blue door: "LOCKED." / "...WAIT. THE KEY!" and it opens. Inside are three witches, stuck in for three days since their own frog swallowed the
-door key and escaped out the window. Each tells her part of the story when you talk to
-her, and lets slip a hint about a sister you haven't spoken to yet; talk to all three (any order). The third one tosses you a can of **Crimson Cow** (silver and blue): you
-hold it up, drink it (it does nothing, but you feel energised), and when you step back
-outside you've grown a pair of wings: "HUH. I GUESS CRIMSON COW GIVES YOU FEATHERS."
-
-### Side quest: the worms, the rod and the big red herring
-
-- Talk to the dachshund at home a third time and it flops onto its back and wriggles
-  for belly scratches.
-- In the top-left corner of the ruins (by the runestone) there's a pile of wriggling
-  worms. Press A on it to pick one up: "I'D LOVE FISHING WITH YOU, EVEN IF YOU ARE A WORM."
-- The bard across the bridge used to fish the lake, until the wizard hummed his tune back
-  to him. Now he plays all day, so he gives you his old fishing rod. (If you're already
-  carrying a worm it goes straight on the hook; otherwise press A on the worms again.)
-- Press A facing water with the rod: no worm and you need to bait the hook; anywhere but
-  the lake beside the old fisher and "THIS DOESN'T LOOK LIKE A GOOD PLACE TO FISH."
-- By the fisher: you cast, get a bite and reel in a red fish ("MAYBE A SNAPPER OR
-  SOMETHING"). The fisher can't believe it, cooks it on a little fire, tells you it's a
-  BIG RED HERRING and hands it back. You eat it: "WOW! A BIG RED HERRING. WHAT A GREAT USE OF MY TIME!" "RED HERRING" is always drawn slightly bold. It only bites once.
+Turn every person in the land into a chicken with the chicken staff at the same time
+(17 people, 18 in fortune mode; the witches count, the wizard and the animals don't).
+A banner slides in, and the end screen remembers it.
 
 ### Along the way
 

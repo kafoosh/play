@@ -283,6 +283,20 @@ export function drawCard(x, ox, oy, v, s) {
   suitIcon(x, s, ox + 14, oy + 21, col, 3);
 }
 
+// The back of a big card (same size as drawCard): cream border, black middle, gold dots.
+let backCanvas = null;
+export function cardBack() {
+  if (backCanvas) return backCanvas;
+  const W = 48, H = 64;
+  const [c, x] = makeCanvas(W, H);
+  x.fillStyle = C.ink; x.fillRect(2, 0, W - 4, H); x.fillRect(0, 2, W, H - 4); x.fillRect(1, 1, W - 2, H - 2);
+  x.fillStyle = C.white; x.fillRect(2, 1, W - 4, H - 2); x.fillRect(1, 2, W - 2, H - 4);
+  x.fillStyle = '#141414'; x.fillRect(4, 4, W - 8, H - 8);
+  x.fillStyle = '#ebb23c';
+  for (let j = 0; j < 4; j++) for (let i = 0; i < 3; i++) x.fillRect(12 + i * 11, 12 + j * 12, 2, 2);
+  return (backCanvas = c);
+}
+
 // A parchment scroll with a word on it, for the word reveal. Returns a canvas.
 export function makeScroll(word) {
   const big = word.length <= 10;
@@ -1066,11 +1080,51 @@ export function drawOver(x, kind, ox, oy, m, tx, ty) {
 }
 
 // Little flames for torches/hearth, drawn every frame on top of the map.
-export function flame(x, ox, oy, t, big) {
+// green: the witches' cold green fire.
+const FLAME = { warm: ['#f0603a', '#ffa83a', '#fff07a'], green: ['#2e9a3a', '#5ae04a', '#d0ff9a'] };
+export function flame(x, ox, oy, t, big, green = false) {
   const f = Math.floor(t * 10) % 3;
-  const h = big ? 7 : 5;
-  x.fillStyle = '#f0603a'; x.fillRect(ox - (big ? 3 : 2), oy - h + 2, big ? 7 : 5, h - 1);
-  x.fillStyle = '#ffa83a'; x.fillRect(ox - 1 - (f === 1 ? 1 : 0), oy - h + 1, 3, h - 1);
-  x.fillStyle = '#fff07a'; x.fillRect(ox - (f === 2 ? 1 : 0), oy - h + 3 + (f === 0 ? 1 : 0), 2, h - 4);
+  const h = big ? 7 : 5, [c0, c1, c2] = FLAME[green ? 'green' : 'warm'];
+  x.fillStyle = c0; x.fillRect(ox - (big ? 3 : 2), oy - h + 2, big ? 7 : 5, h - 1);
+  x.fillStyle = c1; x.fillRect(ox - 1 - (f === 1 ? 1 : 0), oy - h + 1, 3, h - 1);
+  x.fillStyle = c2; x.fillRect(ox - (f === 2 ? 1 : 0), oy - h + 3 + (f === 0 ? 1 : 0), 2, h - 4);
   x.fillStyle = '#ffffff'; x.fillRect(ox, oy - 2, 1, 1);
+}
+
+// ---------------------------------------------------------------- table cards
+// Small cards for the fortune teller's table: a black back (thin cream rim) with twelve
+// gold dots, and a joker (a little jester on cream). The table never shows card faces.
+export const MINI_W = 11, MINI_H = 16;
+const JESTER = [
+  'g.......g',
+  'r...g...p',
+  'rr.rrp.pp',
+  '.rrrrppp.',
+  '..ogogo..',
+  '..sssss..',
+  '..seses..',
+  '..srrrs..',
+  '...sss...',
+];
+const JESTER_PAL = { r: '#e5484d', p: '#6a3aa8', g: '#ebb23c', o: '#1c1b19', s: '#f2c9a0', e: '#1c1b19' };
+const miniCache = new Map();
+// face: 'back' or 'joker'
+export function miniCard(face) {
+  let c = miniCache.get(face);
+  if (c) return c;
+  let x;
+  [c, x] = makeCanvas(MINI_W, MINI_H);
+  x.fillStyle = '#1c1b19'; x.fillRect(1, 0, MINI_W - 2, MINI_H); x.fillRect(0, 1, MINI_W, MINI_H - 2); // rounded outline
+  if (face === 'joker') {
+    x.fillStyle = '#fffdf8'; x.fillRect(1, 1, MINI_W - 2, MINI_H - 2);
+    grid(x, JESTER, 1, 4, JESTER_PAL);
+  } else {
+    // a thin cream rim, so overlapping backs in a spread stay apart
+    x.fillStyle = '#e9dcc0'; x.fillRect(1, 1, MINI_W - 2, MINI_H - 2);
+    x.fillStyle = '#141414'; x.fillRect(2, 2, MINI_W - 4, MINI_H - 4);
+    x.fillStyle = '#ebb23c';
+    for (let j = 0; j < 4; j++) for (let i = 0; i < 3; i++) x.fillRect(3 + i * 2, 3 + j * 3, 1, 1);
+  }
+  miniCache.set(face, c);
+  return c;
 }
