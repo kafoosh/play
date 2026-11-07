@@ -157,10 +157,17 @@ deck needed. The address bar is reset to the plain site, title-screen taps are i
 and the cheat sheet shows `BOOK TEST (URL)`.
 
 1. As they step out of the house, the **wizard's apprentice** (blue robe, starry hat)
-   lends them his master's old book: three short pages about the winds, the Tower of
-   Winds and the Still Night. "PICK A WORD THAT GRABS YOU. STARE AT IT TILL IT STICKS.
-   THEN CLOSE THE BOOK." The page corners turn the pages (or left/right on the D-pad);
-   the red **CLOSE** ribbon under the book closes it (on a keyboard: down, then A).
+   lends them his master's old book. It holds three short pages about the winds, the
+   Tower of Winds and the Still Night. "FLIP THROUGH. PICK A WORD THAT GRABS YOU. STARE AT IT
+   TILL IT STICKS. THEN CLOSE THE BOOK ON THAT PAGE."
+   - **The book:** two buttons under it, **TURN PAGE** and **CLOSE BOOK**. TURN PAGE
+     runs round the three pages: after page III comes page I again.
+   - **Taps:** tap the buttons (a tap on the page turns it too).
+   - **D-pad:** left and right move between the buttons and A presses one. The cursor
+     starts on TURN PAGE, so A on its own only ever turns the page.
+   - **Reopening:** the apprentice then asks "GOT A WORD? AND YOU CLOSED IT ON ITS
+     PAGE?". NO opens the book again where they left it, as often as they like. The
+     guessing only starts after a YES.
 2. The apprentice tries to read their mind: two letters ("I'M GETTING... AN R!" and
    "DOES THE WORD YOU'RE THINKING OF HAVE AN R IN IT?"). Then the magic fizzles out and
    he goes off to practise.
