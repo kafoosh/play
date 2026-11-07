@@ -460,21 +460,22 @@ export function fortuneTarget(p, q, n = 7) {
   return -1;
 }
 
-// The three cards she turns, left to right: one from the past, one from the present, and
-// the future, "right at the end" (the last face-down card in the spread). Their card is
-// always one of the three: past and present are their card plus one other picked at
-// random, or two random ones if their card is the one at the end. Returns positions.
+// The three cards she turns, left to right: past, present and future. She takes the
+// leftmost, middle and rightmost of the five face-down cards, so they're spread evenly.
+// If their card isn't one of those, it takes the place of the nearest one (by position
+// in the spread; a tie is decided at random). Returns spread positions, left to right.
 export function fortunePicks(p, q, rand = Math.random) {
   const target = fortuneTarget(p, q), cards = [0, 1, 2, 3, 4, 5, 6].filter(i => i !== p && i !== q);
-  const any = a => a[Math.floor(rand() * a.length) % a.length];
-  const end = cards[4], rest = cards.slice(0, 4);
-  const first = target === end ? any(rest) : target;
-  const second = any(rest.filter(i => i !== first));
-  return [Math.min(first, second), Math.max(first, second), end];
+  const picks = [cards[0], cards[2], cards[4]];
+  if (picks.includes(target)) return picks;
+  const d = picks.map(i => Math.abs(i - target)), best = Math.min(...d);
+  const near = picks.map((_, k) => k).filter(k => d[k] === best);
+  picks[near[Math.floor(rand() * near.length) % near.length]] = target;
+  return picks.sort((a, b) => a - b);
 }
 
 export const FORTUNE = {
-  hello: ['PSST! {N}! OVER HERE!', 'I\'M THE VILLAGE FORTUNE TELLER.', 'LET ME READ YOUR CARDS BEFORE YOU HEAD NORTH. IT\'S FREE!'],
+  hello: ['PSST! {N}! OVER HERE!', 'I\'M THE VILLAGE FORTUNE TELLER.', 'LET ME READ YOUR FORTUNE BEFORE YOU HEAD NORTH. IT\'S FREE!'],
   askDeck: 'DO YOU HAVE A DECK OF CARDS WITH YOU?',
   noDeck: ['THEN FETCH ONE. WITH BOTH JOKERS.', 'I WILL WAIT. I AM VERY GOOD AT WAITING.'],
   askDeckAgain: 'GOT ONE NOW?',
@@ -500,7 +501,7 @@ export const FORTUNE = {
   point: [
     'NOW THE CARDS. I JUST NEED 3 TO KNOW YOUR FUTURE.',
     'EENY... MEENY... MINY...',
-    'ONE FROM THE PAST, ONE FROM YOUR PRESENT, AND ONE RIGHT AT THE END FOR THE FUTURE.',
+    'ONE FROM THE PAST, ONE FROM THE PRESENT, ONE FOR THE FUTURE.',
   ],
   close: [
     'YOUR FORTUNE HAS SPOKEN.',
@@ -513,27 +514,23 @@ export const FORTUNE = {
   ui: { which: ['PAST: WHAT\'S THIS?', 'PRESENT: AND THIS?', 'FUTURE: LAST ONE!'], seen: 'SEEN THAT ONE!', reading: 'YOUR FORTUNE' },
 };
 
-// A reading of where the jokers fell (p, q: positions in the spread, left = 0).
+// A reading of where the jokers fell, in one line (p, q: positions in the spread).
 const pickOf = rand => a => a[Math.floor(rand() * a.length) % a.length];
 export function jokerReading(p, q, rand = Math.random) {
   if (p > q) [p, q] = [q, p];
-  const pick = pickOf(rand), out = [pick(['OHO! THE JOKERS HAVE SPOKEN.', 'HMM... I SEE. I SEE!'])];
-  if (q - p - 1 >= 3) out.push(pick([
-    'THEY SIT FAR APART. SOMEONE ON YOUR ROAD IS GRUMPY. BE NICE TO THEM.',
-    'FAR APART. A LONG WALK AHEAD. GOOD THING YOU HAVE LEGS.',
-  ]));
-  else out.push(pick([
-    'SIDE BY SIDE... A LOCKED DOOR. A LOST KEY. A FROG?',
-    'CLOSE TOGETHER. TWO FRIENDS. OR TWO WITCHES. OR THREE.',
-  ]));
-  if (p === 0 || q === 6) out.push('ONE IS AT THE VERY EDGE. WATCH THE LAKE SHORE. SOMETHING GREEN WAITS THERE.');
-  else if (p + q < 6) out.push('THEY LEAN WEST. THE OLD TOWER HAS A SECRET OR TWO.');
-  else if (p + q > 6) out.push('THEY LEAN EAST. THE FISHER COULD USE A FRIEND.');
-  else out.push('RIGHT IN THE MIDDLE. STAY ON THE ROAD AND YOU\'LL BE FINE.');
-  return out;
+  const lines = q - p - 1 >= 3
+    ? ['FAR APART... A LONG WALK AHEAD. GOOD THING YOU HAVE LEGS.', 'THEY SIT FAR APART. SOMEONE ON YOUR ROAD IS GRUMPY. BE NICE.']
+    : ['SIDE BY SIDE... A LOCKED DOOR. A LOST KEY. A FROG?', 'CLOSE TOGETHER. TWO FRIENDS. OR TWO WITCHES. OR THREE.'];
+  if (p === 0 || q === 6) lines.push('ONE SITS AT THE VERY EDGE. WATCH THE LAKE SHORE.');
+  else if (p + q < 6) lines.push('THEY LEAN WEST. THE OLD TOWER HAS A SECRET OR TWO.');
+  else if (p + q > 6) lines.push('THEY LEAN EAST. THE FISHER COULD USE A FRIEND.');
+  else lines.push('RIGHT IN THE MIDDLE. STAY ON THE ROAD AND YOU\'LL BE FINE.');
+  return [pickOf(rand)(lines)];
 }
 
-// A reading of the cards she pointed at, by colour, suit and value. Never names a card.
+// A reading of the cards she pointed at, in two lines: their colours, then the most
+// telling thing about them (one suit, a pair, faces, an ace), else the suit that shows
+// most. Never names a card.
 export function cardReading(cards) {
   const out = [];
   const reds = cards.filter(c => c.s === 'H' || c.s === 'D').length, n = cards.length;
@@ -542,18 +539,16 @@ export function cardReading(cards) {
     : reds * 2 > n ? 'MOSTLY RED. A WARM FIRE IS WAITING FOR YOU AT HOME.'
     : 'MOSTLY BLACK. A QUIET NIGHT. TOO QUIET...');
   const faces = cards.filter(c => c.v >= 11).length, vals = cards.map(c => c.v);
-  const pair = vals.some((v, i) => vals.indexOf(v) !== i), sum = vals.reduce((a, b) => a + b, 0);
+  const pair = vals.some((v, i) => vals.indexOf(v) !== i);
+  // the suit that shows most (the first one shown if they're all different)
+  const count = s => cards.filter(c => c.s === s).length;
+  const top = cards.map(c => c.s).reduce((a, s) => (count(s) > count(a) ? s : a));
   if (cards.every(c => c.s === cards[0].s)) out.push('ALL ONE SUIT! WHAT LUCK! TODAY IS YOUR DAY.');
   else if (pair) out.push('A PAIR! SISTERS... LOCKED UP TOGETHER?');
   else if (faces >= 2) out.push('SO MANY FACES! YOU\'LL MEET LOTS OF FOLKS TODAY.');
   else if (faces === 1) out.push('A ROYAL FACE. SOMEONE IN A TALL HAT IS WAITING FOR YOU.');
   else if (vals.includes(1)) out.push('AN ACE! A FRESH START. MAYBE EVEN A FRESH BREEZE.');
-  else if (sum <= 12) out.push('SMALL CARDS. DON\'T IGNORE SMALL THINGS. LIKE FROGS.');
-  else out.push('STRONG NUMBERS. YOUR BOOTS WILL HOLD UP FINE.');
-  // the suit that shows most (the first one shown if they're all different)
-  const count = s => cards.filter(c => c.s === s).length;
-  const top = cards.map(c => c.s).reduce((a, s) => (count(s) > count(a) ? s : a));
-  out.push({
+  else out.push({
     H: 'HEARTS. SOMEONE AT HOME LOVES YOU. THEY HAVE FOUR SHORT LEGS.',
     C: 'CLUBS. TREES. THEY ALL LEAN NORTH. FUNNY, THAT.',
     S: 'SPADES. DIG AROUND THE OLD RUINS. YOU MIGHT FIND WORMS!',

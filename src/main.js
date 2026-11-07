@@ -229,7 +229,7 @@ function dialogW() { return Math.min(UIX1 - UIX0 - 6, 236); }
 const dialogX = () => Math.round((UIX0 + UIX1 - dialogW()) / 2);
 const dialogChars = () => Math.floor((dialogW() - 16) / 6);
 function say(entries, opts = {}) {
-  D.q = entries.slice(); D.onEnd = opts.onEnd || null; D.low = !!opts.low; D.pos = opts.pos || 'auto'; D.name = opts.name || null;
+  D.hist = []; D.q = entries.slice(); D.onEnd = opts.onEnd || null; D.low = !!opts.low; D.pos = opts.pos || 'auto'; D.name = opts.name || null;
   D.active = true; nextPage();
 }
 function nextPage() {
@@ -247,6 +247,16 @@ function nextPage() {
   }
   if (!D.page) { D.active = false; const f = D.onEnd; D.onEnd = null; if (f) f(); return; }
   D.shown = 0; D.t = 0; D.total = D.page.lines.join('').length;
+  D.hist.push({ page: D.page, q: D.q.slice() }); // for B: each page and what was still to come
+}
+// B: back to the previous page of this conversation (an answered question can be answered again)
+function dialogBack() {
+  if (!D.page || D.hist.length < 2) { Audio.sfx('bump'); return; }
+  D.hist.pop();
+  const prev = D.hist[D.hist.length - 1];
+  D.page = prev.page; D.q = prev.q.slice(); D.choice = 0;
+  D.total = D.page.lines.join('').length; D.shown = D.total; D.t = 99;
+  Audio.sfx('move');
 }
 function dialogUpdate(dt) {
   if (!D.active || D.shown >= D.total) return;
@@ -872,7 +882,8 @@ const Play = {
   onB() {
     this.secret('B');
     if (Table.input() && !D.active) { Table.onB(); return; }
-    if (D.active || this.script || G.fade || this.cool > 0 || this.card) return;
+    if (D.active) { dialogBack(); return; }
+    if (this.script || G.fade || this.cool > 0 || this.card) return;
     const p = this.p, id = G.flags.chickenStaff ? 'poly' : G.hero.id, pcx = p.px + 8, pcy = p.py + 8;
     this.cool = id === 'bard' ? 0.6 : 0.4;
     this.swing = { t: 0, dir: p.dir, id };

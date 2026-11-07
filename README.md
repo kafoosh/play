@@ -118,8 +118,8 @@ fortune teller (purple hood) stops them and talks them through it:
 6. On her table, show where the two jokers lie: move the arrow (D-pad, or tap a gap),
    A puts a joker there, B takes one back. UNDO or YES once both are down. She gives a
    "reading" of the jokers.
-7. "EENY... MEENY... MINY..." She turns one card from the past, one from the present and
-   one right at the end for the future. They flip each one she points at and enter it
+7. "EENY... MEENY... MINY... ONE FROM THE PAST, ONE FROM THE PRESENT, ONE FOR THE
+   FUTURE." She turns three of the face-down cards, left to right. They flip each one she points at and enter it
    with the value and suit chips. She gives a reading of the colours and suits.
 8. She tells them to remember their card, put the rest back in the deck and keep their
    own card face up in the middle.
@@ -139,11 +139,11 @@ spread (read left to right) their card sits just to the right of that joker:
 This assumes the usual left-to-right spread. A spread the other way round still looks
 valid but points at the wrong end of the gap.
 
-Her three picks are face-down cards, left to right: the future is always the last one in
-the spread ("right at the end"), and the past and present are their card plus one other
-at random (two at random if their card is the one at the end). Their card is always one
-of the three, so the game knows which entry is theirs. Their card can be any of the five
-face-down cards, depending on where the jokers fell. Any other joker spacing means the deal went
+Her three picks are the leftmost, middle and rightmost of the five face-down cards, so
+they're spread evenly. If their card isn't one of those, it takes the place of the
+nearest one (a tie is decided at random). So their card is always one of the three, and
+the game knows which entry is theirs. Their card can be any of the five face-down
+cards, depending on where the jokers fell. Any other joker spacing means the deal went
 wrong: she says the jokers are arguing and has them deal again with a new card.
 
 ### Award: Look At All Those Chickens
@@ -154,6 +154,7 @@ A banner slides in, and the end screen remembers it.
 
 ### Along the way
 
+- In any conversation, **B** goes back a page, even to a question already answered.
 - In the woods past the bridge, a **hermit** spots you ("!"), walks over and asks if
   you've thought of a playing card (or have a word in mind, in word mode). YES lets you
   pass. NO gets a nudge to have something in mind before seeing the wizard, then lets
