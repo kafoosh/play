@@ -161,6 +161,11 @@ function updateParts(dt) {
     if (p.k === 'z' || p.k === 'note') p.x += Math.sin(p.life * 5) * 0.3;
     if (p.k === 'say') { p.vy = (p.vy || -18) * 0.9; }
     if (p.k === 'mote') p.x += Math.sin(p.life * 1.7 + p.p) * 0.15;
+    if (p.k === 'drop') { // falls, bounces once, lies there
+      p.vy += 160 * dt;
+      if (p.y >= p.floor) { p.y = p.floor; p.vx *= 0.4; p.vy = p.bounced ? 0 : -p.vy * 0.3; p.bounced = true; }
+    }
+    if (p.k === 'puff') { p.vx *= 0.96; p.x += Math.sin(p.life * 6) * 0.1; }
   }
   parts = parts.filter(p => p.life > 0);
 }
@@ -184,6 +189,18 @@ function drawParts(cx = 0, cy = 0) {
       }
     }
     else if (p.k === 'pix') { ctx.fillStyle = '#ffe9a0'; ctx.fillRect(x, y, 1, 1); }
+    else if (p.k === 'drop') { // a little twinkle as it falls, then a blinking dot on the ground
+      if (p.life > 0.6 || Math.floor(p.life * 10) % 2) {
+        ctx.fillStyle = p.col; ctx.fillRect(x, y, 1, 1);
+        if (!p.bounced || p.vy) { ctx.fillStyle = '#e8b84a'; ctx.fillRect(x - 1, y, 1, 1); ctx.fillRect(x + 1, y, 1, 1); ctx.fillRect(x, y - 1, 1, 1); ctx.fillRect(x, y + 1, 1, 1); }
+      }
+    }
+    else if (p.k === 'puff') { // a little grey smoke that grows and fades
+      const k = 1 - p.life / p.max, r = 1 + Math.round(k * 2);
+      ctx.globalAlpha = 0.9 * (p.life / p.max); ctx.fillStyle = '#c8c4d0';
+      ctx.fillRect(x - r, y - r + 1, r * 2 + 1, r * 2 - 1); ctx.fillRect(x - r + 1, y - r, r * 2 - 1, r * 2 + 1);
+      ctx.globalAlpha = 1;
+    }
     else if (p.k === 'say') {
       ctx.globalAlpha = Math.min(1, p.life / 0.4);
       tinyText(ctx, p.text, x, y);
@@ -1856,18 +1873,29 @@ function* bookScene() {
   }
   const L = nextLetter(), second = () => { const l = nextLetter(); return l ? [bookLine(T[1].pre, l), letterAsk(l, [T[1].yes], [T[1].no])] : []; };
   yield* say2([...B.closed, bookLine(T[0].pre, L), letterAsk(L, [T[0].yes], [T[0].no], second)]);
-  // he reaches for a third letter: the magic gathers round him, then fizzles out
-  yield* say2([B.fizzle[0]]);
+  // he reaches for a third letter: the magic gathers round him (less and less of it),
+  // goes quiet... and lets out one sad little spark that drops at his feet, and a puff
+  yield* say2(B.fizzle);
   Audio.sfx('twinkle');
   const t0 = this.time, ox = a.px + 8, oy = a.py + 2;
-  while (this.time - t0 < 1.1) {
-    if (Math.random() < 0.6) { const an = Math.random() * Math.PI * 2, r = 18 + Math.random() * 10; parts.push({ k: 'spark', x: ox + Math.cos(an) * r, y: oy + Math.sin(an) * r, vx: -Math.cos(an) * r * 1.4, vy: -Math.sin(an) * r * 1.4, life: 0.6, col: C.cyan, world: true }); }
+  while (this.time - t0 < 1.4) {
+    const k = (this.time - t0) / 1.4; // it peters out
+    if (Math.random() < 0.5 * (1 - k)) { const an = Math.random() * Math.PI * 2, r = 16 + Math.random() * 8; parts.push({ k: 'spark', x: ox + Math.cos(an) * r, y: oy + Math.sin(an) * r, vx: -Math.cos(an) * r * 1.2, vy: -Math.sin(an) * r * 1.2, life: 0.6, col: k < 0.5 ? C.cyan : '#8ab4c4', world: true }); }
     yield null;
   }
+  yield wait(0.7);
   Audio.sfx('fizzle');
-  for (let i = 0; i < 10; i++) parts.push({ k: 'spark', x: ox - 4 + Math.random() * 8, y: oy - 8, vx: (Math.random() - 0.5) * 14, vy: 6 + Math.random() * 10, life: 0.7, col: '#8a8a90', world: true });
-  yield wait(0.6);
-  yield* say2([B.fizzle[1], ...B.bye]);
+  const side = a.dir === 'left' ? -1 : 1;
+  parts.push({ k: 'drop', x: ox + side * 5, y: oy + 1, vx: side * 6, vy: -22, floor: a.py + 15, life: 1.6, col: '#ffe9a0', world: true });
+  parts.push({ k: 'puff', x: ox, y: a.py - 6, vx: 0, vy: -5, life: 1.3, max: 1.3, world: true });
+  yield wait(0.45);
+  Audio.sfx('plop');
+  const look = a.dir;
+  a.dir = 'down'; // he looks at it
+  yield wait(0.9);
+  yield* say2(B.fizzled);
+  a.dir = look;
+  yield* say2(B.bye);
   this.reading = false;
   yield* walkTo.call(this, a, (x, y) => x === a.home.x && y === a.home.y);
   a.dir = 'left';

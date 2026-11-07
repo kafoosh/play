@@ -663,7 +663,7 @@ export function bookWord(page, answers) {
 export const BOOK = {
   // the apprentice stops you as you leave the house
   hello: ['HEY! {N}! WAIT UP!', 'I\'M THE WIZARD\'S APPRENTICE. WELL. TRAINEE.', 'I NEED SOMEONE TO PRACTISE ON. YOU\'LL DO.'],
-  give: ['HERE. THE MASTER\'S OLD BOOK. DON\'T TELL HIM.', 'FLIP THROUGH. PICK A WORD THAT GRABS YOU.', 'STARE AT IT TILL IT STICKS.', 'THEN CLOSE THE BOOK ON THAT PAGE.'],
+  give: ['HERE. THE MASTER\'S OLD BOOK. DON\'T TELL HIM.', 'FLIP THROUGH. PICK A WORD THAT GRABS YOU.', 'STARE AT IT TILL IT STICKS.', 'THEN CLOSE THE BOOK.'],
   // after the book is closed: NO opens it again
   askClosed: 'GOT YOUR WORD?',
   closedYes: [],
@@ -674,7 +674,9 @@ export const BOOK = {
     { pre: 'I\'M GETTING... {AL}!', yes: 'IT WORKED! IT ACTUALLY WORKED!', no: 'OH. THAT WAS A WARM-UP.' },
     { pre: 'AGAIN... {AL}?', yes: 'I\'M A NATURAL!', no: 'HUH. THEY\'RE SHY TODAY.' },
   ],
-  fizzle: ['ONE MORE. I CAN FEEL IT...', '...NOPE. GONE.'],
+  // his third go: the magic gathers... and lets out one sad little spark
+  fizzle: ['ONE MORE. I CAN FEEL IT...'],
+  fizzled: ['...PFT.', '*COUGH*', 'THAT WAS IT. THAT WAS ALL OF IT.'],
   bye: ['HOW DOES THE MASTER DO THIS?', 'I NEED MORE PRACTICE. I\'LL TAKE THE BOOK BACK.', 'KEEP YOUR WORD IN MIND. THE MASTER\'S NORTH, OVER THE BRIDGE.'],
   // the bridge guard, the first time you talk to him
   guard: ['HALT! WHO GOES THERE?', '...{N}? THE WIZARD SAID YOU\'D COME.', 'RULES ARE RULES. WHAT\'S THE PASSWORD?', '...YOU DON\'T KNOW IT. NOBODY DOES.', 'FINE. EASIER QUESTION.'],

@@ -159,7 +159,7 @@ and the cheat sheet shows `BOOK TEST (URL)`.
 1. As they step out of the house, the **wizard's apprentice** (blue robe, starry hat)
    lends them his master's old book. It holds three short pages about the winds, the
    Tower of Winds and the Still Night. "FLIP THROUGH. PICK A WORD THAT GRABS YOU. STARE AT IT
-   TILL IT STICKS. THEN CLOSE THE BOOK ON THAT PAGE."
+   TILL IT STICKS. THEN CLOSE THE BOOK."
    - **Turning:** an arrow beside the book turns to the next page. It runs round the
      three pages (after III comes I again), and bobs while it waits. A or RIGHT turns
      the page; on a touch screen, tap the arrow (or the page).
