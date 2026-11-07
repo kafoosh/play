@@ -665,7 +665,7 @@ export const BOOK = {
   hello: ['HEY! {N}! WAIT UP!', 'I\'M THE WIZARD\'S APPRENTICE. WELL. TRAINEE.', 'I NEED SOMEONE TO PRACTISE ON. YOU\'LL DO.'],
   give: ['HERE. THE MASTER\'S OLD BOOK. DON\'T TELL HIM.', 'FLIP THROUGH. PICK A WORD THAT GRABS YOU.', 'STARE AT IT TILL IT STICKS.', 'THEN CLOSE THE BOOK ON THAT PAGE.'],
   // after the book is closed: NO opens it again
-  askClosed: 'GOT A WORD? AND YOU CLOSED IT ON ITS PAGE?',
+  askClosed: 'GOT YOUR WORD?',
   closedYes: [],
   closedNo: ['THEN HAVE ANOTHER LOOK. NO RUSH.'],
   closed: ['GOOD. DON\'T SAY IT!', 'OK. HERE GOES...'],

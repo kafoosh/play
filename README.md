@@ -166,8 +166,8 @@ and the cheat sheet shows `BOOK TEST (URL)`.
    - **Closing:** **CLOSE BOOK** sits under the book. With the buttons, press DOWN to
      reach it, then A (UP goes back to the arrow), so a mashed A never closes the book.
      On a touch screen, tap it.
-   - **Reopening:** the apprentice then asks "GOT A WORD? AND YOU CLOSED IT ON ITS
-     PAGE?". NO opens the book again where they left it, as often as they like. The
+   - **Reopening:** the apprentice then asks "GOT YOUR WORD?". NO opens the book again
+     where they left it, as often as they like. The
      guessing only starts after a YES.
 2. The apprentice tries to read their mind: two letters ("I'M GETTING... AN R!" and
    "DOES THE WORD YOU'RE THINKING OF HAVE AN R IN IT?"). Then the magic fizzles out and
