@@ -169,31 +169,37 @@ and the cheat sheet shows `BOOK TEST (URL)`.
    - **Reopening:** the apprentice then asks "GOT YOUR WORD?". NO opens the book again
      where they left it, as often as they like. The
      guessing only starts after a YES.
-2. The apprentice tries to read their mind: two letters ("I'M GETTING... AN R!" and
-   "DOES THE WORD YOU'RE THINKING OF HAVE AN R IN IT?"). Then the magic fizzles out and
-   he goes off to practise.
-3. The **bridge guard** asks for the password, gives up, and asks one letter instead.
-4. The **hermit** collects words. If a letter is still needed, he likes words with it
-   ("LANTERN. LICHEN. LOVELY.") and asks if theirs has one. If the word is already
-   known, he asks nothing and just talks about his favourite word (MOSS).
+2. The apprentice tries to read their mind. First a straight guess: "I'M GETTING... AN
+   R!" and "DOES THE WORD YOU'RE THINKING OF HAVE AN R IN IT?". Then he calls the winds
+   for a second go: the magic gathers, peters out, and lets out one sad spark ("...PFT."
+   "*COUGH*"). He asks anyway: "THERE WASN'T A G IN IT, WAS THERE?", answered with
+   **THERE WAS** or **THERE WASN'T**. Then he goes off to practise.
+3. The **bridge guard** asks for the password, gives up, and asks one letter instead
+   (only if it's still needed).
+4. The **hermit** collects words. He just talks about his favourite word (MOSS).
 5. The wizard names the word on his scroll.
 
 **How it works.** Every word in the book worth choosing has five letters or more; every
 shorter word is filler (THE, AND, ONCE, ONLY...), so "a word that grabs you" means one of
-30 words. The page showing when they close the book is almost always their word's page,
-and every page's words can be told apart in four letter questions. The game keeps every
-word in the book in play, though, and puts the page first: each question also rules out
-words on the other pages where it can. So:
+23 words. The game trusts the page the book was closed on, and each page has only seven
+or eight such words, few enough that three yes/no letter questions always tell them
+apart:
 
-- **closed on their word's page:** 4 questions in all for 30 of the 34 cases, 5 for the
-  rest (PLAYED, RAISED, WINDS on page II, STIRRED on page III);
-- **closed on another page:** the answers soon rule that page out and the hermit keeps
-  going until one word is left: 5-7 questions, and the word is still right.
+| Page | Words |
+|---|---|
+| I. THE WINDS | WINDS, WANDERED, KINGDOM, NORTHERN, BROUGHT, SNOWFALL, SOUTHERN, BIRDSONG |
+| II. THE TOWER | TOWER, VILLAGERS, RAISED, WINDS, SLEPT, YOUNG, WIZARD, LISTENED |
+| III. THE STILL NIGHT | STILL, NIGHT, WINDS, VANISHED, WIZARD, SMILED, HEARD |
 
-No question is ever asked for show: once the word is known, nobody asks another. If the
-guard was never asked (knocked aside, or a chicken), the hermit asks his letter too; if letters are still left at the castle, the
-wizard asks them ("THE WIND IS FAINT TODAY. HELP IT ALONG."). If an answer was wrong and
-no word fits, the wizard names the closest one.
+The apprentice asks two, the guard the third. WIZARD on page III only needs two, so then
+the guard just lets you pass. No question is ever asked for show.
+
+There's no safety net: if they close the book on a different page from their word, or
+answer a letter wrong, the wizard names the wrong word. CLOSE BOOK takes a deliberate
+DOWN, and "GOT YOUR WORD?" lets them go back into the book, to keep that rare. If the
+guard was never asked (knocked aside, or a chicken), the hermit asks his letter instead
+("THE BEST ONES HAVE AN L. LANTERN. LICHEN. LOVELY."); if a letter is still left at the
+castle, the wizard asks it ("THE WIND IS FAINT TODAY. HELP IT ALONG.").
 
 ### Award: Look At All Those Chickens
 

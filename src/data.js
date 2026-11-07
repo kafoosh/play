@@ -571,21 +571,23 @@ export function cardReading(cards) {
 // Book mode (play.oddpaq.com/!book): a self-working book test. The wizard's apprentice
 // hands over the master's old book: three short pages. The spectator stares at one
 // interesting word until it sticks, then closes the book, which tells the game the page
-// they were on. TURN PAGE runs round the three pages. Every word worth choosing has five letters or more; every shorter word
-// is filler (the tests check this). Then the apprentice, the bridge guard and the hermit
-// each ask a letter or two ("DOES THE WORD YOU'RE THINKING OF HAVE AN R IN IT?"), and the
-// wizard names the word.
+// they were on. TURN PAGE runs round the three pages.
+// Every word worth choosing has five letters or more, and every shorter word is filler
+// (the tests check this). Each page has seven or eight such words, few enough that three
+// yes/no letter questions always tell them apart: the apprentice asks two ("DOES THE WORD
+// YOU'RE THINKING OF HAVE AN R IN IT?", then "THERE WASN'T AN R IN IT, WAS THERE?") and
+// the bridge guard the third. Then the wizard names the word.
 export const TOME = [
-  { title: 'I. THE WINDS', text: 'ONCE THE WINDS WANDERED ALL THE KINGDOM. THE NORTHERN WINDS BROUGHT SNOWFALL. THE SOUTHERN WINDS BROUGHT BIRDSONG. AND THE FORESTS WHISPERED.' },
-  { title: 'II. THE TOWER', text: 'THE VILLAGERS RAISED A TOWER OF WHITE STONE, AND THE WINDS SLEPT IN ITS SPIRE. MINSTRELS PLAYED FOR THEM. AND A YOUNG WIZARD LISTENED.' },
-  { title: 'III. THE STILL NIGHT', text: 'THEN, THE STILL NIGHT. NOT A FEATHER STIRRED. THE TOWER CRUMBLED. THE WINDS VANISHED. BUT THE WIZARD ONLY SMILED. HE HAD HEARD IT ALL.' },
+  { title: 'I. THE WINDS', text: 'ONCE THE WINDS WANDERED THE KINGDOM. THE NORTHERN WINDS BROUGHT SNOWFALL. THE SOUTHERN WINDS BROUGHT BIRDSONG.' },
+  { title: 'II. THE TOWER', text: 'THE VILLAGERS RAISED A TOWER, AND THE WINDS SLEPT IN IT. A YOUNG WIZARD LISTENED.' },
+  { title: 'III. THE STILL NIGHT', text: 'THEN, THE STILL NIGHT. THE WINDS VANISHED. BUT THE WIZARD ONLY SMILED. HE HAD HEARD IT ALL.' },
 ];
 // The words on each page that someone might pick: five letters or more, title included.
 export const TOME_WORDS = TOME.map(p => [...new Set(`${p.title} ${p.text}`.match(/[A-Z]+/g).filter(w => w.length >= 5))]);
 const ALL_WORDS = [...new Set(TOME_WORDS.flat())];
 
-// The letters the questions may use: the ones the hermit has favourite words for. None of
-// his words are in the book.
+// The letters the questions may use: the ones the hermit has favourite words for (he asks
+// one if the guard never got to). None of his words are in the book.
 export const FAV = {
   A: ['ACORN', 'ASH'], B: ['BEETLE', 'BRAMBLE'], C: ['CANDLE', 'CROW'], D: ['DEW', 'DUSK'], E: ['EMBER', 'EEL'],
   F: ['FERN', 'FOG'], G: ['GOAT', 'GRUEL'], H: ['HUSH', 'HONEY'], I: ['INK', 'IVY'], K: ['KETTLE', 'KNOT'],
@@ -598,65 +600,41 @@ const QL = Object.keys(FAV);
 export const withArticle = L => ('AEFHILMNORSX'.includes(L) ? 'AN ' : 'A ') + L;
 export const letterQuestion = L => `DOES THE WORD YOU'RE THINKING OF HAVE ${withArticle(L)} IN IT?`;
 
-// Which word, from the yes/no answers. Every word in the book stays in play, but the page
-// the book was closed on comes first: its words are found within four questions. Each
-// question also splits off words from the other pages where it can, and when a word from
-// another page still fits, one more question rules it out. So if they closed the book on
-// the wrong page, the answers soon rule out that page and the questions go on until one
-// word is left.
-//   bookNext(page, answers) -> the next letter to ask, or null once one word (or none) fits
+// Which word, from the yes/no answers. The page the book was closed on is trusted: only
+// its words are in play, and each question is the letter that splits them best (fewest
+// questions at worst, then on average). Every pair of answers leads to a word, so three
+// questions always name it.
+//   bookNext(page, answers) -> the next letter to ask, or null once the word is known
 //   bookWord(page, answers) -> the word
 // answers: [[letter, yes], ...] in the order asked.
-const bits = n => { let c = 0; while (n) { n &= n - 1; c++; } return c; };
-const MASK = Object.fromEntries(QL.map(L => [L, ALL_WORDS.reduce((m, w, i) => (w.includes(L) ? m | (1 << i) : m), 0)]));
-const PAGE_MASK = TOME_WORDS.map(ws => ws.reduce((m, w) => m | (1 << ALL_WORDS.indexOf(w)), 0));
-const FULL = (1 << ALL_WORDS.length) - 1;
-const OFF_WEIGHT = 0.2, INF = 1e9, memo = new Map();
-function plan(on, off, budget) {
-  const n = bits(on) + bits(off), non = bits(on);
-  if (n <= 1) return [0, null];
-  if (non > 1 && budget <= 0) return [INF, null];
-  const key = `${on},${off},${budget}`;
+const memo = new Map();
+function plan(ws) { // [most questions, total questions over all the words, best letter]
+  if (ws.length <= 1) return [0, 0, null];
+  const key = ws.join();
   if (memo.has(key)) return memo.get(key);
-  let best = [INF, null];
+  let best = [99, 0, null];
   for (const L of QL) {
-    const m = MASK[L], yo = on & m, no = on & ~m, yf = off & m, nf = off & ~m;
-    if (!(yo | yf) || !(no | nf)) continue;
-    const nb = on ? budget - 1 : budget;
-    if (non > 1 && Math.max(bits(yo), bits(no)) > 2 ** nb) continue;
-    const a = plan(yo, yf, yo ? nb : 99)[0];
-    if (a >= INF) continue;
-    const b = plan(no, nf, no ? nb : 99)[0];
-    if (b >= INF) continue;
-    const cost = non + OFF_WEIGHT * bits(off) + a + b;
-    if (cost < best[0]) best = [cost, L];
+    const y = ws.filter(w => w.includes(L)), n = ws.filter(w => !w.includes(L));
+    if (!y.length || !n.length) continue;
+    const a = plan(y), b = plan(n), c = [1 + Math.max(a[0], b[0]), ws.length + a[1] + b[1], L];
+    if (c[0] < best[0] || (c[0] === best[0] && c[1] < best[1])) best = c;
   }
   memo.set(key, best);
   return best;
 }
-function narrow(page, answers) {
-  let on = PAGE_MASK[page] || 0, off = FULL & ~on, budget = 4;
-  for (const [L, yes] of answers) {
-    if (on) budget--;
-    const m = MASK[L] || 0, keep = yes ? m : ~m;
-    on &= keep; off &= keep;
-  }
-  return { on, off, budget };
-}
+const fits = answers => w => answers.every(([L, yes]) => w.includes(L) === yes);
 export function bookNext(page, answers) {
-  const { on, off, budget } = narrow(page, answers);
-  if (bits(on) + bits(off) <= 1) return null;
-  return plan(on, off, on ? budget : 99)[1];
+  const left = (TOME_WORDS[page] || []).filter(fits(answers));
+  return left.length > 1 ? plan(left)[2] : null;
 }
 export function bookWord(page, answers) {
-  const { on, off } = narrow(page, answers), left = on | off;
-  if (left) return ALL_WORDS[Math.log2(left & -left)];
-  // Nothing fits (a wrong answer, or a word not in the book): the closest word. Fewest
-  // wrong answers first, then a word on the page they closed the book on, then the one
-  // whose first wrong answer came latest.
-  const misses = w => answers.map(([L, yes], i) => (w.includes(L) !== yes ? i : -1)).filter(i => i >= 0);
-  const score = w => { const m = misses(w); return [m.length, TOME_WORDS[page] && TOME_WORDS[page].includes(w) ? 0 : 1, -(m[0] ?? 99)]; };
-  return ALL_WORDS.slice().sort((a, b) => { const x = score(a), y = score(b); return x[0] - y[0] || x[1] - y[1] || x[2] - y[2]; })[0];
+  const left = (TOME_WORDS[page] || []).filter(fits(answers));
+  if (left.length) return left[0];
+  // Nothing on the page fits (only possible with answers from somewhere else): the
+  // closest word. Fewest wrong answers first, then a word on that page.
+  const misses = w => answers.filter(([L, yes]) => w.includes(L) !== yes).length;
+  const score = w => misses(w) * 2 + ((TOME_WORDS[page] || []).includes(w) ? 0 : 1);
+  return ALL_WORDS.slice().sort((a, b) => score(a) - score(b))[0];
 }
 
 // Book mode lines. {L} is the letter ("R"), {AL} the letter with its article ("AN R").
@@ -670,13 +648,15 @@ export const BOOK = {
   closedNo: ['THEN HAVE ANOTHER LOOK. NO RUSH.'],
   closed: ['GOOD. DON\'T SAY IT!', 'OK. HERE GOES...'],
   // his two goes: the line before the question, then what he says to YES and to NO
-  tries: [
-    { pre: 'I\'M GETTING... {AL}!', yes: 'IT WORKED! IT ACTUALLY WORKED!', no: 'OH. THAT WAS A WARM-UP.' },
-    { pre: 'AGAIN... {AL}?', yes: 'I\'M A NATURAL!', no: 'HUH. THEY\'RE SHY TODAY.' },
-  ],
-  // his third go: the magic gathers... and lets out one sad little spark
+  // his first go: the line before the question, then what he says to YES and to NO
+  first: { pre: 'I\'M GETTING... {AL}!', yes: 'IT WORKED! IT ACTUALLY WORKED!', no: 'OH. THAT WAS A WARM-UP.' },
+  // his second go: he calls the winds, the magic fizzles out, and he asks anyway
   fizzle: ['ONE MORE. I CAN FEEL IT...'],
-  fizzled: ['...PFT.', '*COUGH*', 'THAT WAS IT. THAT WAS ALL OF IT.'],
+  fizzled: ['...PFT.', '*COUGH*', 'I THINK I SAW {AL} IN THERE.'],
+  askFizzled: 'THERE WASN\'T {AL} IN IT, WAS THERE?',
+  fizzledOpts: ['THERE WAS', 'THERE WASN\'T'],
+  fizzledWas: ['THERE WAS?!', 'HA! STILL GOT IT. SORT OF.'],
+  fizzledWasnt: ['NO. OF COURSE NOT.', 'THAT WAS IT, THEN. THAT WAS ALL OF IT.'],
   bye: ['HOW DOES THE MASTER DO THIS?', 'I NEED MORE PRACTICE. I\'LL TAKE THE BOOK BACK.', 'KEEP YOUR WORD IN MIND. THE MASTER\'S NORTH, OVER THE BRIDGE.'],
   // the bridge guard, the first time you talk to him
   guard: ['HALT! WHO GOES THERE?', '...{N}? THE WIZARD SAID YOU\'D COME.', 'RULES ARE RULES. WHAT\'S THE PASSWORD?', '...YOU DON\'T KNOW IT. NOBODY DOES.', 'FINE. EASIER QUESTION.'],
