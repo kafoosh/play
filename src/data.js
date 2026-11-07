@@ -484,7 +484,7 @@ export const FORTUNE = {
   askCutAgain: 'HAPPY NOW?',
   row: ['SPREAD THEM BETWEEN YOUR HANDS NOW.', 'SHOW ME WHERE THE JOKERS LIE.'],
   redo: ['HMM? THE JOKERS ARE ARGUING.', 'THE DEAL WENT WRONG SOMEWHERE. ONCE MORE!', 'PUT THE JOKERS FACE UP AGAIN AND GATHER THE OTHER FIVE.', 'FORGET YOUR OLD CARD. YOU\'LL GET A NEW ONE.'],
-  point: ['NOW LAY THE SPREAD ON THE TABLE, JUST AS IT IS.', 'I\'LL POINT AT A CARD. FLIP IT OVER AND TELL ME WHAT IT IS.'],
+  point: ['NOW LAY THE SPREAD ON THE TABLE, JUST AS IT IS.', 'NOW THE CARDS. I JUST NEED 3 TO KNOW YOUR FUTURE.'],
   close: [
     'YOUR FORTUNE HAS SPOKEN.',
     'REMEMBER YOUR CHOSEN CARD!',
@@ -492,8 +492,8 @@ export const FORTUNE = {
     'OFF YOU GO, {N}. NORTH, OVER THE BRIDGE.',
     'REMEMBER YOUR CARD!',
   ],
-  // headings on her table while you name the cards
-  ui: { which: 'WHAT IS IT?', seen: 'SEEN THAT ONE!', reading: 'YOUR FORTUNE' },
+  // headings on her table while you name the cards: one for each card she points at
+  ui: { which: ['WHAT\'S THIS ONE?', 'AND THIS ONE?', 'AND THE LAST ONE?'], seen: 'SEEN THAT ONE!', reading: 'YOUR FORTUNE' },
 };
 
 // A reading of where the jokers fell (p, q: positions in the spread, left = 0).

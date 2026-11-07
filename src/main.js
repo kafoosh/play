@@ -1560,12 +1560,11 @@ const Table = {
     ctx.fillStyle = '#2f5d4a'; ctx.fillRect(x + 6, fy + 1, w - 12, fh - 2);
     ctx.fillStyle = '#386b55'; for (let i = 0; i < 18; i++) ctx.fillRect(x + 7 + ((hash(i, 7) * (w - 15)) | 0), fy + 2 + ((hash(i, 9) * (fh - 4)) | 0), 1, 1);
     // heading
-    if (!jk) text(ctx, this.mode === 'card' ? (this.warn > 0 ? FU.seen : FU.which) : FU.reading, x + 8, y + 4, this.warn > 0 ? C.red : UI.accent);
+    if (!jk) text(ctx, this.mode === 'card' ? (this.warn > 0 ? FU.seen : FU.which[Math.min(this.k, FU.which.length - 1)]) : FU.reading, x + 8, y + 4, this.warn > 0 ? C.red : UI.accent);
     if (this.mode === 'card') {
-      // what they've picked so far, then three dots for the three cards
+      // what they've picked so far
       const s = this.sel, lab = (s.v ? VALUE_LABEL[s.v] : '') + (s.s ? SUIT_CH[s.s] : '');
-      if (lab) text(ctx, lab, x + w - 34 - textWidth(lab), y + 4, s.s === 'H' || s.s === 'D' ? C.red : UI.text);
-      for (let i = 0; i < this.order.length; i++) { ctx.fillStyle = i < this.k ? C.gold : i === this.k ? UI.accent : UI.paperD; ctx.fillRect(x + w - 25 + i * 5, y + 6, 3, 3); }
+      if (lab) text(ctx, lab, x + w - 9 - textWidth(lab), y + 4, s.s === 'H' || s.s === 'D' ? C.red : UI.text);
     }
     // the spread: a soft shadow, then the card, all on one straight line
     const pointed = this.mode === 'card' ? this.order[this.k] : -1;

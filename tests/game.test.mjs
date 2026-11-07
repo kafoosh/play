@@ -197,7 +197,7 @@ test('fortune: every line can be drawn and fits the box', () => {
     for (const line of wrap(s.replace(/\{N\}/g, 'ABCDEFGH'), 23)) assert.ok(line.length <= 23, `too long: ${line}`);
   }
   // the table headings share a line with the undo chip or the pick
-  for (const v of Object.values(FORTUNE.ui)) assert.ok(v.length <= 18, `heading too long: ${v}`);
+  for (const v of Object.values(FORTUNE.ui).flat()) assert.ok(v.length <= 18, `heading too long: ${v}`);
 });
 
 test('fortune teller stands by the house and the path stays open', () => {
