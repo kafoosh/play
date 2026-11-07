@@ -523,18 +523,18 @@ export const FORTUNE = {
   ui: { which: ['PAST: WHAT\'S THIS?', 'PRESENT: AND THIS?', 'FUTURE: LAST ONE!'], seen: 'SEEN THAT ONE!', reading: 'YOUR FORTUNE' },
 };
 
-// A reading of where the jokers fell, in one line (p, q: positions in the spread). Each
-// line is a little bit of the world: the Still Night, the locked house, the lake...
+// A reading of where the jokers fell, in one line (p, q: positions in the spread): what
+// the jokers show, then what it means for the road ahead, told through the world.
 const pickOf = rand => a => a[Math.floor(rand() * a.length) % a.length];
 export function jokerReading(p, q, rand = Math.random) {
   if (p > q) [p, q] = [q, p];
   const lines = q - p - 1 >= 3
-    ? ['FAR APART... LIKE THIS VALLEY AND THE WIND SINCE THE STILL NIGHT.', 'FAR APART. LIKE A GUARD AND HIS BRIDGE. HE\'LL BE BACK ON IT SOON.']
-    : ['SIDE BY SIDE... A LOCKED DOOR. A LOST KEY. A FROG?', 'CLOSE TOGETHER. THREE SISTERS, ONE HOUSE, NO KEY.'];
-  if (p === 0 || q === 6) lines.push('ONE SITS AT THE EDGE, LIKE THE FISHER BY HIS STILL LAKE.');
-  else if (p + q < 6) lines.push('THEY LEAN WEST, TO THE VILLAGE!');
-  else if (p + q > 6) lines.push('THEY LEAN EAST, TO THE LAKE. NOTHING BITES THERE ANY MORE.');
-  else lines.push('RIGHT IN THE MIDDLE, LIKE THE ROAD NORTH. THE WIZARD WAITS.');
+    ? ['FAR APART... A LONG ROAD LIES AHEAD. THE WIND WAITS AT ITS END.', 'FAR APART. YOU WILL MEET ONE WHO WON\'T MOVE... UNTIL HE DOES.']
+    : ['SIDE BY SIDE. I SEE A LOCKED DOOR... AND A KEY IN A FROG.', 'CLOSE TOGETHER. YOU WILL MEET THREE SISTERS WHO CAN\'T GET OUT.'];
+  if (p === 0 || q === 6) lines.push('ONE AT THE EDGE. YOUR LUCK WAITS BY THE WATER. BRING A WORM.');
+  else if (p + q < 6) lines.push('THEY LEAN WEST. YOUR LUCK BEGINS IN THE VILLAGE!');
+  else if (p + q > 6) lines.push('THEY LEAN EAST. THE LAKE HOLDS A PRIZE FOR YOU. A RED ONE.');
+  else lines.push('DEAD CENTRE. YOUR ROAD RUNS NORTH, TO THE ONE WHO LISTENS.');
   return [pickOf(rand)(lines)];
 }
 
