@@ -174,8 +174,8 @@ and the cheat sheet shows `BOOK TEST (URL)`.
    for a second go: the magic gathers, peters out, and lets out one sad spark ("...PFT."
    "*COUGH*"). He asks anyway: "I THINK I SAW A G IN THERE." "WAS THERE A G IN IT?"
    Then he goes off to practise.
-3. The **bridge guard** asks for the password, gives up, and asks one letter instead
-   (only if it's still needed).
+3. The **bridge guard** wants the password, but he's forgotten it himself: "I KNOW IT
+   HAD AN L IN IT." "DO YOU HAVE A WORD IN MIND WITH AN L?" (only if it's still needed).
 4. The **hermit** collects words. He just talks about his favourite word (MOSS).
 5. The wizard names the word on his scroll.
 
@@ -198,7 +198,8 @@ There's no safety net: if they close the book on a different page from their wor
 answer a letter wrong, the wizard names the wrong word. CLOSE BOOK takes a deliberate
 DOWN, and "GOT YOUR WORD?" lets them go back into the book, to keep that rare. If the
 guard was never asked (knocked aside, or a chicken), the hermit asks his letter instead
-("THE BEST ONES HAVE AN L. LANTERN. LICHEN. LOVELY."); if a letter is still left at the
+("TODAY I'M AFTER ONES WITH AN L. LANTERN. LICHEN. LOVELY." "GOT A WORD IN MIND WITH
+AN L?"); if a letter is still left at the
 castle, the wizard asks it ("THE WIND IS FAINT TODAY. HELP IT ALONG.").
 
 ### Award: Look At All Those Chickens

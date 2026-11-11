@@ -1106,9 +1106,10 @@ const Play = {
     }
     else if (n.id === 'dog' && n.talked % 3 === 2 && !n.moving) { n.talked++; this.run(function* () { yield* bellyScene.call(this, n); }); return; }
     else if (n.id === 'guard' && G.armed.book && !G.flags.bookGuard && !n.chicken && !n.awake && nextLetter()) {
-      // book mode: his password check is one of the letter questions (if one is still needed)
+      // book mode: he's forgotten the password, and his letter is one of the questions (if one is still needed)
       G.flags.bookGuard = 1;
-      lines = [...BOOK.guard, letterAsk(nextLetter(), BOOK.guardYes, BOOK.guardNo)];
+      const L = nextLetter();
+      lines = [...BOOK.guard.map(s => bookLine(s, L)), letterAsk(L, BOOK.guardYes, BOOK.guardNo, undefined, bookLine(BOOK.askGuard, L))];
     }
     else if (n.id === 'bard' && !n.chicken && !n.awake) {
       if (!G.flags.rod) { lines = FISH.bard; after = () => this.run(rodScene); }
@@ -1846,7 +1847,7 @@ function hermitLetters(i) {
   if (!L) return [...(i ? BOOK.hermitBye : BOOK.hermitKnown)];
   if (i >= 12) return [...BOOK.hermitBye];
   const pre = i ? [...BOOK.hermitMore[Math.min(i, 2) - 1], ...BOOK.hermitFond] : BOOK.hermitFirst;
-  return [...pre.map(s => bookLine(s, L)), letterAsk(L, [BOOK.hermitYes[i % 3]], [BOOK.hermitNo[i % 3]], () => hermitLetters(i + 1))];
+  return [...pre.map(s => bookLine(s, L)), letterAsk(L, [BOOK.hermitYes[i % 3]], [BOOK.hermitNo[i % 3]], () => hermitLetters(i + 1), bookLine(BOOK.askHermit, L))];
 }
 
 // Book mode: the apprentice stops you as you come out of the house, lends you the

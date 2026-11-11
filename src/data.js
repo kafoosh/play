@@ -576,7 +576,8 @@ export function cardReading(cards) {
 // (the tests check this). Each page has seven or eight such words, few enough that three
 // yes/no letter questions always tell them apart: the apprentice asks two ("DOES THE WORD
 // YOU'RE THINKING OF HAVE AN R IN IT?", then "WAS THERE A G IN IT?") and
-// the bridge guard the third. Then the wizard names the word.
+// the bridge guard the third, as help with a password he's forgotten ("DO YOU HAVE A
+// WORD IN MIND WITH AN L?"). Then the wizard names the word.
 export const TOME = [
   { title: 'I. THE WINDS', text: 'ONCE THE WINDS WANDERED THE KINGDOM. THE NORTHERN WINDS BROUGHT SNOWFALL. THE SOUTHERN WINDS BROUGHT BIRDSONG.' },
   { title: 'II. THE TOWER', text: 'THE VILLAGERS RAISED A TOWER, AND THE WINDS SLEPT IN IT. A YOUNG WIZARD LISTENED.' },
@@ -658,12 +659,16 @@ export const BOOK = {
   fizzledWasnt: ['NO. OF COURSE NOT.', 'THAT WAS IT, THEN. THAT WAS ALL OF IT.'],
   bye: ['HOW DOES THE MASTER DO THIS?', 'I NEED MORE PRACTICE. I\'LL TAKE THE BOOK BACK.', 'KEEP YOUR WORD IN MIND. THE MASTER\'S NORTH, OVER THE BRIDGE.'],
   // the bridge guard, the first time you talk to him
-  guard: ['HALT! WHO GOES THERE?', '...{N}? THE WIZARD SAID YOU\'D COME.', 'RULES ARE RULES. WHAT\'S THE PASSWORD?', '...YOU DON\'T KNOW IT. NOBODY DOES.', 'FINE. EASIER QUESTION.'],
-  guardYes: ['CLOSE ENOUGH. PASS.'],
-  guardNo: ['NO? ...WHATEVER. PASS.'],
+  // he's forgotten the password himself, and asks for help with it
+  guard: ['HALT! WHO GOES THERE?', '...{N}? THE WIZARD SAID YOU\'D COME.', 'RULES ARE RULES. I NEED THE PASSWORD.', '...EXCEPT I CAN\'T REMEMBER IT.', 'I KNOW IT HAD {AL} IN IT.'],
+  askGuard: 'DO YOU HAVE A WORD IN MIND WITH {AL}?',
+  guardYes: ['THAT\'LL DO. DON\'T TELL ME. PASS.'],
+  guardNo: ['NO? ...NOBODY EVER DOES. PASS.'],
   // the hermit in the woods: one question, more if he needs them
   hermit: ['WAIT, TRAVELLER.', 'OFF TO SEE THE WIZARD?'],
-  hermitFirst: ['I COLLECT WORDS. THE BEST ONES HAVE {AL}.', '{W1}. {W2}. LOVELY.'],
+  // he's after words for his collection, and asks if you've got one
+  hermitFirst: ['I COLLECT WORDS. TODAY I\'M AFTER ONES WITH {AL}.', '{W1}. {W2}. LOVELY.'],
+  askHermit: 'GOT A WORD IN MIND WITH {AL}?',
   hermitMore: [['ONE MORE. I\'M FUSSY.'], ['A TRICKY ONE. I LIKE THAT.']],
   hermitFond: ['I\'M FOND OF {AL} TOO. {W1}. {W2}.'],
   hermitYes: ['HA! GOOD WORD.', 'OHH. NICE.', 'I KNEW IT.'],
