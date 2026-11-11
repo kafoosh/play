@@ -324,6 +324,7 @@ test('book: every line can be drawn and fits the box', () => {
     for (const s of flat(BOOK)) all.push(bookLine(s, L));
     assert.ok(wrap(BOOK.askClosed, 23).length <= 3, 'the YES/NO question fits one box');
     assert.ok(wrap(bookLine(BOOK.askFizzled, L), 23).length <= 3, 'his second question fits one box');
+    for (const k of ['askGuard', 'askHermit']) assert.ok(wrap(bookLine(BOOK[k], L), 23).length <= 3, `${k} fits one box`);
     assert.ok(wrap(letterQuestion(L), 23).length <= 3, 'the question fits one box');
   }
   for (const s of all) {
