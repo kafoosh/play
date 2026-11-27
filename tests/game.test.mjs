@@ -362,14 +362,13 @@ const scrollDeals = () => {
   return out;
 };
 
-test('symbol: twelve symbols in two inks on every scroll', () => {
+test('symbol: twelve symbols, six in each ink, on every scroll', () => {
   assert.equal(SYMBOLS.length, 12);
   assert.equal(new Set(SYMBOLS).size, 12);
   const seen = new Set();
   for (const d of scrollDeals()) {
     assert.equal(d.red.length, 12);
-    const reds = d.red.filter(Boolean).length;
-    assert.ok(reds >= 5 && reds <= 7, 'a fair mix of the two inks');
+    assert.equal(d.red.filter(Boolean).length, 6);
     assert.deepEqual([...d.syms].sort((a, b) => a - b), SYMBOLS.map((_, i) => i));
     seen.add(d.red.join());
   }
@@ -391,8 +390,7 @@ test('symbol: every start and every choice ends on the same symbol', () => {
       }
       at = next; sizes.push(at.size);
     });
-    assert.equal(sizes[sizes.length - 1], 1);
-    sizes.forEach((n, k) => assert.ok(!k || n <= sizes[k - 1], 'the places only ever narrow'));
+    assert.deepEqual(sizes, [6, 3, 3, 1]);
     assert.deepEqual([...at], [d.end]);
     assert.equal(d.sym, d.syms[d.end]);
   }
@@ -414,8 +412,7 @@ test('symbol: the symbol changes from game to game', () => {
   let s = 7; const rand = () => { s = (s * 1103515245 + 12345) % 2147483648; return s / 2147483648; };
   for (let i = 0; i < 400; i++) { const d = scrollDeal(rand); syms.add(d.sym); cells.add(d.end); }
   assert.equal(syms.size, 12, 'any of the twelve can come up');
-  assert.equal(cells.size, 8); // every place but the four corners
-  for (const c of [0, 3, 8, 11]) assert.ok(!cells.has(c));
+  assert.deepEqual([...cells].sort((a, b) => a - b), [4, 5, 6, 7]); // anywhere in the middle row
 });
 
 test('symbol: each hop line says the way that hop goes, and its ink', () => {

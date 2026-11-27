@@ -212,11 +212,11 @@ taps are ignored, and the cheat sheet shows `SYMBOL FORCE (URL)`.
 1. As they step out of the house, the fortune teller stops them: "DO YOU HAVE A SYMBOL
    IN MIND FOR THE WIZARD?" "NO? HERE, CHOOSE ONE FROM THIS SCROLL." He doesn't wait
    for an answer.
-2. He unrolls a scroll of twelve symbols, four across and three down, some in red ink
-   and some in black: circle, square, triangle, star, heart, moon, sun, cross, arrow,
+2. He unrolls a scroll of twelve symbols, four across and three down, six in red ink
+   and six in black: circle, square, triangle, star, heart, moon, sun, cross, arrow,
    spiral, eye, key. They think of any one.
 3. "TOO EASY. THE WIZARD WOULD SEE IT A MILE OFF." So they move it around, in their
-   head, with four hops. Each is one text box, for example:
+   head, with four hops. Each is one text box (the inks may be the other way round):
    - "GO UP, DOWN, LEFT OR RIGHT TO THE NEAREST RED SYMBOL."
    - "NOW GO UP OR DOWN TO THE NEAREST BLACK SYMBOL."
    - "UP OR DOWN AGAIN, TO THE NEAREST RED SYMBOL."
@@ -230,32 +230,28 @@ taps are ignored, and the cheat sheet shows `SYMBOL FORCE (URL)`.
 
 **How it works.** It's a grid force of the kind Derren Brown used for the photographs
 in *Séance*: every instruction leaves a choice, but the inks are laid out so that all
-the choices run together. There are three layouts, so the symbol's place moves about
+the choices run together. There are two layouts, so the symbol's place moves about
 (R red, B black, brackets where everyone ends):
 
 ```
- 1. R  B  B  R      2. B  R  R  B      3. R  R  B  B
-    R  R [B] R         R  R  R [B]        B  R  R  R
-    B  R  B  B         R  B  B  B         B [B] B  B
+ 1. R  B  B  R      2. B  R  R  B
+    R  R [B] R         R  R  R [B]
+    B  R  B  B         R  B  B  B
 ```
-
-| Layout | Hop 1 | Hop 2 | Hop 3 | Hop 4 | Places left |
-|---|---|---|---|---|---|
-| 1 and 2 | any way, to red | up or down, to black | up or down, to red | left or right, to black | 12, 6, 3, 3, 1 |
-| 3 | any way, to red | left or right, to black | left or right, to red | up or down, to black | 12, 5, 2, 2, 1 |
 
 Take layout 1. After hop 1 they are on one of the six reds. Up or down to black leaves
 three places (bottom left, top second, bottom right). Up or down to red takes each of
-those into the middle row, and the middle row has only one black.
+those into the middle row, and the middle row has only one black. Layout 2 runs the
+same way. So twelve free choices become 6, 3, 3 and then 1.
 
 From the second hop on, every hop is to the other ink from the one they stand on, so
 "the nearest red" can never be taken to mean "stay here"; on the first hop, staying is
 harmless. The tests walk every start and every choice on every scroll.
 
 Each game picks a layout, mirrors it left-right or top-bottom, may swap the inks, and
-shuffles the symbols over the twelve places: 24 scrolls in all. The forced place can be
-any of the eight that aren't corners, any of the twelve symbols can come up, and the
-wording follows the scroll. Layout 3 has five symbols in one ink and seven in the other.
+shuffles the symbols over the twelve places: 16 scrolls in all. The forced place can be
+any of the four in the middle row, any of the twelve symbols can come up, and the inks
+named in the hops follow the scroll.
 
 There's no safety net: "nearest" has to be followed. Someone who hops past the nearest
 symbol to a further one, or moves diagonally, can end up somewhere else.

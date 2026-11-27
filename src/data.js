@@ -570,18 +570,17 @@ export function cardReading(cards) {
 
 // ---------------------------------------------------------------- the fortune teller's scroll
 // Symbol mode (play.oddpaq.com/!symbol): a grid force, nothing to enter. The fortune
-// teller shows a scroll of twelve symbols, four across and three down, some in red ink
-// and some in black. The spectator thinks of any one, then hops four times in their
-// head, each time to the nearest symbol of the ink he names. The first hop may go up,
-// down, left or right; the others go along a row or along a column.
+// teller shows a scroll of twelve symbols, four across and three down, six in red ink
+// and six in black. The spectator thinks of any one, then hops four times in their head,
+// each time to the nearest symbol of the ink he names:
+//   1. up, down, left or right    2. up or down    3. up or down    4. left or right
 // The inks are laid out so that every start, and every choice on the way, ends on the
 // same symbol (the tests walk all of them). Each hop is to the other ink from the one
 // they stand on, so nobody can take "nearest" to mean "stay here"; on the first hop,
 // staying is harmless.
-// There are three layouts, each with its own hops, so the symbol's place moves about:
-// the middle row's inner places, the middle row's ends, or the inner places of the top
-// and bottom rows. Each game picks one, mirrors it (left-right, top-bottom), may swap
-// the two inks, and shuffles the symbols.
+// There are two layouts, so the symbol's place moves about: one ends on an inner place
+// of the middle row, the other at an end of it. Each game picks one, mirrors it
+// (left-right, top-bottom), may swap the two inks, and shuffles the symbols.
 export const SYMBOLS = ['CIRCLE', 'SQUARE', 'TRIANGLE', 'STAR', 'HEART', 'MOON', 'SUN', 'CROSS', 'ARROW', 'SPIRAL', 'EYE', 'KEY'];
 export const SCROLL_W = 4, SCROLL_H = 3;
 // ink: the rows of the scroll. hops: for each hop, the lines they may move along and the
@@ -589,7 +588,6 @@ export const SCROLL_W = 4, SCROLL_H = 3;
 const SCROLLS = [
   { ink: ['RBBR', 'RRBR', 'BRBB'], hops: [['any', 'R'], ['col', 'B'], ['col', 'R'], ['row', 'B']] }, // ends in the middle row, third along
   { ink: ['BRRB', 'RRRB', 'RBBB'], hops: [['any', 'R'], ['col', 'B'], ['col', 'R'], ['row', 'B']] }, // ends at the end of the middle row
-  { ink: ['RRBB', 'BRRR', 'BBBB'], hops: [['any', 'R'], ['row', 'B'], ['row', 'R'], ['col', 'B']] }, // ends in the bottom row, second along
 ];
 export const SCROLL_COUNT = SCROLLS.length;
 const HOP_DIRS = { row: [[1, 0], [-1, 0]], col: [[0, 1], [0, -1]], any: [[1, 0], [-1, 0], [0, 1], [0, -1]] };
