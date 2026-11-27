@@ -304,19 +304,62 @@ export function makeScroll(word) {
   const lines = big ? [word] : wrap(word, 20).slice(0, 4);
   const tw = Math.max(...lines.map(l => textWidth(l, sc)));
   const w = Math.max(60, tw + 20), lh = 7 * sc + 5, h = lines.length * lh + 26;
-  const [c, x] = makeCanvas(w + 6, h);
-  x.fillStyle = C.ink; x.fillRect(3, 4, w, h - 8);
-  x.fillStyle = '#f7e8c2'; x.fillRect(4, 5, w - 2, h - 10);
-  x.fillStyle = '#e2c992'; x.fillRect(4, 5, 2, h - 10); x.fillRect(w - 1, 5, 2, h - 10);
-  x.fillStyle = '#efdcae'; for (let i = 0; i < 6; i++) x.fillRect(8 + ((hash(i, w) * (w - 12)) | 0), 9 + ((hash(i, h) * (h - 20)) | 0), 3, 1);
-  for (const ry of [0, h - 8]) {
+  const [c, x] = blankScroll(w, h - 16);
+  lines.forEach((l, i) => textCenter(x, l, (w + 6) / 2, 13 + i * lh, '#4a2a4a', sc));
+  return c;
+}
+
+// The twelve symbols on the fortune teller's scroll (symbol mode), 11x11, in the order of
+// SYMBOLS in data.js: circle, square, triangle, star, heart, moon, sun, cross, arrow,
+// spiral, eye, key.
+const SYMBOL_ART = [
+  ['...#####...', '..#######..', '.###...###.', '###.....###', '##.......##', '##.......##', '##.......##', '###.....###', '.###...###.', '..#######..', '...#####...'],
+  ['###########', '###########', '##.......##', '##.......##', '##.......##', '##.......##', '##.......##', '##.......##', '##.......##', '###########', '###########'],
+  ['.....#.....', '....###....', '....###....', '...##.##...', '...##.##...', '..##...##..', '..##...##..', '.##.....##.', '.##.....##.', '###########', '###########'],
+  ['.....#.....', '.....#.....', '....###....', '....###....', '###########', '.#########.', '..#######..', '..#######..', '.####.####.', '.###...###.', '.#.......#.'],
+  ['...........', '.###...###.', '#####.#####', '###########', '###########', '###########', '.#########.', '..#######..', '...#####...', '....###....', '.....#.....'],
+  ['....####...', '..####.....', '.####......', '.###.......', '####.......', '####.......', '####.......', '.###......#', '.####...###', '..########.', '....####...'],
+  ['.....#.....', '.#...#...#.', '..#.....#..', '....###....', '...#####...', '##.#####.##', '...#####...', '....###....', '..#.....#..', '.#...#...#.', '.....#.....'],
+  ['....###....', '....###....', '....###....', '....###....', '###########', '###########', '###########', '....###....', '....###....', '....###....', '....###....'],
+  ['.....#.....', '....###....', '...#####...', '..#######..', '.#########.', '....###....', '....###....', '....###....', '....###....', '....###....', '....###....'],
+  ['###########', '#.........#', '#.#######.#', '#.#.....#.#', '#.#.###.#.#', '#.#.#.#.#.#', '#.#.#...#.#', '#.#.#####.#', '#.#.......#', '#.#########', '#..........'],
+  ['...........', '...........', '...#####...', '.##.....##.', '##..###..##', '#...###...#', '##..###..##', '.##.....##.', '...#####...', '...........', '...........'],
+  ['...........', '...........', '.###.......', '##.##......', '#...#######', '#...#######', '##.##..#.#.', '.###...#.#.', '...........', '...........', '...........'],
+];
+export const SYMBOL_INK = { red: '#c8242c', black: '#241a1e' };
+export function drawSymbol(x, i, ox, oy, red, scale = 1) {
+  x.fillStyle = red ? SYMBOL_INK.red : SYMBOL_INK.black;
+  SYMBOL_ART[i].forEach((row, j) => { for (let k = 0; k < 11; k++) if (row[k] === '#') x.fillRect(ox + k * scale, oy + j * scale, scale, scale); });
+}
+// A blank scroll: parchment between two wooden rods. w, h: the size of the parchment
+// between the rods. Returns [canvas, context, x, y] with x, y the parchment's corner.
+function blankScroll(w, h) {
+  const H = h + 16, [c, x] = makeCanvas(w + 6, H);
+  x.fillStyle = C.ink; x.fillRect(3, 4, w, H - 8);
+  x.fillStyle = '#f7e8c2'; x.fillRect(4, 5, w - 2, H - 10);
+  x.fillStyle = '#e2c992'; x.fillRect(4, 5, 2, H - 10); x.fillRect(w - 1, 5, 2, H - 10);
+  x.fillStyle = '#efdcae'; for (let i = 0; i < 6; i++) x.fillRect(8 + ((hash(i, w) * (w - 12)) | 0), 9 + ((hash(i, H) * (H - 20)) | 0), 3, 1);
+  for (const ry of [0, H - 8]) {
     x.fillStyle = C.woodO; x.fillRect(0, ry, w + 6, 8);
     x.fillStyle = C.woodL; x.fillRect(1, ry + 1, w + 4, 6);
     x.fillStyle = C.wood; x.fillRect(1, ry + 4, w + 4, 3);
     x.fillStyle = C.woodD; x.fillRect(1, ry + 6, w + 4, 1);
     x.fillStyle = C.gold; x.fillRect(0, ry + 2, 1, 4); x.fillRect(w + 5, ry + 2, 1, 4);
   }
-  lines.forEach((l, i) => textCenter(x, l, (w + 6) / 2, 13 + i * lh, '#4a2a4a', sc));
+  return [c, x, 3, 8];
+}
+// The fortune teller's scroll: the symbols in rows of `cols`, each in its ink.
+export function makeSymbolScroll(syms, red, cols) {
+  const rows = Math.ceil(syms.length / cols), sx = 21, sy = 17, pad = 9;
+  const [c, x, px, py] = blankScroll(cols * sx - (sx - 11) + pad * 2, rows * sy - (sy - 11) + 12);
+  syms.forEach((s, i) => drawSymbol(x, s, px + pad + (i % cols) * sx, py + 6 + Math.floor(i / cols) * sy, red[i]));
+  return c;
+}
+// One symbol, large, with its name under it: the wizard's reveal in symbol mode.
+export function makeSymbolReveal(sym, red, name) {
+  const w = Math.max(60, textWidth(name) + 20), [c, x, px, py] = blankScroll(w, 56);
+  drawSymbol(x, sym, px + Math.round((w - 33) / 2), py + 6, red, 3);
+  textCenter(x, name, px + w / 2, py + 44, '#4a2a4a');
   return c;
 }
 

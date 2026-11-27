@@ -1,5 +1,5 @@
-import { C, UI, text, textCenter, textWidth, tinyText, hatSprite, wingSprite, keySprite, potionSprite, fishSprite, dogBellySprite, luteSprite, fanSprite, wrap, box, blob, glow, glyphDots, drawCard, cardBack, makeScroll, miniCard, MINI_W, MINI_H, charSprite, drawTile, drawOver, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
-import { MAPS, LOOKS, NPCS, SCRIPT, cardName, decodeWord, VALUE_GRID, CHASED, CLASSES, SKINS, HAIRS, OUCH, GRUDGE, KONAMI, EGG, squawk, QUEST, FISH, AWARD, FORTUNE, fortuneTarget, fortunePicks, jokerReading, cardReading, TOME, BOOK, bookNext, bookWord, bookLine, letterQuestion } from './data.js';
+import { C, UI, text, textCenter, textWidth, tinyText, hatSprite, wingSprite, keySprite, potionSprite, fishSprite, dogBellySprite, luteSprite, fanSprite, wrap, box, blob, glow, glyphDots, drawCard, cardBack, makeScroll, makeSymbolScroll, makeSymbolReveal, miniCard, MINI_W, MINI_H, charSprite, drawTile, drawOver, flame, makeCanvas, hash, shade, VALUE_LABEL } from './art.js';
+import { MAPS, LOOKS, NPCS, SCRIPT, cardName, decodeWord, VALUE_GRID, CHASED, CLASSES, SKINS, HAIRS, OUCH, GRUDGE, KONAMI, EGG, squawk, QUEST, FISH, AWARD, FORTUNE, fortuneTarget, fortunePicks, jokerReading, cardReading, TOME, BOOK, bookNext, bookWord, bookLine, letterQuestion, SYMBOLS, SCROLL, SCROLL_W, scrollDeal, scrollLines } from './data.js';
 import * as Audio from './audio.js';
 
 // The game draws at a low resolution that follows the screen's shape: VW x VH game pixels.
@@ -23,6 +23,8 @@ if (window.__force) { G.armed = { ...window.__force }; G.locked = true; }
 if (window.__fortune) { G.armed = { v: null, s: null, fortune: true }; G.locked = true; }
 // "/!book": the apprentice's book test. The word comes from the letter questions.
 if (window.__book) { G.armed = { v: null, s: null, book: true, word: null }; G.locked = true; }
+// "/!symbol": the fortune teller's scroll. The symbol is the one his four hops end on.
+if (window.__symbol) { G.armed = { v: null, s: null, symbol: true, sym: null, red: false }; G.locked = true; }
 if (window.__forceWord) { const w = decodeWord(window.__forceWord); if (w) { G.armed = { v: null, s: null, word: w }; G.locked = true; } }
 const armedCard = () => ({ v: G.armed.v || 1, s: G.armed.s || 'S' });
 const fill = s => s.replace(/\{N\}/g, G.name || 'HERO');
@@ -556,7 +558,7 @@ function drawCheat() {
   });
   const a = G.armed;
   const lab = a.v || a.s ? `${a.v ? a.v : '?'}${a.s ? { C: '♣', H: '♥', S: '♠', D: '♦' }[a.s] : '?'}` : '--';
-  textCenter(ctx, a.fortune ? 'FORTUNE TELLER (URL)' : a.book ? 'BOOK TEST (URL)' : a.word ? 'WORD: ' + a.word.slice(0, 16) : 'ARMED: ' + lab + (G.locked ? ' (URL)' : ''), 80, 116, UI.accent);
+  textCenter(ctx, a.fortune ? 'FORTUNE TELLER (URL)' : a.symbol ? 'SYMBOL FORCE (URL)' : a.book ? 'BOOK TEST (URL)' : a.word ? 'WORD: ' + a.word.slice(0, 16) : 'ARMED: ' + lab + (G.locked ? ' (URL)' : ''), 80, 116, UI.accent);
   textCenter(ctx, 'TAP TO CLOSE', 80, 126, UI.dim);
   ctx.restore();
 }
@@ -722,7 +724,7 @@ const Play = {
   start() {
     G.flags = {};
     G.book = { page: 0, answers: [] };
-    this.npcs = NPCS.filter(n => (!n.fortuneOnly || G.armed.fortune) && (!n.bookOnly || G.armed.book)).map(n => ({
+    this.npcs = NPCS.filter(n => (!n.fortuneOnly || G.armed.fortune || G.armed.symbol) && (!n.bookOnly || G.armed.book)).map(n => ({
       ...n, look: LOOKS[n.look], dir: n.dir || 'down', px: n.x * 16, py: n.y * 16, home: { x: n.x, y: n.y },
       moving: false, t: 0, timer: 1 + Math.random() * 2, frame: 0, anim: Math.random() * 3, talked: 0,
     }));
@@ -746,6 +748,7 @@ const Play = {
     Audio.music(this.map.def.music);
     if (mapName === 'world' && G.flags.wingsDue && !G.flags.wings) this.run(wingsScene);
     if (mapName === 'world' && G.armed.fortune && !G.flags.fortune) this.run(fortuneScene);
+    if (mapName === 'world' && G.armed.symbol && !G.flags.symbol) this.run(symbolScene);
     if (mapName === 'world' && G.armed.book && !G.flags.book) this.run(bookScene);
   },
   run(gen) { this.script = gen.call(this); this.waitFn = null; },
@@ -895,7 +898,7 @@ const Play = {
     // effects
     this.fx.flash = Math.max(0, this.fx.flash - dt * 1.4);
     Table.update(dt);
-    Tome.update(dt);
+    Tome.update(dt); Scroll.update(dt);
     if (this.card) this.card.t += dt;
     if (this.award) this.award.t += dt;
     updateParts(dt);
@@ -1089,7 +1092,8 @@ const Play = {
   talkTo(n) {
     if (n.id === 'wizard') { if (!G.flags.met) this.run(wizardScene); return; }
     if (!n.sleep && n.look.kind !== 'frog') n.dir = OPP[this.p.dir];
-    let lines = n.cycle ? [n.cycle[n.talked % n.cycle.length]] : n.talked && n.again ? n.again : n.talk, after = null;
+    const cycle = n.id === 'seer' && G.armed.symbol ? SCROLL.cycle : n.cycle;
+    let lines = cycle ? [cycle[n.talked % cycle.length]] : n.talked && n.again ? n.again : n.talk, after = null;
     const W = ['circe', 'bess', 'pennatella'];
     if (W.includes(n.id) && !G.flags.potion && !n.chicken) {
       if (!n.told) {
@@ -1253,6 +1257,7 @@ const Play = {
     Table.draw();
     drawParts(cx, cy);
     Tome.draw();
+    Scroll.draw();
     if (this.card) this.drawReveal();
     if (this.fx.flash > 0) { ctx.fillStyle = `rgba(255,255,255,${Math.min(1, this.fx.flash)})`; ctx.fillRect(0, 0, VW, VH); }
     this.dialogY = dialogBoxY(p.py - cy);
@@ -1431,7 +1436,7 @@ const Play = {
     if (!this.cardCanvas) this.cardCanvas = revealCanvas(c);
     const rc = this.cardCanvas, rw = Math.round(rc.width * step), rh = Math.round(rc.height * step);
     ctx.drawImage(rc, cxp - rw / 2 | 0, cyp - rh / 2 | 0, rw, rh);
-    if (c.t > 0.9) textCenter(ctx, c.word ? 'THE WIND SAYS:' : cardName(c.v, c.s), cxp, cyp - rc.height / 2 - 13, C.gold, 1, C.ink);
+    if (c.t > 0.9) textCenter(ctx, c.word || c.sym != null ? 'THE WIND SAYS:' : cardName(c.v, c.s), cxp, cyp - rc.height / 2 - 13, C.gold, 1, C.ink);
     if (c.waitA && c.t > 1.6 && Math.floor(G.time * 3) % 2) text(ctx, '▼', cxp + 30, cyp + rc.height / 2 + 6, C.gold);
   },
 };
@@ -1750,6 +1755,27 @@ const Tome = {
   },
 };
 
+// ================================================================ the fortune teller's scroll
+// Symbol mode: the scroll of twelve symbols, held up above his text box while he talks.
+// It takes no input. It unrolls from the middle when it opens.
+const Scroll = {
+  on: false, t: 0, canvas: null,
+  open(deal) { this.on = true; this.t = 0; this.canvas = makeSymbolScroll(deal.syms, deal.red, SCROLL_W); },
+  close() { this.on = false; },
+  update(dt) { if (this.on) this.t += dt; },
+  draw() {
+    if (!this.on) return;
+    const c = this.canvas, room = UIB - 46 - 14; // down to the name tag on his text box
+    const x = Math.round((UIX0 + UIX1 - c.width) / 2), y = Math.max(2, Math.round((room - c.height) / 2));
+    ctx.fillStyle = 'rgba(10,6,20,0.55)'; ctx.fillRect(0, 0, VW, VH);
+    // the two rods part and the parchment shows between them
+    const k = 1 - Math.pow(1 - Math.min(1, this.t / 0.45), 3), half = Math.round((c.height / 2 - 8) * k), mid = y + (c.height >> 1);
+    if (half > 0) ctx.drawImage(c, 0, (c.height >> 1) - half, c.width, half * 2, x, mid - half, c.width, half * 2);
+    ctx.drawImage(c, 0, 0, c.width, 8, x, mid - half - 8, c.width, 8);
+    ctx.drawImage(c, 0, c.height - 8, c.width, 8, x, mid + half, c.width, 8);
+  },
+};
+
 // ---------------------------------------------------------------- script helpers
 const wait = s => { const until = Play.time + s; return () => Play.time >= until; };
 function* talk(lines, low = false, pos = null, name = null) { say(lines, { low, pos: pos || 'auto', name }); yield () => !D.active; }
@@ -1758,6 +1784,8 @@ function* talk(lines, low = false, pos = null, name = null) { say(lines, { low, 
 const henWizard = () => !!(Play.npcs && Play.npc('wizard').chicken);
 const wz = l => (henWizard() ? squawk(fill(l)) : l);
 const ask = (q = SCRIPT.ask) => ({ ask: wz(q), yes: [], no: () => [...SCRIPT.askNo.map(wz), ask(SCRIPT.askAgain)] });
+// Symbol mode: NO sends them back to the symbol they stopped on, not to a new one.
+const askSymbol = (q = SCROLL.wizardAsk) => ({ ask: wz(q), yes: [], no: () => [...SCROLL.wizardNo.map(wz), askSymbol(SCRIPT.askAgain)] });
 const askWord = (q = SCRIPT.askWord) => ({ ask: wz(q), yes: [], no: () => [...SCRIPT.askNoWord.map(wz), askWord(SCRIPT.askAgain)] });
 // Book mode: one letter question. Its answer is kept as answer number k, so going back
 // with B and answering again replaces it, and the questions after it are worked out anew.
@@ -1771,9 +1799,10 @@ function letterAsk(L, yes, no, then = () => [], q = letterQuestion(L)) {
 // The next letter to ask, or null once the word is known: no question is ever asked for show.
 const nextLetter = () => bookNext(G.book.page, G.book.answers);
 // The thing the wizard reveals: the armed word on a scroll, or the armed card.
-const armedReveal = () => (G.armed.word ? { word: G.armed.word } : armedCard());
+const armedReveal = () => (G.armed.word ? { word: G.armed.word } : G.armed.symbol ? { sym: G.armed.sym || 0, red: G.armed.red } : armedCard());
 function revealCanvas(r) {
   if (r.word) return makeScroll(r.word);
+  if (r.sym != null) return makeSymbolReveal(r.sym, r.red, SYMBOLS[r.sym]);
   const [c, x] = makeCanvas(48, 64); drawCard(x, 0, 0, r.v, r.s); return c;
 }
 
@@ -1829,6 +1858,7 @@ function* hermitScene() {
   const word = !!G.armed.word;
   const lucky = !word && G.armed.fortune; // fortune mode: the lucky card from the fortune teller
   if (G.armed.book) yield* talk([...BOOK.hermit, ...hermitLetters(0)], false, null, 'HERMIT');
+  else if (G.armed.symbol) yield* talk([...Q.hello, { ask: SCROLL.hermitAsk, yes: SCROLL.hermitYes, no: SCROLL.hermitNo }], false, null, 'HERMIT');
   else yield* talk([...Q.hello, { ask: word ? Q.askWord : lucky ? Q.askLucky : Q.askCard, yes: lucky ? Q.yesLucky : Q.yes, no: lucky ? Q.noLucky : Q.no }], false, null, 'HERMIT');
   // then she goes back to her spot, off the path
   for (let i = 0; i < 12 && !(h.x === h.home.x && h.y === h.home.y); i++) {
@@ -1953,6 +1983,35 @@ function* fortuneScene() {
   yield* say2([...cardReading(cards), F.close[0]]);
   Table.close();
   yield* say2(F.close.slice(1));
+  this.reading = false;
+  yield* walkTo.call(this, f, (x, y) => x === f.home.x && y === f.home.y);
+  f.dir = 'left';
+}
+
+// Symbol mode: the fortune teller stops you as you come out of the house, unrolls his
+// scroll and talks you through four hops. Nothing is entered: the scroll is laid out so
+// that every start ends on the same symbol, and that is the one the wizard reveals.
+function* symbolScene() {
+  G.flags.symbol = 1; this.reading = true;
+  const f = this.npc('seer'), p = this.p, S = SCROLL;
+  const say2 = lines => talk(lines, false, 'bottom', 'FORTUNE TELLER');
+  yield wait(0.4);
+  parts.push({ k: 'say', text: '!', x: f.px + 8, y: f.py - 9, vy: -10, life: 0.9, world: true });
+  Audio.sfx('select');
+  yield wait(0.6);
+  yield* walkTo.call(this, f, (x, y) => Math.abs(x - p.x) + Math.abs(y - p.y) === 1);
+  const dx = p.x - f.x, dy = p.y - f.y;
+  f.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+  p.dir = OPP[f.dir];
+  yield* say2(S.hello);
+  const deal = scrollDeal();
+  G.armed.sym = deal.sym; G.armed.red = deal.red[deal.end];
+  Scroll.open(deal); Audio.sfx('twinkle');
+  // one conversation while the scroll is open, so B can go back to an earlier hop
+  yield* say2([...S.pick, ...scrollLines(deal), ...S.stop]);
+  Scroll.close(); Audio.sfx('door');
+  yield wait(0.3);
+  yield* say2(S.close);
   this.reading = false;
   yield* walkTo.call(this, f, (x, y) => x === f.home.x && y === f.home.y);
   f.dir = 'left';
@@ -2171,7 +2230,7 @@ function* wizardScene() {
   // book mode: any letters nobody asked on the way (the hermit was a chicken, say), he asks
   const more = () => { const L = bookNext(G.book.page, G.book.answers); return L ? [letterAsk(L, [], [], more)] : []; };
   const help = G.armed.book && bookNext(G.book.page, G.book.answers) ? [...BOOK.wizardHelp.map(wz), ...more()] : [];
-  yield* talk([...SCRIPT.wizard1.map(wz), word ? askWord() : ask(), ...w2.slice(0, -1), ...help, ...w2.slice(-1)], true, null, 'WIZARD');
+  yield* talk([...SCRIPT.wizard1.map(wz), word ? askWord() : G.armed.symbol ? askSymbol() : ask(), ...w2.slice(0, -1), ...help, ...w2.slice(-1)], true, null, 'WIZARD');
   if (G.armed.book) G.armed.word = bookWord(G.book.page, G.book.answers);
   // the wind returns
   Audio.stopMusic();
@@ -2197,7 +2256,7 @@ function* wizardScene() {
   setTimeout(() => Audio.music('fanfare'), 250);
   for (let i = 0; i < 30; i++) parts.push({ k: 'wind', x: cx - Math.random() * 60, y: cy + Math.random() * VH, vx: 200 + Math.random() * 100, vy: 0, len: 8 + (Math.random() * 10 | 0), life: 1.5, world: true });
   yield () => !this.card.waitA && this.card.t > 1.2;
-  const said = this.card.word || cardName(this.card.v, this.card.s);
+  const said = this.card.word || (this.card.sym != null ? SYMBOLS[this.card.sym] : cardName(this.card.v, this.card.s));
   yield* talk(henWizard() ? [`BUK BUK... ${said}!`, wz('FAREWELL, {N}.')] : SCRIPT.wizard3, true, 'bottom', 'WIZARD');
   yield wait(0.3);
   fadeTo(() => setScene(End), 0.6);
@@ -2282,7 +2341,7 @@ function frame(now) {
 const dbg = new URLSearchParams(location.search).get('scene');
 if (dbg) {
   G.name = 'KEN'; G.hero = makeHero(G.name, +(new URLSearchParams(location.search).get('cls') || 0));
-  if (!G.armed.v && !G.armed.word && !G.armed.fortune && !G.armed.book) G.armed = { v: 7, s: 'D' };
+  if (!G.armed.v && !G.armed.word && !G.armed.fortune && !G.armed.book && !G.armed.symbol) G.armed = { v: 7, s: 'D' };
   if (G.armed.book && dbg === 'end') G.armed.word = bookWord(0, []);
   if (dbg === 'end') setScene(End);
   else if (dbg === 'name') setScene(NameEntry);
@@ -2295,5 +2354,5 @@ if (dbg) {
   }
 } else setScene(Title);
 requestAnimationFrame(frame);
-window.__G = G; window.__D = D; window.__Table = Table; window.__Tome = Tome; window.__Play = Play; window.__SKY = SKY; window.__audio = Audio.audioState; window.__ac = Audio.audioCtx;
+window.__G = G; window.__D = D; window.__Table = Table; window.__Tome = Tome; window.__Scroll = Scroll; window.__Play = Play; window.__SKY = SKY; window.__audio = Audio.audioState; window.__ac = Audio.audioCtx;
 window.__sceneName = () => (G.scene === Title ? 'title' : G.scene === NameEntry ? 'name' : G.scene === ClassScene ? 'class' : G.scene === Play ? 'play' : 'end');

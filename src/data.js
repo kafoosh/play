@@ -254,7 +254,8 @@ export const NPCS = [
     talk: ['THE WIZARD IS WAITING FOR YOU, {N}.', 'A WORD OF ADVICE. DON\'T THINK TOO LOUD IN THERE.'],
     again: ['GO ON IN.'] },
 
-  // fortune mode only (play.oddpaq.com/!card): he stops you as you leave the house
+  // fortune mode (play.oddpaq.com/!card) and symbol mode (/!symbol) only: he stops you as you
+  // leave the house. In symbol mode he says SCROLL.cycle instead.
   { id: 'seer', name: 'FORTUNE TELLER', map: 'world', x: 17, y: 40, look: 'seer', dir: 'left', fortuneOnly: true,
     // after the reading: one of these each time you talk to him, in turn
     cycle: ['ONLY ONE LUCKY CARD PER CUSTOMER.', 'STILL HERE? THE WIZARD WON\'T WAIT FOREVER.', 'IS YOUR LUCKY CARD STILL FACE UP?', 'NORTH! OVER THE BRIDGE! SHOO!', 'IT\'S YOUR LIFE! I DON\'T CARE!'] },
@@ -566,6 +567,89 @@ export function cardReading(cards) {
       : 'A GOOD MIX. A GOOD DAY FOR A LONG WALK.',
   ];
 }
+
+// ---------------------------------------------------------------- the fortune teller's scroll
+// Symbol mode (play.oddpaq.com/!symbol): a grid force, nothing to enter. The fortune
+// teller shows a scroll of twelve symbols, four across and three down, six in red ink
+// and six in black. The spectator thinks of any one, then hops four times in their head,
+// each time to the nearest symbol of the ink he names:
+//   1. up, down, left or right    2. up or down    3. up or down    4. left or right
+// The inks are laid out so that every start, and every choice on the way, ends on the
+// same symbol (the tests walk all of them). Each hop is to the other ink from the one
+// they stand on, so nobody can take "nearest" to mean "stay here"; on the first hop,
+// staying is harmless.
+// There are two layouts, so the symbol's place moves about: one ends on an inner place
+// of the middle row, the other at an end of it. Each game picks one, mirrors it
+// (left-right, top-bottom), may swap the two inks, and shuffles the symbols.
+export const SYMBOLS = ['CIRCLE', 'SQUARE', 'TRIANGLE', 'STAR', 'HEART', 'MOON', 'SUN', 'CROSS', 'ARROW', 'SPIRAL', 'EYE', 'KEY'];
+export const SCROLL_W = 4, SCROLL_H = 3;
+// ink: the rows of the scroll. hops: for each hop, the lines they may move along and the
+// ink to land on.
+const SCROLLS = [
+  { ink: ['RBBR', 'RRBR', 'BRBB'], hops: [['any', 'R'], ['col', 'B'], ['col', 'R'], ['row', 'B']] }, // ends in the middle row, third along
+  { ink: ['BRRB', 'RRRB', 'RBBB'], hops: [['any', 'R'], ['col', 'B'], ['col', 'R'], ['row', 'B']] }, // ends at the end of the middle row
+];
+export const SCROLL_COUNT = SCROLLS.length;
+const HOP_DIRS = { row: [[1, 0], [-1, 0]], col: [[0, 1], [0, -1]], any: [[1, 0], [-1, 0], [0, 1], [0, -1]] };
+// Where hop k can take you from cell `pos` (cells count along the rows, 0-11): the
+// nearest symbol of that hop's ink in each direction allowed.
+export function scrollHop(deal, pos, k) {
+  const { line, red } = deal.hops[k], out = [];
+  for (const [dx, dy] of HOP_DIRS[line]) {
+    let x = pos % SCROLL_W + dx, y = Math.floor(pos / SCROLL_W) + dy;
+    for (; x >= 0 && x < SCROLL_W && y >= 0 && y < SCROLL_H; x += dx, y += dy)
+      if (deal.red[y * SCROLL_W + x] === red) { out.push(y * SCROLL_W + x); break; }
+  }
+  return out;
+}
+// A scroll for one game: red[cell], syms[cell] (indexes into SYMBOLS), the four hops,
+// and the cell and symbol everyone ends on.
+export function scrollDeal(rand = Math.random) {
+  const base = SCROLLS[Math.floor(rand() * SCROLLS.length) % SCROLLS.length];
+  const flipX = rand() < 0.5, flipY = rand() < 0.5, swap = rand() < 0.5, red = [];
+  for (let y = 0; y < SCROLL_H; y++) for (let x = 0; x < SCROLL_W; x++)
+    red.push((base.ink[flipY ? SCROLL_H - 1 - y : y][flipX ? SCROLL_W - 1 - x : x] === 'R') !== swap);
+  const syms = SYMBOLS.map((_, i) => i);
+  for (let i = syms.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)) % (i + 1); [syms[i], syms[j]] = [syms[j], syms[i]]; }
+  const deal = { red, syms, hops: base.hops.map(([line, ink]) => ({ line, red: (ink === 'R') !== swap })) };
+  let end = 0;
+  deal.hops.forEach((_, k) => { end = scrollHop(deal, end, k)[0]; });
+  return { ...deal, end, sym: syms[end] };
+}
+export const SCROLL = {
+  hello: ['PSST! {N}! OVER HERE!', 'I\'M THE VILLAGE FORTUNE TELLER.', 'DO YOU HAVE A SYMBOL IN MIND FOR THE WIZARD?', 'NO? HERE, CHOOSE ONE FROM THIS SCROLL.'],
+  pick: [
+    'ANY ONE YOU LIKE. DON\'T POINT! KEEP IT IN YOUR HEAD.',
+    'GOT ONE? TOO EASY. THE WIZARD WOULD SEE IT A MILE OFF.',
+    'LET\'S MOVE IT AROUND. IN YOUR HEAD. I WON\'T LOOK!',
+    'HOP FROM SYMBOL TO SYMBOL. SKIP OVER ANY THAT ARE IN THE WAY.',
+  ],
+  // one line for each hop; {WAY} is how that hop may go, {INK} is RED or BLACK
+  hop: [
+    'GO {WAY} TO THE NEAREST {INK} SYMBOL.',
+    'NOW GO {WAY} TO THE NEAREST {INK} SYMBOL.',
+    '{WAY} AGAIN, TO THE NEAREST {INK} SYMBOL.',
+    'LAST ONE! {WAY} TO THE NEAREST {INK} SYMBOL.',
+  ],
+  way: { any: 'UP, DOWN, LEFT OR RIGHT', col: 'UP OR DOWN', row: 'LEFT OR RIGHT' },
+  stop: ['STOP THERE! THAT\'S YOUR SYMBOL NOW.'],
+  close: [
+    'DON\'T TELL ME WHICH. I DON\'T WANT TO KNOW!',
+    'KEEP IT IN YOUR HEAD FOR THE WIZARD.',
+    'OFF YOU GO, {N}. NORTH, OVER THE BRIDGE.',
+    'IT\'S YOUR LIFE!',
+  ],
+  // after the scroll: one of these each time you talk to him, in turn
+  cycle: ['ONLY ONE SYMBOL PER CUSTOMER.', 'STILL HERE? THE WIZARD WON\'T WAIT FOREVER.', 'STILL GOT YOUR SYMBOL? GOOD.', 'NORTH! OVER THE BRIDGE! SHOO!', 'IT\'S YOUR LIFE! I DON\'T CARE!'],
+  // the hermit's check in the woods
+  hermitAsk: 'TELL ME. DO YOU HAVE A SYMBOL IN MIND?',
+  hermitYes: ['GOOD. IF THE WIZARD ASKS, THINK OF THAT SYMBOL.', 'GO ON.'],
+  hermitNo: ['NO? THE FORTUNE TELLER SHOWED YOU HIS SCROLL.', 'THE SYMBOL YOU STOPPED ON. THINK OF THAT ONE.', 'GO ON, THEN.'],
+  // the wizard
+  wizardAsk: 'TELL ME. ARE YOU THINKING OF A SYMBOL?',
+  wizardNo: ['THEN THINK OF THE ONE FROM THE SCROLL. THE ONE YOU STOPPED ON.', 'TAKE YOUR TIME. I AM VERY OLD. I CAN WAIT.'],
+};
+export const scrollLines = deal => SCROLL.hop.map((s, k) => s.replace('{WAY}', SCROLL.way[deal.hops[k].line]).replace('{INK}', deal.hops[k].red ? 'RED' : 'BLACK'));
 
 // ---------------------------------------------------------------- the apprentice's book
 // Book mode (play.oddpaq.com/!book): a self-working book test. The wizard's apprentice

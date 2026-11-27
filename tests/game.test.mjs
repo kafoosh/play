@@ -1,7 +1,7 @@
 // Run with: node --test tests/
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MAPS, NPCS, LOOKS, SCRIPT, parseForce, cardName, VALUE_GRID, encodeWord, decodeWord, CLASSES, OUCH, GRUDGE, EGG, squawk, KONAMI, QUEST, FISH, FORTUNE, AWARD, fortuneTarget, fortunePicks, jokerReading, cardReading, TOME, TOME_WORDS, FAV, BOOK, bookNext, bookWord, bookLine, letterQuestion, withArticle } from '../src/data.js';
+import { MAPS, NPCS, LOOKS, SCRIPT, parseForce, cardName, VALUE_GRID, encodeWord, decodeWord, CLASSES, OUCH, GRUDGE, EGG, squawk, KONAMI, QUEST, FISH, FORTUNE, AWARD, fortuneTarget, fortunePicks, jokerReading, cardReading, TOME, TOME_WORDS, FAV, BOOK, bookNext, bookWord, bookLine, letterQuestion, withArticle, SYMBOLS, SCROLL, scrollDeal, scrollHop, scrollLines, SCROLL_COUNT } from '../src/data.js';
 import { GLYPH_SET, GLYPH5_SET, wrap } from '../src/art.js';
 import { SONGS } from '../src/audio.js';
 
@@ -349,4 +349,97 @@ test('apprentice stands by the house in book mode only', () => {
   assert.ok(a && a.bookOnly && !a.fortuneOnly);
   assert.ok(Math.abs(a.x - 15) + Math.abs(a.y - 40) <= 3, 'near the front door');
   assert.ok(reach(MAPS.world, [15, 40], [`${a.x},${a.y}`]).has('16,4'), 'path stays open');
+});
+
+// ---------------------------------------------------------------- the fortune teller's scroll
+// every scroll there can be: each layout, mirrored or not each way, inks swapped or not
+const scrollDeals = () => {
+  const out = [];
+  for (let b = 0; b < SCROLL_COUNT; b++) for (let m = 0; m < 8; m++) {
+    const r = [(b + 0.5) / SCROLL_COUNT, ...[m & 1, m & 2, m & 4].map(v => (v ? 0 : 0.9))]; let i = 0;
+    out.push(scrollDeal(() => (i < 4 ? r[i++] : 0.37)));
+  }
+  return out;
+};
+
+test('symbol: twelve symbols, six in each ink, on every scroll', () => {
+  assert.equal(SYMBOLS.length, 12);
+  assert.equal(new Set(SYMBOLS).size, 12);
+  const seen = new Set();
+  for (const d of scrollDeals()) {
+    assert.equal(d.red.length, 12);
+    assert.equal(d.red.filter(Boolean).length, 6);
+    assert.deepEqual([...d.syms].sort((a, b) => a - b), SYMBOLS.map((_, i) => i));
+    seen.add(d.red.join());
+  }
+  assert.equal(seen.size, SCROLL_COUNT * 8, 'all different scrolls');
+});
+
+test('symbol: every start and every choice ends on the same symbol', () => {
+  for (const d of scrollDeals()) {
+    let at = new Set(d.syms.map((_, i) => i));
+    const sizes = [];
+    d.hops.forEach((h, k) => {
+      const next = new Set();
+      for (const pos of at) {
+        const to = scrollHop(d, pos, k);
+        assert.ok(to.length, `hop ${k + 1} from cell ${pos} has somewhere to go`);
+        for (const t of to) { assert.equal(d.red[t], h.red); next.add(t); }
+        // someone already on that ink might stay where they are: that must be safe too
+        if (d.red[pos] === h.red) next.add(pos);
+      }
+      at = next; sizes.push(at.size);
+    });
+    assert.deepEqual(sizes, [6, 3, 3, 1]);
+    assert.deepEqual([...at], [d.end]);
+    assert.equal(d.sym, d.syms[d.end]);
+  }
+});
+
+test('symbol: after the first hop, every hop is to the other ink', () => {
+  for (const d of scrollDeals()) {
+    let at = new Set(d.red.map((r, i) => (r === d.hops[0].red ? i : -1)).filter(i => i >= 0));
+    for (let k = 1; k < d.hops.length; k++) {
+      const next = new Set();
+      for (const pos of at) { assert.notEqual(d.red[pos], d.hops[k].red, `hop ${k + 1} from cell ${pos}`); scrollHop(d, pos, k).forEach(t => next.add(t)); }
+      at = next;
+    }
+  }
+});
+
+test('symbol: the symbol changes from game to game', () => {
+  const syms = new Set(), cells = new Set();
+  let s = 7; const rand = () => { s = (s * 1103515245 + 12345) % 2147483648; return s / 2147483648; };
+  for (let i = 0; i < 400; i++) { const d = scrollDeal(rand); syms.add(d.sym); cells.add(d.end); }
+  assert.equal(syms.size, 12, 'any of the twelve can come up');
+  assert.deepEqual([...cells].sort((a, b) => a - b), [4, 5, 6, 7]); // anywhere in the middle row
+});
+
+test('symbol: each hop line says the way that hop goes, and its ink', () => {
+  const way = SCROLL.way;
+  for (const d of scrollDeals()) {
+    const lines = scrollLines(d);
+    assert.equal(lines.length, d.hops.length);
+    d.hops.forEach((h, k) => {
+      assert.ok(lines[k].includes(way[h.line]), lines[k]);
+      if (h.line !== 'any') assert.ok(!lines[k].includes(way.any) && !lines[k].includes(h.line === 'col' ? way.row : way.col), lines[k]);
+      assert.ok(lines[k].includes(h.red ? ' RED ' : ' BLACK '), lines[k]);
+      assert.ok(!lines[k].includes(h.red ? 'BLACK' : 'RED'), lines[k]);
+    });
+  }
+});
+
+test('symbol: every line can be drawn and fits the box', () => {
+  const all = [...SYMBOLS];
+  for (const [k, v] of Object.entries(SCROLL)) if (k !== 'hop' && k !== 'way') all.push(...[].concat(v));
+  const pages = scrollDeals().flatMap(scrollLines);
+  all.push(...pages);
+  for (const s of all) {
+    for (const ch of s.replace(/\{N\}/g, 'ABCDEFGH')) assert.ok(GLYPH_SET.has(ch), `missing glyph "${ch}" in: ${s}`);
+    for (const line of wrap(s.replace(/\{N\}/g, 'ABCDEFGH'), 23)) assert.ok(line.length <= 23, `too long: ${line}`);
+    assert.ok(!/\{(?!N\})/.test(s), `stray placeholder: ${s}`);
+  }
+  // each hop is one page: three lines at most, so the whole instruction is on screen at once
+  for (const s of pages) assert.ok(wrap(s, 23).length <= 3, `more than a page: ${s}`);
+  for (const s of SYMBOLS) assert.ok(s.length <= 10, `name too long for the scroll: ${s}`);
 });
