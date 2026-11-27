@@ -622,7 +622,6 @@ export const SCROLL = {
     'ANY ONE YOU LIKE. DON\'T POINT! KEEP IT IN YOUR HEAD.',
     'GOT ONE? TOO EASY. THE WIZARD WOULD SEE IT A MILE OFF.',
     'LET\'S MOVE IT AROUND. IN YOUR HEAD. I WON\'T LOOK!',
-    'HOP FROM SYMBOL TO SYMBOL. SKIP OVER ANY THAT ARE IN THE WAY.',
   ],
   // one line for each hop; {WAY} is how that hop may go, {INK} is RED or BLACK
   hop: [
