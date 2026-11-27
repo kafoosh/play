@@ -98,8 +98,8 @@ longer phrases wrap onto up to four lines. The cheat sheet shows `WORD: HELLO`.
 
 **Card or word?** Anything starting with a number is a **card** (`/7D`, `/12h`,
 `/1s90x`, or the same after `?=`). Anything made only of letters (plus `+ - _`) is a
-**word** (`/jraap`, or `?=jraap`). The two exceptions are `/!card`, the fortune teller,
-and `/!book`, the apprentice's book test, both below.
+**word** (`/jraap`, or `?=jraap`). The three exceptions are `/!card`, the fortune teller,
+`/!book`, the apprentice's book test, and `/!symbol`, the fortune teller's scroll, all below.
 
 ### Fortune teller: a self-working card trick (`/!card`)
 
@@ -202,10 +202,64 @@ guard was never asked (knocked aside, or a chicken), the hermit asks his letter 
 AN L?"); if a letter is still left at the
 castle, the wizard asks it ("THE WIND IS FAINT TODAY. HELP IT ALONG.").
 
+### The fortune teller's scroll: a self-working symbol force (`/!symbol`)
+
+Send the spectator to **`play.oddpaq.com/!symbol`** (or `?=!symbol`). Nothing to arm, no
+props, and nothing to enter: it all happens in their head. The address bar is reset to
+the plain site, title-screen taps are ignored, and the cheat sheet shows
+`SYMBOL FORCE (URL)`.
+
+1. As they step out of the house, the fortune teller stops them: "DO YOU HAVE A SYMBOL
+   IN MIND FOR THE WIZARD?" "NO? HERE, CHOOSE ONE FROM THIS SCROLL." He doesn't wait
+   for an answer.
+2. He unrolls a scroll of twelve symbols, four across and three down, six in red ink
+   and six in black: circle, square, triangle, star, heart, moon, sun, cross, arrow,
+   spiral, eye, key. They think of any one.
+3. "TOO EASY. THE WIZARD WOULD SEE IT A MILE OFF." So they move it around, in their
+   head, with four hops. Each is one text box (the inks may be the other way round):
+   - "GO UP, DOWN, LEFT OR RIGHT TO THE NEAREST RED SYMBOL."
+   - "NOW GO UP OR DOWN TO THE NEAREST BLACK SYMBOL."
+   - "UP OR DOWN AGAIN, TO THE NEAREST RED SYMBOL."
+   - "LAST ONE! LEFT OR RIGHT TO THE NEAREST BLACK SYMBOL."
+4. "STOP THERE! THAT'S YOUR SYMBOL NOW." The scroll rolls up. B goes back a text box
+   while the scroll is open, if they lose their place.
+5. The **hermit** asks if they have a symbol in mind (on NO: "THE SYMBOL YOU STOPPED ON.
+   THINK OF THAT ONE.").
+6. The wizard asks "ARE YOU THINKING OF A SYMBOL?" and it appears on his scroll, in its
+   ink, with its name. The end screen shows it too.
+
+**How it works.** It's a grid force of the kind Derren Brown used for the photographs
+in *Séance*: every instruction leaves a choice, but the inks are laid out so that all
+the choices run together. One of the eight scrolls:
+
+```
+ R   B   B   R
+ R   R  [B]  R
+ B   R   B   B
+```
+
+- After hop 1 they are on one of the six reds.
+- Hop 2, up or down to black: three places left (bottom left, top second, bottom right).
+- Hop 3, up or down to red: each of those goes to the middle row.
+- Hop 4, left or right to black: the middle row has only one black.
+
+So twelve free choices become 6, 3, 3 and then 1. From the second hop on, every hop is
+to the other ink from the one they stand on, so "the nearest red" can never be taken to
+mean "stay here"; on the first hop, staying is harmless. The tests walk every start and
+every choice on all eight scrolls.
+
+Each game the scroll is mirrored left-right or top-bottom, the inks may swap, and the
+symbols are shuffled over the twelve places. So the symbol, its ink and the wording all
+change from game to game, and any of the twelve can come up. The forced place is always
+in the middle row, second or third along.
+
+There's no safety net: "nearest" has to be followed. Someone who hops past the nearest
+symbol to a further one, or moves diagonally, can end up somewhere else.
+
 ### Award: Look At All Those Chickens
 
 Turn every person in the land into a chicken with the chicken staff at the same time
-(17 people, 18 in fortune mode; the witches count, the wizard and the animals don't).
+(17 people, 18 in fortune or symbol mode; the witches count, the wizard and the animals don't).
 A banner slides in, and the end screen remembers it.
 
 ### Along the way
@@ -271,7 +325,8 @@ armed): `?scene=world`, `?scene=north`, `?scene=castle`, `?scene=class`, `?scene
 `?scene=end`. Add `&cls=0`–`3` to pick the test hero's path (knight, ranger, mage, bard).
 
 Tests (map walkability, NPC placement, every character of every line drawable by the
-pixel font and fitting the text box, music timing, URL force parsing, word cipher):
+pixel font and fitting the text box, music timing, URL force parsing, word cipher, the fortune teller's deal, the book's
+questions, every walk across the symbol scroll):
 
 ```bash
 npm test

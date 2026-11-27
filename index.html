@@ -15,8 +15,9 @@
       var segs = location.pathname.split('/');
       // "/!card" (or "?=!card"): the fortune teller's self-working reading.
       // "/!book" (or "?=!book"): the apprentice's self-working book test.
-      var bang = /^!(card|book)$/i;
-      var arm = function (s) { if (/book/i.test(s)) window.__book = true; else window.__fortune = true; };
+      // "/!symbol" (or "?=!symbol"): the fortune teller's scroll of symbols.
+      var bang = /^!(card|book|symbol)$/i;
+      var arm = function (s) { if (/book/i.test(s)) window.__book = true; else if (/symbol/i.test(s)) window.__symbol = true; else window.__fortune = true; };
       for (var j = 1; j < segs.length; j++) {
         var sj = segs[j];
         try { sj = decodeURIComponent(sj); } catch (e) {}
